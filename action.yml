@@ -1,5 +1,5 @@
 # action.yml
-name: 'Huawei OBS Helper'
+name: 'HuaweiCloud OBS Helper'
 description: 'Upload/Download files or folders to Huawei OBS'
 inputs:
   access_key:
@@ -24,6 +24,9 @@ inputs:
   obs_file_path:
     description: "The file/folder path of obs bucket"
     required: true  
+branding:
+  icon: 'cloud'
+  color: 'red'
 runs:
   using: 'docker'
   image: 'Dockerfile'
