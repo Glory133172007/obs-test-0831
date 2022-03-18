@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Upload To Huawei OBS
-        uses: huaweicloud/obs-helper@v1
+        uses: huaweicloud/obs-helper@v1.0.0
         id: upload_file_to_obs
         with:
           access_key: ${{ secrets.ACCESSKEY }}
@@ -41,7 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Upload To Huawei OBS
-        uses: huaweicloud/obs-helper@v1
+        uses: huaweicloud/obs-helper@v1.0.0
         id: upload_file_to_obs
         with:
           access_key: ${{ secrets.ACCESSKEY }}
@@ -82,7 +82,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Upload To Huawei OBS
-        uses: huaweicloud/obs-helper@v1
+        uses: huaweicloud/obs-helper@v1.0.0
         id: upload_file_to_obs
         with:
           access_key: ${{ secrets.ACCESSKEY }}
@@ -106,7 +106,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Upload To Huawei OBS
-        uses: huaweicloud/obs-helper@v1
+        uses: huaweicloud/obs-helper@v1.0.0
         id: upload_file_to_obs
         with:
           access_key: ${{ secrets.ACCESSKEY }}
