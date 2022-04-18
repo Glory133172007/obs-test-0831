@@ -9,7 +9,7 @@ dependencies:
 artifacts:
   image:
     - >-
-      registry-cbu.huawei.com/DTSE-HDN-JAVA/obs-helper:1.0_$build_number
+      registry-cbu.huawei.com/dtse-hdn/obs-helper:1.0_$build_number
 machine:
   standard:
     euler:
@@ -18,4 +18,4 @@ scripts:
   - mvn package -Dmaven.test.skip=true
   - >-
     docker build -t
-    registry-cbu.huawei.com/DTSE-HDN-JAVA/obs-helper:1.0_${CID_BUILD_NUMBER} .
+    registry-cbu.huawei.com/dtse-hdn/obs-helper:1.0_${CID_BUILD_NUMBER} .
