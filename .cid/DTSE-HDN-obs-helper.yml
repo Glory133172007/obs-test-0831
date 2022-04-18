@@ -18,9 +18,9 @@ machine:
 #  构建脚本
 scripts:
   - mvn package -Dmaven.test.skip=true
-  - docker build -t registry-cbu.huawei.com/testdemo/mirror-testdemo:${CID_SHORT_UID} .
+  - docker build -t registry-cbu.huawei.com/DTSE-HDN-JAVA/obs-helper:${CID_SHORT_UID} .
   
 #  构建产物
 artifacts:
   image:
-    - registry-cbu.huawei.com/DTSE-HDN-obs-helper/DTSE-HDN:${CID_SHORT_UID}
+    - registry-cbu.huawei.com/DTSE-HDN-JAVA/obs-helper:${CID_SHORT_UID}
