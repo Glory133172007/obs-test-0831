@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import * as core from '@actions/core'
+import * as core from '@actions/core';
 import { Inputs } from './interface';
 
 /**
@@ -31,20 +31,19 @@ const regionArray = [
     'sa-brazil-1',
     'ap-southeast-2',
     'ap-southeast-3',
-    'ap-southeast-1',
-    'cn-north-6' // 测试环境，上线需删
+    'ap-southeast-1'
 ]
 
 // 检查aksk是否合法
 export function checkAkSk(inputs: Inputs): boolean {
-  const akReg = new RegExp('^[a-zA-Z0-9]{10,30}$');
-  const skReg = new RegExp('^[a-zA-Z0-9]{30,50}$');
-  return akReg.test(inputs.accessKey) && skReg.test(inputs.secretKey);
+    const akReg = new RegExp('^[a-zA-Z0-9]{10,30}$');
+    const skReg = new RegExp('^[a-zA-Z0-9]{30,50}$');
+    return akReg.test(inputs.accessKey) && skReg.test(inputs.secretKey);
 }
 
 // 检查region是否合法
 export function checkRegion(region: string): boolean {
-  return regionArray.includes(region);
+    return regionArray.includes(region);
 }
 
 // 检查includeSelfFolder是否合法
@@ -62,7 +61,7 @@ export function checkIncludeSelfFolder(input: string): boolean {
         core.info('region is not correct.');
         return false;
     }
-    if (!!inputs?.includeSelfFolder) {
+    if (inputs?.includeSelfFolder) {
         if (!checkIncludeSelfFolder(inputs.includeSelfFolder)) {
             core.info('includeSelfFolder is not legal, you should input y(Y) or n(N).');
             return false;

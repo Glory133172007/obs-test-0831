@@ -102,8 +102,8 @@ test('test get last item with slash from Path', () => {
  // 检查ak/sk是否合法
  test('test file is oversized', () => {
    const input1 = {
-      accessKey: 'KQC3HCJ7AUISAMRHJ4LI',
-      secretKey: 'tMrRMsPdL0TkZyFvlntweH84Nie1h0vKpi5LRcJd',
+      accessKey: '******',
+      secretKey: '******',
       bucketName: 'hdn-hcloudtoolkit-devkitgithubaction-obs',
       operationType: 'upload',
       obsFilePath: 'uploadtest1/',
@@ -115,7 +115,7 @@ test('test get last item with slash from Path', () => {
 
    const input2 = {
       accessKey: 'KQC3',
-      secretKey: 'tMrRMsPdL0TkZyFvlntweH84Nie1h0vKpi5LRcJd11111222222233333444444',
+      secretKey: '******11111222222233333444444',
       bucketName: 'hdn-hcloudtoolkit-devkitgithubaction-obs',
       operationType: 'upload',
       obsFilePath: 'uploadtest1/',

@@ -44,7 +44,6 @@ export async function startUpload(obsClient: any, inputs: Inputs): Promise<void>
                     folder: []
                 };
                 await fileDisplay(obsClient, inputs, localFilePath, localFileRootPath, uploadList);
-                console.log(uploadList.folder)
 
                 const uploadListLength = uploadList.file.length + uploadList.folder.length;
                 if (uploadListLength <= 1000) {
@@ -65,7 +64,6 @@ export async function startUpload(obsClient: any, inputs: Inputs): Promise<void>
 
 // 循环读取文件夹, 统计待上传文件/文件夹
 export async function fileDisplay(obsClient: any, inputs: Inputs, localFilePath: string, obsFileRootPath: string, uploadList: UploadFileList): Promise<void> {
-
     // 根据文件路径读取文件，返回一个文件列表
     const fslist = fs.readdirSync(localFilePath);
     if (fslist.length > 0) {

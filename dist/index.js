@@ -13455,9 +13455,8 @@ const bucket = __importStar(__webpack_require__(216));
 const utils = __importStar(__webpack_require__(611));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
-        // const inputs: context.Inputs = context.getInputs();
-        const inputs = context.getInputsForTest();
-        //如果参数输入有问题，终止操作
+        const inputs = context.getInputs();
+        // 如果参数输入有问题，终止操作
         if (!utils.checkInputs(inputs)) {
             core.setFailed('input parameters is not correct.');
             return;
@@ -13477,10 +13476,10 @@ function run() {
         }
         // 执行上传/下载操作
         if (inputs.operationType === 'upload') {
-            upload.startUpload(obs, inputs);
+            yield upload.startUpload(obs, inputs);
         }
         else if (inputs.operationType === 'download') {
-            download.startDownload(obs, inputs);
+            yield download.startDownload(obs, inputs);
         }
         else {
             core.info('operation type error, you should input "upload" or "download"');
@@ -18225,21 +18224,16 @@ function getInputs() {
 exports.getInputs = getInputs;
 function getInputsForTest() {
     return {
-        accessKey: 'KQC3HCJ7AUISAMRHJ4LI',
-        secretKey: 'tMrRMsPdL0TkZyFvlntweH84Nie1h0vKpi5LRcJd',
+        accessKey: '******',
+        secretKey: '******',
         bucketName: 'hdn-hcloudtoolkit-devkitgithubaction-obs',
         operationType: 'upload',
-        // obsFilePath: 'uploadtest1/',
-        // localFilePath: ['resource/bigFile.zip'],
         obsFilePath: 'uploadtest2',
         localFilePath: ['resource/uploadDir'],
-        region: 'cn-north-6',
-        // includeSelfFolder: 'y',
-        exclude: ['uploadDir/test-mult', "uploadDir/test/yasuobao.txt"]
+        region: 'cn-north-6'
     };
 }
 exports.getInputsForTest = getInputsForTest;
-// obsutil cp obs://hdn-hcloudtoolkit-devkitgithubaction-obs/uploadtest1/bigFile.zip D:\project\obs-helper\resource\downloadDir\dd3 -r -f 
 
 
 /***/ }),
@@ -21470,7 +21464,7 @@ function startUpload(obsClient, inputs) {
                 }
                 // 处理文件夹
                 if (fsStat.isDirectory()) {
-                    const localFileRootPath = !!inputs.includeSelfFolder
+                    const localFileRootPath = inputs.includeSelfFolder
                         ? getObsRootFile(inputs.includeSelfFolder, inputs.obsFilePath, localRoot)
                         : getObsRootFile('', inputs.obsFilePath, localRoot);
                     // 获取待上传列表
@@ -21479,10 +21473,9 @@ function startUpload(obsClient, inputs) {
                         folder: []
                     };
                     yield fileDisplay(obsClient, inputs, localFilePath, localFileRootPath, uploadList);
-                    console.log(uploadList.folder);
                     const uploadListLength = uploadList.file.length + uploadList.folder.length;
                     if (uploadListLength <= 1000) {
-                        if (!!inputs.obsFilePath) {
+                        if (inputs.obsFilePath) {
                             yield obsCreateRootFolder(obsClient, inputs.bucketName, utils.getStringDelLastSlash(inputs.obsFilePath));
                         }
                         yield uploadFileAndFolder(obsClient, inputs.bucketName, uploadList);
@@ -21512,7 +21505,7 @@ function fileDisplay(obsClient, inputs, localFilePath, obsFileRootPath, uploadLi
                 const filepath = path.join(localFilePath, filename);
                 // 根据文件路径获取文件信息
                 const info = fs.statSync(filepath);
-                const obsFilePath = !!obsFileRootPath ? `${obsFileRootPath}/${filename}` : `${obsFileRootPath}${filename}`;
+                const obsFilePath = obsFileRootPath ? `${obsFileRootPath}/${filename}` : `${obsFileRootPath}${filename}`;
                 if (info.isFile()) {
                     uploadList.file.push({
                         local: utils.replaceSlash(filepath),
@@ -21705,8 +21698,7 @@ const regionArray = [
     'sa-brazil-1',
     'ap-southeast-2',
     'ap-southeast-3',
-    'ap-southeast-1',
-    'cn-north-6' // 测试环境，上线需删
+    'ap-southeast-1'
 ];
 // 检查aksk是否合法
 function checkAkSk(inputs) {
@@ -21735,7 +21727,7 @@ function checkInputs(inputs) {
         core.info('region is not correct.');
         return false;
     }
-    if (!!(inputs === null || inputs === void 0 ? void 0 : inputs.includeSelfFolder)) {
+    if (inputs === null || inputs === void 0 ? void 0 : inputs.includeSelfFolder) {
         if (!checkIncludeSelfFolder(inputs.includeSelfFolder)) {
             core.info('includeSelfFolder is not legal, you should input y(Y) or n(N).');
             return false;
@@ -28787,7 +28779,6 @@ function startDownload(obsClient, inputs) {
         // 获得要下载的目录列表
         const inputLocalFilePath = inputs.localFilePath[0];
         const downloadPathList = yield getDownloadList(obsClient, inputs, inputs.obsFilePath);
-        console.log(downloadPathList);
         if (downloadPathList.length < 1) {
             core.info('obs file or dirctory not exist');
             return;

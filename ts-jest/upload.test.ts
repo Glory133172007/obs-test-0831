@@ -16,8 +16,8 @@ function getObsClient(inputs: Inputs) {
 
 test('upload a exist file without rename to obs folder "obsTest1"', async () => {
     const inputs = {
-        accessKey: 'KQC3HCJ7AUISAMRHJ4LI',
-        secretKey: 'tMrRMsPdL0TkZyFvlntweH84Nie1h0vKpi5LRcJd',
+        accessKey: '******',
+        secretKey: '******',
         bucketName: 'hdn-hcloudtoolkit-devkitgithubaction-obs',
         operationType: 'upload',
         obsFilePath: 'obsTest1/file1.txt',
@@ -32,8 +32,8 @@ test('upload a exist file without rename to obs folder "obsTest1"', async () => 
 
 test('upload a exist file and rename to obs root', async () => {
     const inputs = {
-        accessKey: 'KQC3HCJ7AUISAMRHJ4LI',
-        secretKey: 'tMrRMsPdL0TkZyFvlntweH84Nie1h0vKpi5LRcJd',
+        accessKey: '******',
+        secretKey: '******',
         bucketName: 'hdn-hcloudtoolkit-devkitgithubaction-obs',
         operationType: 'upload',
         obsFilePath: 'elif.txt',
@@ -48,8 +48,8 @@ test('upload a exist file and rename to obs root', async () => {
 
 test('upload a nonexist file to obs root', async () => {
     const inputs = {
-        accessKey: 'KQC3HCJ7AUISAMRHJ4LI',
-        secretKey: 'tMrRMsPdL0TkZyFvlntweH84Nie1h0vKpi5LRcJd',
+        accessKey: '******',
+        secretKey: '******',
         bucketName: 'hdn-hcloudtoolkit-devkitgithubaction-obs',
         operationType: 'upload',
         obsFilePath: '',
@@ -65,8 +65,8 @@ test('upload a nonexist file to obs root', async () => {
 
 test('upload a big file to obs', async () => {
     const inputs = {
-        accessKey: 'KQC3HCJ7AUISAMRHJ4LI',
-        secretKey: 'tMrRMsPdL0TkZyFvlntweH84Nie1h0vKpi5LRcJd',
+        accessKey: '******',
+        secretKey: '******',
         bucketName: 'hdn-hcloudtoolkit-devkitgithubaction-obs',
         operationType: 'upload',
         obsFilePath: 'src/bigFile.zip',
@@ -83,8 +83,8 @@ test('upload a big file to obs', async () => {
 
 test('upload a exist empty folder to obs "obsTest2"', async () => {
     const inputs = {
-        accessKey: 'KQC3HCJ7AUISAMRHJ4LI',
-        secretKey: 'tMrRMsPdL0TkZyFvlntweH84Nie1h0vKpi5LRcJd',
+        accessKey: '******',
+        secretKey: '******',
         bucketName: 'hdn-hcloudtoolkit-devkitgithubaction-obs',
         operationType: 'upload',
         obsFilePath: 'obsTest2',
@@ -100,8 +100,8 @@ test('upload a exist empty folder to obs "obsTest2"', async () => {
 
 test('upload a exist folder to obs "obsTest3" and include local folder "uploadDir" itself', async () => {
     const inputs = {
-        accessKey: 'KQC3HCJ7AUISAMRHJ4LI',
-        secretKey: 'tMrRMsPdL0TkZyFvlntweH84Nie1h0vKpi5LRcJd',
+        accessKey: '******',
+        secretKey: '******',
         bucketName: 'hdn-hcloudtoolkit-devkitgithubaction-obs',
         operationType: 'upload',
         obsFilePath: 'obsTest3',
@@ -117,8 +117,8 @@ test('upload a exist folder to obs "obsTest3" and include local folder "uploadDi
 
 test('upload a exist folder to obs "obsTest4"', async () => {
     const inputs = {
-        accessKey: 'KQC3HCJ7AUISAMRHJ4LI',
-        secretKey: 'tMrRMsPdL0TkZyFvlntweH84Nie1h0vKpi5LRcJd',
+        accessKey: '******',
+        secretKey: '******',
         bucketName: 'hdn-hcloudtoolkit-devkitgithubaction-obs',
         operationType: 'upload',
         obsFilePath: 'obsTest4',
@@ -133,8 +133,8 @@ test('upload a exist folder to obs "obsTest4"', async () => {
 
 test('upload a nonexist folder to obs root ', async () => {
     const inputs = {
-        accessKey: 'KQC3HCJ7AUISAMRHJ4LI',
-        secretKey: 'tMrRMsPdL0TkZyFvlntweH84Nie1h0vKpi5LRcJd',
+        accessKey: '******',
+        secretKey: '******',
         bucketName: 'hdn-hcloudtoolkit-devkitgithubaction-obs',
         operationType: 'upload',
         obsFilePath: '',
@@ -149,8 +149,8 @@ test('upload a nonexist folder to obs root ', async () => {
 
 test('upload a exist folder include lots of files to obs "obsTest5" ', async () => {
     const inputs = {
-        accessKey: 'KQC3HCJ7AUISAMRHJ4LI',
-        secretKey: 'tMrRMsPdL0TkZyFvlntweH84Nie1h0vKpi5LRcJd',
+        accessKey: '******',
+        secretKey: '******',
         bucketName: 'hdn-hcloudtoolkit-devkitgithubaction-obs',
         operationType: 'upload',
         obsFilePath: 'obsTest5',
@@ -172,8 +172,8 @@ test('fileDisplay', async () => {
         folder: []
     };
     const inputs = {
-        accessKey: 'KQC3HCJ7AUISAMRHJ4LI',
-        secretKey: 'tMrRMsPdL0TkZyFvlntweH84Nie1h0vKpi5LRcJd',
+        accessKey: '******',
+        secretKey: '******',
         bucketName: 'hdn-hcloudtoolkit-devkitgithubaction-obs',
         operationType: 'upload',
         obsFilePath: 'obsTest6',
@@ -181,7 +181,6 @@ test('fileDisplay', async () => {
         region: 'cn-north-6',   
     };
     await upload.fileDisplay(getObsClient(inputs), inputs, 'resource/uploadDir', '', uploadList);
-    console.log(uploadList)
     expect(uploadList.file.length).toEqual(5);
     expect(uploadList.folder).toEqual(['test', 'test/test2', 'test-mult', 'test-mult/other1', 'test1']);
 });
@@ -193,8 +192,8 @@ test('getObsRootFile', () => {
 
 test('uploadFile', async () => {
     const inputs = {
-        accessKey: 'KQC3HCJ7AUISAMRHJ4LI',
-        secretKey: 'tMrRMsPdL0TkZyFvlntweH84Nie1h0vKpi5LRcJd',
+        accessKey: '******',
+        secretKey: '******',
         bucketName: 'hdn-hcloudtoolkit-devkitgithubaction-obs',
         operationType: 'upload',
         obsFilePath: 'obsTest6',
@@ -209,8 +208,8 @@ test('uploadFile', async () => {
 
 test('uploadFolder', async () => {
     const inputs = {
-        accessKey: 'KQC3HCJ7AUISAMRHJ4LI',
-        secretKey: 'tMrRMsPdL0TkZyFvlntweH84Nie1h0vKpi5LRcJd',
+        accessKey: '******',
+        secretKey: '******',
         bucketName: 'hdn-hcloudtoolkit-devkitgithubaction-obs',
         operationType: 'upload',
         obsFilePath: 'obsTest6/emptyFolder1',
@@ -225,8 +224,8 @@ test('uploadFolder', async () => {
 
 test('obsCreateRootFolder', async () => {
     const inputs = {
-        accessKey: 'KQC3HCJ7AUISAMRHJ4LI',
-        secretKey: 'tMrRMsPdL0TkZyFvlntweH84Nie1h0vKpi5LRcJd',
+        accessKey: '******',
+        secretKey: '******',
         bucketName: 'hdn-hcloudtoolkit-devkitgithubaction-obs',
         operationType: 'upload',
         obsFilePath: 'obsTest6/root1/root2/root3',

@@ -17,16 +17,12 @@ export function getInputs(): Inputs {
 
 export function getInputsForTest(): Inputs {
     return {
-        accessKey: 'KQC3HCJ7AUISAMRHJ4LI',
-        secretKey: 'tMrRMsPdL0TkZyFvlntweH84Nie1h0vKpi5LRcJd',
+        accessKey: '******',
+        secretKey: '******',
         bucketName: 'hdn-hcloudtoolkit-devkitgithubaction-obs',
         operationType: 'upload',
-        // obsFilePath: 'uploadtest1/',
-        // localFilePath: ['resource/bigFile.zip'],
         obsFilePath: 'uploadtest2',
         localFilePath: ['resource/uploadDir'],
-        region: 'cn-north-6',
-        // includeSelfFolder: 'y',
-        exclude: ['uploadDir/test-mult', "uploadDir/test/yasuobao.txt"]
+        region: 'cn-north-6'
     }
 }

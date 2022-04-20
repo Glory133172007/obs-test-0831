@@ -15,8 +15,8 @@ function getObsClient(inputs: Inputs) {
 // --------------------file---------------------
 test('download a exist file to local and rename it', async () => {
     const inputs = {
-        accessKey: 'KQC3HCJ7AUISAMRHJ4LI',
-        secretKey: 'tMrRMsPdL0TkZyFvlntweH84Nie1h0vKpi5LRcJd',
+        accessKey: '******',
+        secretKey: '******',
         bucketName: 'hdn-hcloudtoolkit-devkitgithubaction-obs',
         operationType: 'download',
         obsFilePath: 'uploadDir/file2.txt',
@@ -31,8 +31,8 @@ test('download a exist file to local and rename it', async () => {
 
 test('download a exist file but exclude it', async () => {
     const inputs = {
-        accessKey: 'KQC3HCJ7AUISAMRHJ4LI',
-        secretKey: 'tMrRMsPdL0TkZyFvlntweH84Nie1h0vKpi5LRcJd',
+        accessKey: '******',
+        secretKey: '******',
         bucketName: 'hdn-hcloudtoolkit-devkitgithubaction-obs',
         operationType: 'download',
         obsFilePath: 'uploadDir/file1.txt',
@@ -49,8 +49,8 @@ test('download a exist file but exclude it', async () => {
 
 test('download a nonexist file to local', async () => {
     const inputs = {
-        accessKey: 'KQC3HCJ7AUISAMRHJ4LI',
-        secretKey: 'tMrRMsPdL0TkZyFvlntweH84Nie1h0vKpi5LRcJd',
+        accessKey: '******',
+        secretKey: '******',
         bucketName: 'hdn-hcloudtoolkit-devkitgithubaction-obs',
         operationType: 'download',
         obsFilePath: 'uploadDir/fileaaabbb.txt',
@@ -68,8 +68,8 @@ test('download a nonexist file to local', async () => {
 
 test('download a exist folder to local and exclude folder "test-mult" and file "yasuobao.txt"', async () => {
     const inputs = {
-        accessKey: 'KQC3HCJ7AUISAMRHJ4LI',
-        secretKey: 'tMrRMsPdL0TkZyFvlntweH84Nie1h0vKpi5LRcJd',
+        accessKey: '******',
+        secretKey: '******',
         bucketName: 'hdn-hcloudtoolkit-devkitgithubaction-obs',
         operationType: 'download',
         obsFilePath: 'uploadDir',
@@ -88,8 +88,8 @@ test('download a exist folder to local and exclude folder "test-mult" and file "
 
 test('download a exist folder to local and include folder itselt', async () => {
     const inputs = {
-        accessKey: 'KQC3HCJ7AUISAMRHJ4LI',
-        secretKey: 'tMrRMsPdL0TkZyFvlntweH84Nie1h0vKpi5LRcJd',
+        accessKey: '******',
+        secretKey: '******',
         bucketName: 'hdn-hcloudtoolkit-devkitgithubaction-obs',
         operationType: 'download',
         obsFilePath: 'uploadDir/test/',
@@ -109,8 +109,8 @@ test('download a exist folder to local and include folder itselt', async () => {
 
 test('download a exist folder to nonexist local', async () => {
     const inputs = {
-        accessKey: 'KQC3HCJ7AUISAMRHJ4LI',
-        secretKey: 'tMrRMsPdL0TkZyFvlntweH84Nie1h0vKpi5LRcJd',
+        accessKey: '******',
+        secretKey: '******',
         bucketName: 'hdn-hcloudtoolkit-devkitgithubaction-obs',
         operationType: 'download',
         obsFilePath: 'uploadDir123',
@@ -127,8 +127,8 @@ test('download a exist folder to nonexist local', async () => {
 
 test('download a nonexist folder to local', async () => {
     const inputs = {
-        accessKey: 'KQC3HCJ7AUISAMRHJ4LI',
-        secretKey: 'tMrRMsPdL0TkZyFvlntweH84Nie1h0vKpi5LRcJd',
+        accessKey: '******',
+        secretKey: '******',
         bucketName: 'hdn-hcloudtoolkit-devkitgithubaction-obs',
         operationType: 'download',
         obsFilePath: 'uploadDir123',
@@ -165,8 +165,8 @@ test('createEmptyRootFolders', () => {
 
 test('downloadFile', async () => {
     const inputs = {
-        accessKey: 'KQC3HCJ7AUISAMRHJ4LI',
-        secretKey: 'tMrRMsPdL0TkZyFvlntweH84Nie1h0vKpi5LRcJd',
+        accessKey: '******',
+        secretKey: '******',
         bucketName: 'hdn-hcloudtoolkit-devkitgithubaction-obs',
         operationType: 'download',
         obsFilePath: 'uploadDir/file2.txt',
@@ -188,8 +188,8 @@ test('getLocalFileName', () => {
 
 test('getDownloadList and delUselessPath', async () => {
     const inputs = {
-        accessKey: 'KQC3HCJ7AUISAMRHJ4LI',
-        secretKey: 'tMrRMsPdL0TkZyFvlntweH84Nie1h0vKpi5LRcJd',
+        accessKey: '******',
+        secretKey: '******',
         bucketName: 'hdn-hcloudtoolkit-devkitgithubaction-obs',
         operationType: 'download',
         obsFilePath: 'uploadDir',

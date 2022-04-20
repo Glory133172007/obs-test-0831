@@ -19,7 +19,6 @@ export async function startDownload(obsClient: any, inputs: Inputs): Promise<voi
     // 获得要下载的目录列表
     const inputLocalFilePath = inputs.localFilePath[0];
     const downloadPathList = await getDownloadList(obsClient, inputs, inputs.obsFilePath); 
-    console.log(downloadPathList)
     
     if (downloadPathList.length < 1) {
         core.info('obs file or dirctory not exist');
