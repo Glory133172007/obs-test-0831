@@ -2,31 +2,35 @@
 name: 'Huawei OBS Helper'
 description: 'Upload/Download files or folders to Huawei OBS'
 inputs:
-  access_key:
+  accessKey:
     description: "Access key id"
     required: true
-  secret_key:
+  secretKey:
     description: "Secret access key"
     required: true
   region:
     description: 'Region'
     required: false
     default: 'cn-north-4'
-  bucket_name:
+  bucketName:
     description: "The name of the bucket you want to upload or download"
     required: true
-  operation_type:
+  operationType:
     description: upload or download
     required: true
-  local_file_path:
+  localFilePath:
     description: "Local file/folder path"
-    required: false
-  obs_file_path:
+    required: ture
+  obsFilePath:
     description: "The file/folder path of obs bucket"
     required: true  
+  includeSelfFolder:
+    description: "Include root folder when upload or download"
+  exclude:
+    description: "Exclude file or folder when download a folder"
 branding:
   icon: 'cloud'
   color: 'red'
 runs:
-  using: 'docker'
-  image: 'Dockerfile'
+  using: 'node16'
+  main: 'dist/index.js'
