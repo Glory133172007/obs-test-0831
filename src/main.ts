@@ -12,9 +12,13 @@ async function run() {
         core.setFailed('input parameters is not correct.');
         return;
     }
-    
+
     // 初始化OBS客户端
-    const obs = context.getObsClient(inputs.access_key, inputs.secret_key, `https://obs.${inputs.region}.myhuaweicloud.com`);
+    const obs = context.getObsClient(
+        inputs.access_key,
+        inputs.secret_key,
+        `https://obs.${inputs.region}.myhuaweicloud.com`
+    );
 
     // 若桶不存在，退出
     if (!bucket.hasBucket(obs, inputs.bucket_name)) {

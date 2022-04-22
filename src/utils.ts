@@ -31,14 +31,14 @@ const regionArray = [
     'sa-brazil-1',
     'ap-southeast-2',
     'ap-southeast-3',
-    'ap-southeast-1'
+    'ap-southeast-1',
 ];
 
 const FILE_MAX_SIZE = 5 * 1024 * 1024 * 1024;
 
 export const includeSelfFolderArray = {
     includeItem: ['y', 'yes', 'true'],
-    excludeItem: ['n', 'no', 'false']
+    excludeItem: ['n', 'no', 'false'],
 };
 
 // 检查aksk是否合法
@@ -63,7 +63,7 @@ export function checkUploadFilePath(inputs: Inputs): boolean {
     if (inputs.local_file_path.length === 0) {
         core.info('please input localFilePath.');
         return false;
-    } 
+    }
     for (const path of inputs.local_file_path) {
         if (path === '') {
             core.info('you should not input a empty string as local_file_path.');
@@ -96,8 +96,10 @@ export function checkDownloadFilePath(inputs: Inputs): boolean {
 
 // 检查includeSelfFolder参数是否合法
 export function checkIncludeSelfFolder(input: string): boolean {
-    return includeSelfFolderArray.includeItem.indexOf(input.toLowerCase()) > -1 
-        || includeSelfFolderArray.excludeItem.indexOf(input.toLowerCase()) > -1;
+    return (
+        includeSelfFolderArray.includeItem.indexOf(input.toLowerCase()) > -1 ||
+        includeSelfFolderArray.excludeItem.indexOf(input.toLowerCase()) > -1
+    );
 }
 
 // 检查输入的各参数是否正常
@@ -114,15 +116,16 @@ export function checkInputs(inputs: Inputs): boolean {
         core.info('operation_type is not correct, you should input "upload" or "download".');
         return false;
     }
-    const checkFilePath = inputs.operation_type.toLowerCase() === 'upload'
-                        ? checkUploadFilePath(inputs) 
-                        : checkDownloadFilePath(inputs);
+    const checkFilePath =
+        inputs.operation_type.toLowerCase() === 'upload' ? checkUploadFilePath(inputs) : checkDownloadFilePath(inputs);
     if (!checkFilePath) {
         return false;
     }
     if (inputs?.include_self_folder) {
         if (!checkIncludeSelfFolder(inputs.include_self_folder)) {
-            core.info('include_self_folder is not legal, you should input y(Y)/n(N)/yes(YES)/no(NO)/true(TRUE)/false(FALSE).');
+            core.info(
+                'include_self_folder is not legal, you should input y(Y)/n(N)/yes(YES)/no(NO)/true(TRUE)/false(FALSE).'
+            );
             return false;
         }
     }
@@ -131,7 +134,7 @@ export function checkInputs(inputs: Inputs): boolean {
 
 // 替换路径中的'\'为'/'
 export function replaceSlash(dir: string): string {
-  return dir.replace(/\\/g, '/');
+    return dir.replace(/\\/g, '/');
 }
 
 // 从文件路径中获取到最后一个'/'后的名称
@@ -170,7 +173,7 @@ export function createFolder(path: string): void {
 export function isEndWithSlash(path: string): boolean {
     try {
         return path.slice(-1) === '/';
-    } catch (error) { 
+    } catch (error) {
         return false;
     }
 }

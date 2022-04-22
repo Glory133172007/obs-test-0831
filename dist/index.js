@@ -13221,7 +13221,7 @@ function uploadFileOrFolder(obsClient, inputs) {
                     let obsFilePath = '';
                     if (inputs.obs_file_path) {
                         obsFilePath = utils.isEndWithSlash(inputs.obs_file_path)
-                            ? (inputs.obs_file_path + localRoot)
+                            ? inputs.obs_file_path + localRoot
                             : inputs.obs_file_path;
                     }
                     // 若是多个path上传中的文件，需要手动添加文件名
@@ -13236,7 +13236,7 @@ function uploadFileOrFolder(obsClient, inputs) {
                         : getObsRootFile('', inputs.obs_file_path, localRoot);
                     const uploadList = {
                         file: [],
-                        folder: []
+                        folder: [],
                     };
                     yield fileDisplay(obsClient, inputs, localFilePath, localFileRootPath, uploadList);
                     // 若总文件数大于1000，取消上传
@@ -13297,7 +13297,7 @@ function fileDisplay(obsClient, inputs, localFilePath, obsFileRootPath, uploadLi
                 if (info.isFile()) {
                     uploadList.file.push({
                         local: utils.replaceSlash(filepath),
-                        obs: obsFilePath
+                        obs: obsFilePath,
                     });
                 }
                 if (info.isDirectory()) {
@@ -13349,7 +13349,7 @@ function uploadFile(obsClient, bucketName, localFilePath, obsFilePath) {
         yield obsClient.putObject({
             Bucket: bucketName,
             Key: obsFilePath,
-            SourceFile: localFilePath
+            SourceFile: localFilePath,
         });
     });
 }
@@ -13367,7 +13367,7 @@ function uploadFolder(obsClient, bucketName, obsFilePath) {
         core.info(`create folder ${obsFilePath}/`);
         yield obsClient.putObject({
             Bucket: bucketName,
-            Key: obsFilePath + '/'
+            Key: obsFilePath + '/',
         });
     });
 }
@@ -13392,7 +13392,7 @@ function obsCreateRootFolder(obsClient, bucketName, obsFile) {
             core.info('create folder ' + obsPath);
             yield obsClient.putObject({
                 Bucket: bucketName,
-                Key: obsPath
+                Key: obsPath,
             });
         }
     });
@@ -13535,7 +13535,7 @@ exports.listObjects = exports.hasBucket = void 0;
 function hasBucket(obsClient, bucketName) {
     return __awaiter(this, void 0, void 0, function* () {
         const promise = yield obsClient.headBucket({
-            Bucket: bucketName
+            Bucket: bucketName,
         });
         return !(promise.CommonMsg.Status === 404);
     });
@@ -13551,7 +13551,7 @@ function listObjects(obsClient, bucketName) {
     return __awaiter(this, void 0, void 0, function* () {
         const objList = [];
         const promise = yield obsClient.listObjects({
-            Bucket: bucketName
+            Bucket: bucketName,
         });
         promise.InterfaceResult.Contents.forEach((element) => {
             objList.push(element['Key']);
@@ -18206,19 +18206,19 @@ exports.getObsClient = exports.getInputs = void 0;
 const core = __importStar(__webpack_require__(470));
 function getInputs() {
     return {
-        access_key: core.getInput("access_key", { required: true }),
-        secret_key: core.getInput("secretKey", { required: true }),
-        bucket_name: core.getInput("bucketName", { required: true }),
-        operation_type: core.getInput("operationType", { required: true }),
-        local_file_path: core.getMultilineInput("localFilePath", {
+        access_key: core.getInput('access_key', { required: true }),
+        secret_key: core.getInput('secretKey', { required: true }),
+        bucket_name: core.getInput('bucketName', { required: true }),
+        operation_type: core.getInput('operationType', { required: true }),
+        local_file_path: core.getMultilineInput('localFilePath', {
             required: true,
         }),
-        obs_file_path: core.getInput("obsFilePath", { required: true }),
-        region: core.getInput("region", { required: true }),
-        include_self_folder: core.getInput("includeSelfFolder", {
+        obs_file_path: core.getInput('obsFilePath', { required: true }),
+        region: core.getInput('region', { required: true }),
+        include_self_folder: core.getInput('includeSelfFolder', {
             required: false,
         }),
-        exclude: core.getMultilineInput("exclude", { required: false }),
+        exclude: core.getMultilineInput('exclude', { required: false }),
     };
 }
 exports.getInputs = getInputs;
@@ -18240,7 +18240,7 @@ function getObsClient(ak, sk, server) {
         return obs;
     }
     catch (error) {
-        core.setFailed("init obs client fail.");
+        core.setFailed('init obs client fail.');
     }
 }
 exports.getObsClient = getObsClient;
@@ -21748,12 +21748,12 @@ const regionArray = [
     'sa-brazil-1',
     'ap-southeast-2',
     'ap-southeast-3',
-    'ap-southeast-1'
+    'ap-southeast-1',
 ];
 const FILE_MAX_SIZE = 5 * 1024 * 1024 * 1024;
 exports.includeSelfFolderArray = {
     includeItem: ['y', 'yes', 'true'],
-    excludeItem: ['n', 'no', 'false']
+    excludeItem: ['n', 'no', 'false'],
 };
 // 检查aksk是否合法
 function checkAkSk(inputs) {
@@ -21810,8 +21810,8 @@ function checkDownloadFilePath(inputs) {
 exports.checkDownloadFilePath = checkDownloadFilePath;
 // 检查includeSelfFolder参数是否合法
 function checkIncludeSelfFolder(input) {
-    return exports.includeSelfFolderArray.includeItem.indexOf(input.toLowerCase()) > -1
-        || exports.includeSelfFolderArray.excludeItem.indexOf(input.toLowerCase()) > -1;
+    return (exports.includeSelfFolderArray.includeItem.indexOf(input.toLowerCase()) > -1 ||
+        exports.includeSelfFolderArray.excludeItem.indexOf(input.toLowerCase()) > -1);
 }
 exports.checkIncludeSelfFolder = checkIncludeSelfFolder;
 // 检查输入的各参数是否正常
@@ -21828,9 +21828,7 @@ function checkInputs(inputs) {
         core.info('operation_type is not correct, you should input "upload" or "download".');
         return false;
     }
-    const checkFilePath = inputs.operation_type.toLowerCase() === 'upload'
-        ? checkUploadFilePath(inputs)
-        : checkDownloadFilePath(inputs);
+    const checkFilePath = inputs.operation_type.toLowerCase() === 'upload' ? checkUploadFilePath(inputs) : checkDownloadFilePath(inputs);
     if (!checkFilePath) {
         return false;
     }
@@ -28905,7 +28903,7 @@ exports.downloadFileOrFolder = downloadFileOrFolder;
  * @returns
  */
 function pathIsSingleFile(downloadPathList, obsPath) {
-    return downloadPathList.length === 1 && downloadPathList[0] === obsPath && !utils.isEndWithSlash(downloadPathList[0]);
+    return (downloadPathList.length === 1 && downloadPathList[0] === obsPath && !utils.isEndWithSlash(downloadPathList[0]));
 }
 exports.pathIsSingleFile = pathIsSingleFile;
 /**
@@ -28959,7 +28957,9 @@ exports.createEmptyRootFolders = createEmptyRootFolders;
  */
 function downloadFile(obsClient, inputs, obsPath, localPath) {
     return __awaiter(this, void 0, void 0, function* () {
-        const localFileName = localPath ? localPath : getLocalFileName(utils.getStringDelLastSlash(inputs.local_file_path[0]), obsPath);
+        const localFileName = localPath
+            ? localPath
+            : getLocalFileName(utils.getStringDelLastSlash(inputs.local_file_path[0]), obsPath);
         core.info(`download ${obsPath} to local: ${localFileName}`);
         yield obsClient.getObject({
             Bucket: inputs.bucket_name,
@@ -29026,7 +29026,7 @@ function listDownloadObjects(obsClient, inputs, obsPath, marker) {
         return yield obsClient.listObjects({
             Bucket: inputs.bucket_name,
             Prefix: obsPath,
-            Marker: marker !== null && marker !== void 0 ? marker : ''
+            Marker: marker !== null && marker !== void 0 ? marker : '',
         });
     });
 }
@@ -29042,7 +29042,7 @@ function delUselessPath(objList, inputs) {
         // 删除不需要的path，仅保留inputs.obsFilePath相关的文件路径
         let isInclude = true;
         if (!!inputs.exclude && inputs.exclude.length > 0) {
-            inputs.exclude.forEach(excludeItem => {
+            inputs.exclude.forEach((excludeItem) => {
                 if (element['Key'].search(`^${utils.getStringDelLastSlash(excludeItem)}`) > -1) {
                     isInclude = false;
                 }
