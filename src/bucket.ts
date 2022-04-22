@@ -1,6 +1,6 @@
 /**
  * 判断桶是否存在
- * @param obsClient obsClient为引入的obs库的类型，本身并未导出其类型，故使用any，下同
+ * @param obsClient obs客户端，因obsClient为引入的obs库的类型，本身并未导出其类型，故使用any，下同
  * @param bucketName 桶名
  * @returns 
  */
@@ -13,7 +13,7 @@ export async function hasBucket(obsClient: any, bucketName: string): Promise<boo
 
 /**
  * 列举桶内对象
- * @param obsClient 
+ * @param obsClient obs客户端
  * @param bucketName 桶名
  * @returns 
  */

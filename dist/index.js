@@ -13448,8 +13448,7 @@ const bucket = __importStar(__webpack_require__(216));
 const utils = __importStar(__webpack_require__(611));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
-        // const inputs = context.getInputs();
-        const inputs = context.getInputsForTest();
+        const inputs = context.getInputs();
         if (!utils.checkInputs(inputs)) {
             core.setFailed('input parameters is not correct.');
             return;
@@ -13529,7 +13528,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.listObjects = exports.hasBucket = void 0;
 /**
  * 判断桶是否存在
- * @param obsClient obsClient为引入的obs库的类型，本身并未导出其类型，故使用any，下同
+ * @param obsClient obs客户端，因obsClient为引入的obs库的类型，本身并未导出其类型，故使用any，下同
  * @param bucketName 桶名
  * @returns
  */
@@ -13544,7 +13543,7 @@ function hasBucket(obsClient, bucketName) {
 exports.hasBucket = hasBucket;
 /**
  * 列举桶内对象
- * @param obsClient
+ * @param obsClient obs客户端
  * @param bucketName 桶名
  * @returns
  */
@@ -18203,19 +18202,23 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getInputsForTest = exports.getObsClient = exports.getInputs = void 0;
+exports.getObsClient = exports.getInputs = void 0;
 const core = __importStar(__webpack_require__(470));
 function getInputs() {
     return {
-        access_key: core.getInput('access_key', { required: true }),
-        secret_key: core.getInput('secretKey', { required: true }),
-        bucket_name: core.getInput('bucketName', { required: true }),
-        operation_type: core.getInput('operationType', { required: true }),
-        local_file_path: core.getMultilineInput('localFilePath', { required: true }),
-        obs_file_path: core.getInput('obsFilePath', { required: true }),
-        region: core.getInput('region', { required: true }),
-        include_self_folder: core.getInput('includeSelfFolder', { required: false }),
-        exclude: core.getMultilineInput('exclude', { required: false })
+        access_key: core.getInput("access_key", { required: true }),
+        secret_key: core.getInput("secretKey", { required: true }),
+        bucket_name: core.getInput("bucketName", { required: true }),
+        operation_type: core.getInput("operationType", { required: true }),
+        local_file_path: core.getMultilineInput("localFilePath", {
+            required: true,
+        }),
+        obs_file_path: core.getInput("obsFilePath", { required: true }),
+        region: core.getInput("region", { required: true }),
+        include_self_folder: core.getInput("includeSelfFolder", {
+            required: false,
+        }),
+        exclude: core.getMultilineInput("exclude", { required: false }),
     };
 }
 exports.getInputs = getInputs;
@@ -18227,34 +18230,20 @@ exports.getInputs = getInputs;
  * @returns obsClient为引入的obs库的类型，本身并未导出其类型，故使用any
  */
 function getObsClient(ak, sk, server) {
-    const ObsClient = __webpack_require__(310);
+    const ObsClient = __webpack_require__(310); // eslint-disable-line @typescript-eslint/no-var-requires
     try {
         const obs = new ObsClient({
             access_key_id: ak,
             secret_access_key: sk,
-            server: server
+            server: server,
         });
         return obs;
     }
     catch (error) {
-        core.setFailed('init obs client fail.');
+        core.setFailed("init obs client fail.");
     }
 }
 exports.getObsClient = getObsClient;
-function getInputsForTest() {
-    return {
-        access_key: 'KQC3HCJ7AUISAMRHJ4LI',
-        secret_key: 'tMrRMsPdL0TkZyFvlntweH84Nie1h0vKpi5LRcJd',
-        bucket_name: 'hdn-hcloudtoolkit-devkitgithubaction-obs',
-        operation_type: 'upload',
-        obs_file_path: 'uploadDir/upload7',
-        local_file_path: ['resource/uploadDir/test-mult', 'resource/uploadDir/file1.txt'],
-        region: 'cn-north-6',
-        include_self_folder: 'y',
-        // exclude: ['uploadDir/test-mult', "uploadDir/test/yasuobao.txt"]
-    };
-}
-exports.getInputsForTest = getInputsForTest;
 
 
 /***/ }),
@@ -21759,8 +21748,7 @@ const regionArray = [
     'sa-brazil-1',
     'ap-southeast-2',
     'ap-southeast-3',
-    'ap-southeast-1',
-    'cn-north-6' // 测试
+    'ap-southeast-1'
 ];
 const FILE_MAX_SIZE = 5 * 1024 * 1024 * 1024;
 exports.includeSelfFolderArray = {

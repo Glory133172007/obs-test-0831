@@ -27,7 +27,7 @@ export function getInputs(): Inputs {
  * @returns obsClient为引入的obs库的类型，本身并未导出其类型，故使用any
  */
 export function getObsClient(ak: string, sk: string, server: string): any {
-  const ObsClient = require("esdk-obs-nodejs");  // eslint-disable-line @typescript-eslint/no-var-requires
+  const ObsClient = require("esdk-obs-nodejs"); // eslint-disable-line @typescript-eslint/no-var-requires
   try {
     const obs = new ObsClient({
       access_key_id: ak,
