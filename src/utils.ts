@@ -31,14 +31,22 @@ const regionArray = [
     'sa-brazil-1',
     'ap-southeast-2',
     'ap-southeast-3',
-    'ap-southeast-1'
-]
+    'ap-southeast-1',
+    'cn-north-6' // 测试
+];
+
+const FILE_MAX_SIZE = 5 * 1024 * 1024 * 1024;
+
+export const includeSelfFolderArray = {
+    includeItem: ['y', 'yes', 'true'],
+    excludeItem: ['n', 'no', 'false']
+};
 
 // 检查aksk是否合法
 export function checkAkSk(inputs: Inputs): boolean {
     const akReg = new RegExp('^[a-zA-Z0-9]{10,30}$');
     const skReg = new RegExp('^[a-zA-Z0-9]{30,50}$');
-    return akReg.test(inputs.accessKey) && skReg.test(inputs.secretKey);
+    return akReg.test(inputs.access_key) && skReg.test(inputs.secret_key);
 }
 
 // 检查region是否合法
@@ -46,13 +54,55 @@ export function checkRegion(region: string): boolean {
     return regionArray.includes(region);
 }
 
-// 检查includeSelfFolder是否合法
+// 检查operation_type参数是否合法
+export function checkOperationType(operation_type: string): boolean {
+    return operation_type.toLowerCase() === 'upload' || operation_type.toLowerCase() === 'download';
+}
+
+// 检查上传时的input_file_path和obs_file_path是否合法
+export function checkUploadFilePath(inputs: Inputs): boolean {
+    if (inputs.local_file_path.length === 0) {
+        core.info('please input localFilePath.');
+        return false;
+    } 
+    for (const path of inputs.local_file_path) {
+        if (path === '') {
+            core.info('you should not input a empty string as local_file_path.');
+            return false;
+        }
+        if (!fs.existsSync(path)) {
+            core.info(`local file or dirctory: '${path}' not exist, please check your input path.`);
+            return false;
+        }
+    }
+    return true;
+}
+
+// 检查下载时的input_file_path和obs_file_path是否合法
+export function checkDownloadFilePath(inputs: Inputs): boolean {
+    if (inputs.local_file_path.length !== 1) {
+        core.info('you should input one local_file_path.');
+        return false;
+    }
+    if (inputs.local_file_path[0] === '') {
+        core.info('you should not input a empty string as local_file_path.');
+        return false;
+    }
+    if (!inputs.obs_file_path) {
+        core.info('you should input one obs_file_path.');
+        return false;
+    }
+    return true;
+}
+
+// 检查includeSelfFolder参数是否合法
 export function checkIncludeSelfFolder(input: string): boolean {
-    return ['y', 'Y', 'n', 'N'].indexOf(input.toLowerCase()) > -1;
+    return includeSelfFolderArray.includeItem.indexOf(input.toLowerCase()) > -1 
+        || includeSelfFolderArray.excludeItem.indexOf(input.toLowerCase()) > -1;
 }
 
 // 检查输入的各参数是否正常
- export function checkInputs(inputs: Inputs): boolean {
+export function checkInputs(inputs: Inputs): boolean {
     if (!checkAkSk(inputs)) {
         core.info('ak or sk is not correct.');
         return false;
@@ -61,9 +111,19 @@ export function checkIncludeSelfFolder(input: string): boolean {
         core.info('region is not correct.');
         return false;
     }
-    if (inputs?.includeSelfFolder) {
-        if (!checkIncludeSelfFolder(inputs.includeSelfFolder)) {
-            core.info('includeSelfFolder is not legal, you should input y(Y) or n(N).');
+    if (!checkOperationType(inputs.operation_type)) {
+        core.info('operation_type is not correct, you should input "upload" or "download".');
+        return false;
+    }
+    const checkFilePath = inputs.operation_type.toLowerCase() === 'upload'
+                        ? checkUploadFilePath(inputs) 
+                        : checkDownloadFilePath(inputs);
+    if (!checkFilePath) {
+        return false;
+    }
+    if (inputs?.include_self_folder) {
+        if (!checkIncludeSelfFolder(inputs.include_self_folder)) {
+            core.info('include_self_folder is not legal, you should input y(Y)/n(N)/yes(YES)/no(NO)/true(TRUE)/false(FALSE).');
             return false;
         }
     }
@@ -94,7 +154,7 @@ export function getPathWithoutRootPath(rootPath: string, path: string): string {
             return path;
         }
     } catch (error) {
-        core.info('rootPath not start with path');
+        core.info('rootPath not start with path.');
         return path;
     }
 }
@@ -126,5 +186,5 @@ export function getStringDelLastSlash(str: string): string {
 
 // 检查文件是否超过5GB
 export function isFileOverSize(filepath: string): boolean {
-    return fs.lstatSync(filepath).size > 5 * 1024 * 1024 * 1024;
+    return fs.lstatSync(filepath).size > FILE_MAX_SIZE;
 }

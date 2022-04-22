@@ -1,78 +1,94 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import * as core from '@actions/core'
 import * as utils from './utils';
+import * as core from '@actions/core';
 import { Inputs, UploadFileList } from './interface';
 
-// obsClient为引入的OBS库的OBS客户端类型，本身并未导出其类型，故使用any，下同
-// 判断是上传文件，还是上传文件夹
-export async function startUpload(obsClient: any, inputs: Inputs): Promise<void> {
+/**
+ * 上传文件/文件夹
+ * @param obsClient  Obs客户端，因obsClient为引入的obs库的类型，本身并未导出其类型，故使用any，下同
+ * @param inputs 用户输入的参数
+ */
+export async function uploadFileOrFolder(obsClient: any, inputs: Inputs): Promise<void> {
     
-    if (inputs.localFilePath.length === 0) {
-        core.info('please input localFilePath');
-        return;
-    }
-    for (const localFilePathItem of inputs.localFilePath) {
-        const localFilePath = utils.getStringDelLastSlash(localFilePathItem);  // 文件或者文件夹
+    for (const path of inputs.local_file_path) {
+        const localFilePath = utils.getStringDelLastSlash(path);  // 文件或者文件夹
         const localRoot = utils.getLastItemWithSlash(utils.getStringDelLastSlash(localFilePath));
         try {
             const fsStat = fs.lstatSync(localFilePath);
-            // 上传文件
             if (fsStat.isFile()) {
                 let obsFilePath = '';
-                if (inputs.obsFilePath) {
-                    obsFilePath = utils.isEndWithSlash(inputs.obsFilePath) 
-                                        ? (inputs.obsFilePath + localRoot) 
-                                        : inputs.obsFilePath;
+                if (inputs.obs_file_path) {
+                    obsFilePath = utils.isEndWithSlash(inputs.obs_file_path) 
+                                        ? (inputs.obs_file_path + localRoot) 
+                                        : inputs.obs_file_path;
                 }
                 
-                // 若是多个path上传，文件不存在重命名的情况，如果输入的obs目录不是文件夹(以'/'结尾)，手动添加文件名
-                if (inputs.localFilePath.length > 1 && !utils.isEndWithSlash(inputs.obsFilePath)) {
+                // 若是多个path上传中的文件，需要手动添加文件名
+                if (inputs.local_file_path.length > 1 && !utils.isEndWithSlash(inputs.obs_file_path)) {
                     obsFilePath += `/${localRoot}`;
                 }
-                await uploadFile(obsClient, inputs.bucketName, localFilePath, obsFilePath);
+                await uploadFile(obsClient, inputs.bucket_name, localFilePath, obsFilePath);
             }
 
-            // 处理文件夹
             if (fsStat.isDirectory()) {
-                const localFileRootPath = inputs.includeSelfFolder 
-                                            ? getObsRootFile(inputs.includeSelfFolder, inputs.obsFilePath, localRoot)
-                                            : getObsRootFile('', inputs.obsFilePath, localRoot);
-                // 获取待上传列表
+                const localFileRootPath = inputs.include_self_folder 
+                                            ? getObsRootFile(inputs.include_self_folder, inputs.obs_file_path, localRoot)
+                                            : getObsRootFile('', inputs.obs_file_path, localRoot);
                 const uploadList = {
                     file: [],
                     folder: []
                 };
                 await fileDisplay(obsClient, inputs, localFilePath, localFileRootPath, uploadList);
 
+                // 若总文件数大于1000，取消上传
                 const uploadListLength = uploadList.file.length + uploadList.folder.length;
                 if (uploadListLength <= 1000) {
-                    if (inputs.obsFilePath) {
-                        await obsCreateRootFolder(obsClient, inputs.bucketName, utils.getStringDelLastSlash(inputs.obsFilePath));
+                    if (inputs.obs_file_path) {
+                        await obsCreateRootFolder(obsClient, inputs.bucket_name, utils.getStringDelLastSlash(inputs.obs_file_path));
                     }
-                    await uploadFileAndFolder(obsClient, inputs.bucketName, uploadList);
+                    await uploadFileAndFolder(obsClient, inputs.bucket_name, uploadList);
                 } else {
-                    core.info(`local dirctory: '${localFilePathItem}' has ${uploadListLength} files and folders.`);
-                    core.info(`please upload a dirctory include less than 1000 files and folders.`);
+                    core.setFailed(`local dirctory: '${path}' has ${uploadListLength} files and folders,`);
+                    core.setFailed(`please upload a dirctory include less than 1000 files and folders.`);
                 }
             }
         } catch (error) {
-            core.info(`local file or dirctory: '${localFilePathItem}' not exist, please check your input path`);
+            core.setFailed(`read local file or dirctory: '${path}' failed.`);
         }
     }
 }
 
-// 循环读取文件夹, 统计待上传文件/文件夹
+/**
+ * 得到待上传对象在obs的根路径
+ * @param includeSelf 是否包含文件夹自身
+ * @param obsfile 用户输入的obs_file_path
+ * @param objectName 对象在本地的名称
+ * @returns 
+ */
+export function getObsRootFile(includeSelf: string, obsfile: string, objectName: string): string {
+    if (utils.includeSelfFolderArray.includeItem.indexOf(includeSelf.toLowerCase())> -1) {
+        const obsFinalFilePath = obsfile ? utils.getStringDelLastSlash(obsfile) + '/' + objectName : objectName;
+        return obsFinalFilePath;
+    } else {
+        return utils.getStringDelLastSlash(obsfile);
+    }
+}
+
+/**
+ * 读取文件夹, 统计待上传文件/文件夹路径
+ * @param obsClient Obs客户端
+ * @param inputs 用户输入的参数
+ * @param localFilePath 本地路径
+ * @param obsFileRootPath 要上传到obs的根路径
+ * @param uploadList 待上传文件列表
+ */
 export async function fileDisplay(obsClient: any, inputs: Inputs, localFilePath: string, obsFileRootPath: string, uploadList: UploadFileList): Promise<void> {
-    // 根据文件路径读取文件，返回一个文件列表
     const fslist = fs.readdirSync(localFilePath);
     if (fslist.length > 0) {
-        // 遍历读取到的文件列表
         for (const filename of fslist) {
-            // path.join得到当前文件的绝对路径
+            // 得到当前文件的绝对路径
             const filepath = path.join(localFilePath, filename);
-
-            // 根据文件路径获取文件信息
             const info = fs.statSync(filepath);
             const obsFilePath = obsFileRootPath ? `${obsFileRootPath}/${filename}` : `${obsFileRootPath}${filename}`;
 
@@ -82,30 +98,26 @@ export async function fileDisplay(obsClient: any, inputs: Inputs, localFilePath:
                     obs: obsFilePath
                 });
             }
+
             if (info.isDirectory()) {
                 uploadList.folder.push(obsFilePath);
-                await fileDisplay(obsClient, inputs, filepath, obsFilePath, uploadList); // 递归, 继续遍历该文件夹里面的文件
+                await fileDisplay(obsClient, inputs, filepath, obsFilePath, uploadList);
             }
         }
     } else {
-        // 是个空文件夹
+        // 是空文件夹
         if (uploadList.folder.indexOf(utils.getStringDelLastSlash(obsFileRootPath)) === -1) {
             uploadList.folder.push(utils.getStringDelLastSlash(obsFileRootPath));
         }
     }
 }
 
-// 根据includeSelf，返回待上传对象在obs的根路径
-export function getObsRootFile(includeSelf: string, obsfile: string, localRoot: string): string {
-    if (includeSelf.toLowerCase() === 'y') {
-        const obsFinalFilePath = obsfile ? utils.getStringDelLastSlash(obsfile) + '/' + localRoot : localRoot;
-        return obsFinalFilePath;
-    } else {
-        return utils.getStringDelLastSlash(obsfile);
-    }
-}
-
-// 上传文件和文件夹
+/**
+ * 上传文件和文件夹
+ * @param obsClient Obs客户端
+ * @param bucketName 桶名
+ * @param uploadList 待上传对象列表
+ */
 async function uploadFileAndFolder(obsClient: any, bucketName: string, uploadList: UploadFileList): Promise<void> {
     for (const folder of uploadList.folder) {
         await uploadFolder(obsClient, bucketName, folder);
@@ -115,7 +127,14 @@ async function uploadFileAndFolder(obsClient: any, bucketName: string, uploadLis
     }
 }
 
-// 上传文件
+/**
+ * 上传文件
+ * @param obsClient Obs客户端
+ * @param bucketName 桶名
+ * @param localFilePath 对象在本地的路径
+ * @param obsFilePath 对象要上传到obs的路径
+ * @returns 
+ */
 export async function uploadFile(obsClient: any, bucketName: string, localFilePath: string, obsFilePath: string): Promise<void> {
     if (utils.isFileOverSize(localFilePath)) {
         core.info(`your local file '${localFilePath}' cannot be uploaded because it is larger than 5 GB`);
@@ -129,7 +148,14 @@ export async function uploadFile(obsClient: any, bucketName: string, localFilePa
     });
 }
 
-// 上传文件夹, 因obs无实际文件夹概念, 不需要本地路径, 只需目标路径即可
+/**
+ * 上传文件夹
+ * 因obs无实际文件夹概念, 不需要本地路径, 只需目标路径即可
+ * @param obsClient Obs客户端
+ * @param bucketName 桶名
+ * @param obsFilePath 对象要上传到obs的路径
+ * @returns 
+ */
 export async function uploadFolder(obsClient: any, bucketName: string, obsFilePath: string): Promise<void> {
     core.info(`create folder ${obsFilePath}/`);
     await obsClient.putObject({
@@ -138,7 +164,14 @@ export async function uploadFolder(obsClient: any, bucketName: string, obsFilePa
     });
 }
 
-// 在obs创建空文件夹
+/**
+ * 在obs创建空文件夹
+ * 上传时若指定一个obs上非已存在的路径, 则需要在obs上逐级建立文件夹
+ * @param obsClient Obs客户端
+ * @param bucketName 桶名
+ * @param obsFilePath 对象要上传到obs的路径
+ * @returns 
+ */
 export async function obsCreateRootFolder(obsClient: any, bucketName: string, obsFile: string): Promise<void> {
     const obsPathList = obsFile.split('/');
     let obsPath = '';

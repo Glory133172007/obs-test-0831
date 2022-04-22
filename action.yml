@@ -1,33 +1,35 @@
 # action.yml
-name: 'Huawei OBS Helper'
+name: 'HuaweiCloud OBS Helper'
 description: 'Upload/Download files or folders to Huawei OBS'
 inputs:
-  accessKey:
+  access_key:
     description: "Access key id"
     required: true
-  secretKey:
+  secret_key:
     description: "Secret access key"
     required: true
   region:
     description: 'Region'
     required: false
     default: 'cn-north-4'
-  bucketName:
+  bucket_name:
     description: "The name of the bucket you want to upload or download"
     required: true
-  operationType:
+  operation_type:
     description: upload or download
     required: true
-  localFilePath:
+  local_file_path:
     description: "Local file/folder path"
-    required: ture
-  obsFilePath:
+    required: true
+  obs_file_path:
     description: "The file/folder path of obs bucket"
     required: true  
-  includeSelfFolder:
+  include_self_folder:
     description: "Include root folder when upload or download"
+    required: false
   exclude:
     description: "Exclude file or folder when download a folder"
+    required: false
 branding:
   icon: 'cloud'
   color: 'red'

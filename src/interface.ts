@@ -1,15 +1,17 @@
 import stream from 'stream';
 
 export interface Inputs {
-    accessKey: string, // ak
-    secretKey: string, // sk
-    bucketName: string, // 桶名
-    operationType: string, // 'upload' || 'download'
-    region: string, // 节点
-    localFilePath: string[],  // 本地文件路径
-    obsFilePath: string, // 桶内路径, 为空时即从根目录起
-    includeSelfFolder?: string, // 上传时是否包含根文件夹
-    exclude?: string[] // 要排除的目录/文件
+    access_key: string, 
+    secret_key: string, 
+    bucket_name: string,
+    operation_type: string,
+    region: string, 
+    local_file_path: string[], 
+    obs_file_path: string,
+    // 是否包含文件夹自身
+    include_self_folder?: string, 
+    // 下载时要排除的文件夹/文件
+    exclude?: string[] 
 }
 
 export interface CommonResult {
@@ -111,7 +113,8 @@ export interface GetObjectInterfaceResult {
     SseCKeyMd5: string,
     Expiration: string,
     Content: string | stream.Readable,
-    Metadata: any // 官网描述类型为Object, 描述为'对象自定义元数据'
+    // Metadata参数官网描述类型为Object, 描述为'对象自定义元数据',未明确说明包含数据类型
+    Metadata: any 
 }
 
 export interface UploadFileList {

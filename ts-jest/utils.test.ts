@@ -102,24 +102,24 @@ test('test get last item with slash from Path', () => {
  // 检查ak/sk是否合法
  test('test file is oversized', () => {
    const input1 = {
-      accessKey: '******',
-      secretKey: '******',
-      bucketName: 'hdn-hcloudtoolkit-devkitgithubaction-obs',
-      operationType: 'upload',
-      obsFilePath: 'uploadtest1/',
-      localFilePath: ['resource/bigFile.zip'],
+      access_key: '******',
+      secret_key: '******',
+      bucket_name: '******',
+      operation_type: 'upload',
+      obs_file_path: 'uploadtest1/',
+      local_file_path: ['resource/bigFile.zip'],
       region: 'cn-north-6',
    }
    const legal1 = utils.checkAkSk(input1);
    expect(legal1).toBeTruthy();
 
    const input2 = {
-      accessKey: 'KQC3',
-      secretKey: '******11111222222233333444444',
-      bucketName: 'hdn-hcloudtoolkit-devkitgithubaction-obs',
-      operationType: 'upload',
-      obsFilePath: 'uploadtest1/',
-      localFilePath: ['resource/bigFile.zip'],
+      access_key: 'KQC3',
+      secret_key: '******11111222222233333444444',
+      bucket_name: '******',
+      operation_type: 'upload',
+      obs_file_path: 'uploadtest1/',
+      local_file_path: ['resource/bigFile.zip'],
       region: 'cn-north-6',
    }
    const legal2 = utils.checkAkSk(input2);
@@ -135,8 +135,118 @@ test('test get last item with slash from Path', () => {
    expect(legal2).toBeTruthy();
 
    const legal3 = utils.checkIncludeSelfFolder('yes');
-   expect(legal3).toBeFalsy();
+   expect(legal3).toBeTruthy();
 
-   const legal4 = utils.checkIncludeSelfFolder('false');
-   expect(legal4).toBeFalsy();
+   const legal4 = utils.checkIncludeSelfFolder('FALSE');
+   expect(legal4).toBeTruthy();
+
+   const legal5 = utils.checkIncludeSelfFolder('not');
+   expect(legal5).toBeFalsy();
+
+   const legal6 = utils.checkIncludeSelfFolder('ok');
+   expect(legal6).toBeFalsy();
+});
+
+test('check operation_type', () => {
+  expect(utils.checkOperationType('upload')).toBeTruthy();
+  expect(utils.checkOperationType('DownLoad')).toBeTruthy();
+  expect(utils.checkOperationType('xiazai')).toBeFalsy();
+  expect(utils.checkOperationType('上传')).toBeFalsy();
+});
+
+test('check local_file_path and obs_file_path when upload', () => {
+   const input1 = {
+      access_key: '******',
+      secret_key: '******',
+      bucket_name: '******',
+      operation_type: 'upload',
+      obs_file_path: 'uploadtest1',
+      local_file_path: ['resource/bigFile.zip'],
+      region: 'cn-north-6',
+   };
+   expect(utils.checkUploadFilePath(input1)).toBeTruthy();
+   const input2 = {
+      access_key: '******',
+      secret_key: '******',
+      bucket_name: '******',
+      operation_type: 'upload',
+      obs_file_path: 'uploadtest1',
+      local_file_path: ['resource/bigFile.zip', 'resource/a.txt'],
+      region: 'cn-north-6',
+   };
+   expect(utils.checkUploadFilePath(input2)).toBeFalsy();
+   const input3 = {
+      access_key: '******',
+      secret_key: '******',
+      bucket_name: '******',
+      operation_type: 'upload',
+      obs_file_path: 'uploadtest1',
+      local_file_path: [],
+      region: 'cn-north-6',
+   };
+   expect(utils.checkUploadFilePath(input3)).toBeFalsy();
+   const input4 = {
+      access_key: '******',
+      secret_key: '******',
+      bucket_name: '******',
+      operation_type: 'upload',
+      obs_file_path: 'uploadtest1',
+      local_file_path: [''],
+      region: 'cn-north-6',
+   };
+   expect(utils.checkUploadFilePath(input4)).toBeFalsy();
+});
+
+
+test('check local_file_path and obs_file_path when download', () => {
+   const input1 = {
+      access_key: '******',
+      secret_key: '******',
+      bucket_name: '******',
+      operation_type: 'download',
+      obs_file_path: 'uploadtest1',
+      local_file_path: ['resource/bigFile.zip'],
+      region: 'cn-north-6',
+   };
+   expect(utils.checkDownloadFilePath(input1)).toBeTruthy();
+   const input2 = {
+      access_key: '******',
+      secret_key: '******',
+      bucket_name: '******',
+      operation_type: 'download',
+      obs_file_path: 'uploadtest1',
+      local_file_path: ['resource/bigFile.zip', 'resource/a.txt'],
+      region: 'cn-north-6',
+   };
+   expect(utils.checkDownloadFilePath(input2)).toBeFalsy();
+   const input3 = {
+      access_key: '******',
+      secret_key: '******',
+      bucket_name: '******',
+      operation_type: 'download',
+      obs_file_path: 'uploadtest1',
+      local_file_path: [],
+      region: 'cn-north-6',
+   };
+   expect(utils.checkDownloadFilePath(input3)).toBeFalsy();
+   const input4 = {
+      access_key: '******',
+      secret_key: '******',
+      bucket_name: '******',
+      operation_type: 'download',
+      obs_file_path: 'uploadtest1',
+      local_file_path: [''],
+      region: 'cn-north-6',
+   };
+   expect(utils.checkDownloadFilePath(input4)).toBeFalsy();
+   const input5 = {
+      access_key: '******',
+      secret_key: '******',
+      bucket_name: '******',
+      operation_type: 'download',
+      obs_file_path: '',
+      local_file_path: ['a/b'],
+      region: 'cn-north-6',
+   };
+   expect(utils.checkDownloadFilePath(input5)).toBeFalsy();
 });
