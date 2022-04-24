@@ -14,7 +14,7 @@ export async function downloadFileOrFolder(obsClient: any, inputs: Inputs): Prom
     const downloadPathList = await getDownloadList(obsClient, inputs, inputs.obs_file_path);
 
     if (downloadPathList.length < 1) {
-        core.setFailed('objecton obs  not exist or no object needed downloaded.');
+        core.setFailed('object not exist in obs or no object needed downloaded.');
         return;
     } else if (pathIsSingleFile(downloadPathList, inputs.obs_file_path)) {
         await downloadFile(obsClient, inputs, downloadPathList[0]);

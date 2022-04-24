@@ -32,7 +32,7 @@ async function run() {
     } else if (inputs.operation_type === 'download') {
         await download.downloadFileOrFolder(obs, inputs);
     } else {
-        core.info('operation type error, you should input "upload" or "download"');
+        core.setFailed('operation type error, you should input "upload" or "download"');
     }
 }
 

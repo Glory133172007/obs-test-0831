@@ -13214,19 +13214,26 @@ function uploadFileOrFolder(obsClient, inputs) {
     return __awaiter(this, void 0, void 0, function* () {
         for (const path of inputs.local_file_path) {
             const localFilePath = utils.getStringDelLastSlash(path); // 文件或者文件夹
-            const localRoot = utils.getLastItemWithSlash(utils.getStringDelLastSlash(localFilePath));
+            const localRoot = utils.getLastItemWithSlash(localFilePath);
             try {
                 const fsStat = fs.lstatSync(localFilePath);
                 if (fsStat.isFile()) {
                     let obsFilePath = '';
                     if (inputs.obs_file_path) {
-                        obsFilePath = utils.isEndWithSlash(inputs.obs_file_path)
-                            ? inputs.obs_file_path + localRoot
-                            : inputs.obs_file_path;
+                        if (utils.isEndWithSlash(inputs.obs_file_path)) {
+                            obsFilePath = inputs.obs_file_path + localRoot;
+                        }
+                        else {
+                            // 若是多路径上传时的文件,不存在重命名,默认传至obs_file_path文件夹下
+                            obsFilePath =
+                                inputs.local_file_path.length > 1
+                                    ? `${inputs.obs_file_path}/${localRoot}`
+                                    : inputs.obs_file_path;
+                        }
                     }
-                    // 若是多个path上传中的文件，需要手动添加文件名
-                    if (inputs.local_file_path.length > 1 && !utils.isEndWithSlash(inputs.obs_file_path)) {
-                        obsFilePath += `/${localRoot}`;
+                    else {
+                        // 若obs_file_path为空,上传所有对象至根目录
+                        obsFilePath = localRoot;
                     }
                     yield uploadFile(obsClient, inputs.bucket_name, localFilePath, obsFilePath);
                 }
@@ -13342,7 +13349,7 @@ function uploadFileAndFolder(obsClient, bucketName, uploadList) {
 function uploadFile(obsClient, bucketName, localFilePath, obsFilePath) {
     return __awaiter(this, void 0, void 0, function* () {
         if (utils.isFileOverSize(localFilePath)) {
-            core.info(`your local file '${localFilePath}' cannot be uploaded because it is larger than 5 GB`);
+            core.setFailed(`your local file '${localFilePath}' cannot be uploaded because it is larger than 5 GB`);
             return;
         }
         core.info(`upload file: ${localFilePath} to ${bucketName}/${obsFilePath}`);
@@ -13468,7 +13475,7 @@ function run() {
             yield download.downloadFileOrFolder(obs, inputs);
         }
         else {
-            core.info('operation type error, you should input "upload" or "download"');
+            core.setFailed('operation type error, you should input "upload" or "download"');
         }
     });
 }
@@ -21775,16 +21782,16 @@ exports.checkOperationType = checkOperationType;
 // 检查上传时的input_file_path和obs_file_path是否合法
 function checkUploadFilePath(inputs) {
     if (inputs.local_file_path.length === 0) {
-        core.info('please input localFilePath.');
+        core.setFailed('please input localFilePath.');
         return false;
     }
     for (const path of inputs.local_file_path) {
         if (path === '') {
-            core.info('you should not input a empty string as local_file_path.');
+            core.setFailed('you should not input a empty string as local_file_path.');
             return false;
         }
         if (!fs.existsSync(path)) {
-            core.info(`local file or dirctory: '${path}' not exist, please check your input path.`);
+            core.setFailed(`local file or dirctory: '${path}' not exist, please check your input path.`);
             return false;
         }
     }
@@ -21794,15 +21801,15 @@ exports.checkUploadFilePath = checkUploadFilePath;
 // 检查下载时的input_file_path和obs_file_path是否合法
 function checkDownloadFilePath(inputs) {
     if (inputs.local_file_path.length !== 1) {
-        core.info('you should input one local_file_path.');
+        core.setFailed('you should input one local_file_path.');
         return false;
     }
     if (inputs.local_file_path[0] === '') {
-        core.info('you should not input a empty string as local_file_path.');
+        core.setFailed('you should not input a empty string as local_file_path.');
         return false;
     }
     if (!inputs.obs_file_path) {
-        core.info('you should input one obs_file_path.');
+        core.setFailed('you should input one obs_file_path.');
         return false;
     }
     return true;
@@ -21817,15 +21824,15 @@ exports.checkIncludeSelfFolder = checkIncludeSelfFolder;
 // 检查输入的各参数是否正常
 function checkInputs(inputs) {
     if (!checkAkSk(inputs)) {
-        core.info('ak or sk is not correct.');
+        core.setFailed('ak or sk is not correct.');
         return false;
     }
     if (!checkRegion(inputs.region)) {
-        core.info('region is not correct.');
+        core.setFailed('region is not correct.');
         return false;
     }
     if (!checkOperationType(inputs.operation_type)) {
-        core.info('operation_type is not correct, you should input "upload" or "download".');
+        core.setFailed('operation_type is not correct, you should input "upload" or "download".');
         return false;
     }
     const checkFilePath = inputs.operation_type.toLowerCase() === 'upload' ? checkUploadFilePath(inputs) : checkDownloadFilePath(inputs);
@@ -21834,7 +21841,7 @@ function checkInputs(inputs) {
     }
     if (inputs === null || inputs === void 0 ? void 0 : inputs.include_self_folder) {
         if (!checkIncludeSelfFolder(inputs.include_self_folder)) {
-            core.info('include_self_folder is not legal, you should input y(Y)/n(N)/yes(YES)/no(NO)/true(TRUE)/false(FALSE).');
+            core.setFailed('include_self_folder is not legal, you should input y(Y)/n(N)/yes(YES)/no(NO)/true(TRUE)/false(FALSE).');
             return false;
         }
     }
@@ -21852,7 +21859,7 @@ function getLastItemWithSlash(path) {
         return path;
     }
     const pathArray = path.split('/');
-    return pathArray[path.split('/').length - 1];
+    return pathArray[pathArray.length - 1];
 }
 exports.getLastItemWithSlash = getLastItemWithSlash;
 // 获得以rootPath开头， 并删除rootPath的path
@@ -28878,7 +28885,7 @@ function downloadFileOrFolder(obsClient, inputs) {
         const inputLocalFilePath = inputs.local_file_path[0];
         const downloadPathList = yield getDownloadList(obsClient, inputs, inputs.obs_file_path);
         if (downloadPathList.length < 1) {
-            core.setFailed('objecton obs  not exist or no object needed downloaded.');
+            core.setFailed('object not exist in obs or no object needed downloaded.');
             return;
         }
         else if (pathIsSingleFile(downloadPathList, inputs.obs_file_path)) {

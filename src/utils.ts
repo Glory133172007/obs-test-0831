@@ -61,16 +61,16 @@ export function checkOperationType(operation_type: string): boolean {
 // 检查上传时的input_file_path和obs_file_path是否合法
 export function checkUploadFilePath(inputs: Inputs): boolean {
     if (inputs.local_file_path.length === 0) {
-        core.info('please input localFilePath.');
+        core.setFailed('please input localFilePath.');
         return false;
     }
     for (const path of inputs.local_file_path) {
         if (path === '') {
-            core.info('you should not input a empty string as local_file_path.');
+            core.setFailed('you should not input a empty string as local_file_path.');
             return false;
         }
         if (!fs.existsSync(path)) {
-            core.info(`local file or dirctory: '${path}' not exist, please check your input path.`);
+            core.setFailed(`local file or dirctory: '${path}' not exist, please check your input path.`);
             return false;
         }
     }
@@ -80,15 +80,15 @@ export function checkUploadFilePath(inputs: Inputs): boolean {
 // 检查下载时的input_file_path和obs_file_path是否合法
 export function checkDownloadFilePath(inputs: Inputs): boolean {
     if (inputs.local_file_path.length !== 1) {
-        core.info('you should input one local_file_path.');
+        core.setFailed('you should input one local_file_path.');
         return false;
     }
     if (inputs.local_file_path[0] === '') {
-        core.info('you should not input a empty string as local_file_path.');
+        core.setFailed('you should not input a empty string as local_file_path.');
         return false;
     }
     if (!inputs.obs_file_path) {
-        core.info('you should input one obs_file_path.');
+        core.setFailed('you should input one obs_file_path.');
         return false;
     }
     return true;
@@ -105,15 +105,15 @@ export function checkIncludeSelfFolder(input: string): boolean {
 // 检查输入的各参数是否正常
 export function checkInputs(inputs: Inputs): boolean {
     if (!checkAkSk(inputs)) {
-        core.info('ak or sk is not correct.');
+        core.setFailed('ak or sk is not correct.');
         return false;
     }
     if (!checkRegion(inputs.region)) {
-        core.info('region is not correct.');
+        core.setFailed('region is not correct.');
         return false;
     }
     if (!checkOperationType(inputs.operation_type)) {
-        core.info('operation_type is not correct, you should input "upload" or "download".');
+        core.setFailed('operation_type is not correct, you should input "upload" or "download".');
         return false;
     }
     const checkFilePath =
@@ -123,7 +123,7 @@ export function checkInputs(inputs: Inputs): boolean {
     }
     if (inputs?.include_self_folder) {
         if (!checkIncludeSelfFolder(inputs.include_self_folder)) {
-            core.info(
+            core.setFailed(
                 'include_self_folder is not legal, you should input y(Y)/n(N)/yes(YES)/no(NO)/true(TRUE)/false(FALSE).'
             );
             return false;
@@ -143,7 +143,7 @@ export function getLastItemWithSlash(path: string): string {
         return path;
     }
     const pathArray = path.split('/');
-    return pathArray[path.split('/').length - 1];
+    return pathArray[pathArray.length - 1];
 }
 
 // 获得以rootPath开头， 并删除rootPath的path

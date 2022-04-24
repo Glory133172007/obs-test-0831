@@ -12,21 +12,26 @@ import { Inputs, UploadFileList } from './interface';
 export async function uploadFileOrFolder(obsClient: any, inputs: Inputs): Promise<void> {
     for (const path of inputs.local_file_path) {
         const localFilePath = utils.getStringDelLastSlash(path); // 文件或者文件夹
-        const localRoot = utils.getLastItemWithSlash(utils.getStringDelLastSlash(localFilePath));
+        const localRoot = utils.getLastItemWithSlash(localFilePath);
         try {
             const fsStat = fs.lstatSync(localFilePath);
             if (fsStat.isFile()) {
                 let obsFilePath = '';
                 if (inputs.obs_file_path) {
-                    obsFilePath = utils.isEndWithSlash(inputs.obs_file_path)
-                        ? inputs.obs_file_path + localRoot
-                        : inputs.obs_file_path;
+                    if (utils.isEndWithSlash(inputs.obs_file_path)) {
+                        obsFilePath = inputs.obs_file_path + localRoot;
+                    } else {
+                        // 若是多路径上传时的文件,不存在重命名,默认传至obs_file_path文件夹下
+                        obsFilePath =
+                            inputs.local_file_path.length > 1
+                                ? `${inputs.obs_file_path}/${localRoot}`
+                                : inputs.obs_file_path;
+                    }
+                } else {
+                    // 若obs_file_path为空,上传所有对象至根目录
+                    obsFilePath = localRoot;
                 }
 
-                // 若是多个path上传中的文件，需要手动添加文件名
-                if (inputs.local_file_path.length > 1 && !utils.isEndWithSlash(inputs.obs_file_path)) {
-                    obsFilePath += `/${localRoot}`;
-                }
                 await uploadFile(obsClient, inputs.bucket_name, localFilePath, obsFilePath);
             }
 
@@ -151,7 +156,7 @@ export async function uploadFile(
     obsFilePath: string
 ): Promise<void> {
     if (utils.isFileOverSize(localFilePath)) {
-        core.info(`your local file '${localFilePath}' cannot be uploaded because it is larger than 5 GB`);
+        core.setFailed(`your local file '${localFilePath}' cannot be uploaded because it is larger than 5 GB`);
         return;
     }
     core.info(`upload file: ${localFilePath} to ${bucketName}/${obsFilePath}`);
