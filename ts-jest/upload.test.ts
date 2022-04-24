@@ -60,7 +60,7 @@ test('upload a nonexist file to obs root', async () => {
     const obs = getObsClient(inputs);
     await upload.uploadFileOrFolder(obs, inputs);
     const objList = await bucket.listObjects(obs, inputs.bucket_name);
-    expect(objList.indexOf('file1.txt')).toEqual(-1);
+    expect(objList.indexOf('file2.txt')).toEqual(-1);
 });
 
 test('upload a big file to obs', async () => {

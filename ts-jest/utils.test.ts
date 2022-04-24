@@ -1,7 +1,6 @@
 import * as fs from 'fs';
 import * as utils from '../src/utils';
 import { expect, test } from '@jest/globals';
-import { Inputs } from '../src/interface';
 
 test('test is region legal', () => {
     const result1 = utils.checkRegion('cn-north-4');
@@ -249,4 +248,14 @@ test('check local_file_path and obs_file_path when download', () => {
       region: 'cn-north-6',
    };
    expect(utils.checkDownloadFilePath(input5)).toBeFalsy();
+});
+
+test('isExistSameNameFile', () => {
+   expect(utils.isExistSameNameFile('D:/project/obs-helper/resource/uploadDir/file1.txt')).toBeTruthy();
+   expect(utils.isExistSameNameFile('D:/project/obs-helper/resource/uploadDir/file2.txt')).toBeFalsy();
+});
+
+test('isExistSameNameFolder', () => {
+   expect(utils.isExistSameNameFolder('D:/project/obs-helper/resource/uploadDir/test1')).toBeTruthy();
+   expect(utils.isExistSameNameFolder('D:/project/obs-helper/resource/uploadDir/test2')).toBeFalsy();
 });

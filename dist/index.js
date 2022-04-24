@@ -21723,7 +21723,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.isFileOverSize = exports.getStringDelLastSlash = exports.isEndWithSlash = exports.createFolder = exports.getPathWithoutRootPath = exports.getLastItemWithSlash = exports.replaceSlash = exports.checkInputs = exports.checkIncludeSelfFolder = exports.checkDownloadFilePath = exports.checkUploadFilePath = exports.checkOperationType = exports.checkRegion = exports.checkAkSk = exports.includeSelfFolderArray = void 0;
+exports.isExistSameNameFile = exports.isExistSameNameFolder = exports.isFileOverSize = exports.getStringDelLastSlash = exports.isEndWithSlash = exports.createFolder = exports.getPathWithoutRootPath = exports.getLastItemWithSlash = exports.replaceSlash = exports.checkInputs = exports.checkIncludeSelfFolder = exports.checkDownloadFilePath = exports.checkUploadFilePath = exports.checkOperationType = exports.checkRegion = exports.checkAkSk = exports.includeSelfFolderArray = void 0;
 const fs = __importStar(__webpack_require__(747));
 const core = __importStar(__webpack_require__(470));
 /**
@@ -21910,6 +21910,16 @@ function isFileOverSize(filepath) {
     return fs.lstatSync(filepath).size > FILE_MAX_SIZE;
 }
 exports.isFileOverSize = isFileOverSize;
+// 本地是否存在同名文件夹
+function isExistSameNameFolder(localPath) {
+    return fs.existsSync(localPath) && fs.statSync(localPath).isDirectory();
+}
+exports.isExistSameNameFolder = isExistSameNameFolder;
+// 本地是否存在同名文件
+function isExistSameNameFile(localPath) {
+    return fs.existsSync(getStringDelLastSlash(localPath)) && fs.statSync(getStringDelLastSlash(localPath)).isFile();
+}
+exports.isExistSameNameFile = isExistSameNameFile;
 
 
 /***/ }),
@@ -28924,17 +28934,27 @@ function downloadFilesFromObs(obsClient, inputs, downloadList, localPath) {
     var _a;
     return __awaiter(this, void 0, void 0, function* () {
         const localRoot = createEmptyRootFolders(localPath, inputs.obs_file_path, (_a = inputs.include_self_folder) !== null && _a !== void 0 ? _a : '');
+        // 如果obs对象是文件夹且本地存在同名文件，不进行下载，记录需要跳过下载的文件夹开头
+        let delFolderPath = '';
         for (const path of downloadList) {
-            let finalLocalPath = localRoot + utils.getPathWithoutRootPath(utils.getStringDelLastSlash(inputs.obs_file_path), path);
-            // 如果有和文件同目录同名的文件夹，给文件名加后缀下载
-            if (downloadList.indexOf(`${path}/`) !== -1) {
-                finalLocalPath += new Date().valueOf();
-            }
-            if (utils.isEndWithSlash(finalLocalPath)) {
-                utils.createFolder(finalLocalPath);
-            }
-            else {
-                yield downloadFile(obsClient, inputs, path, finalLocalPath);
+            if (delFolderPath === '' || !path.match(`^${delFolderPath}`)) {
+                let finalLocalPath = localRoot + utils.getPathWithoutRootPath(utils.getStringDelLastSlash(inputs.obs_file_path), path);
+                // 如果下载列表中有和文件同目录同名的文件夹，给文件名加后缀下载
+                if (downloadList.indexOf(`${path}/`) !== -1) {
+                    finalLocalPath += new Date().valueOf();
+                }
+                if (utils.isEndWithSlash(finalLocalPath)) {
+                    if (utils.isExistSameNameFile(finalLocalPath)) {
+                        core.info(`download folder ${finalLocalPath} failed.`);
+                        delFolderPath = path;
+                    }
+                    else {
+                        utils.createFolder(finalLocalPath);
+                    }
+                }
+                else {
+                    yield downloadFile(obsClient, inputs, path, finalLocalPath);
+                }
             }
         }
     });
@@ -28964,9 +28984,20 @@ exports.createEmptyRootFolders = createEmptyRootFolders;
  */
 function downloadFile(obsClient, inputs, obsPath, localPath) {
     return __awaiter(this, void 0, void 0, function* () {
-        const localFileName = localPath
+        let localFileName = localPath
             ? localPath
             : getLocalFileName(utils.getStringDelLastSlash(inputs.local_file_path[0]), obsPath);
+        // 若本地存在同名文件夹，下载到此文件夹中。若此文件夹中还存在同名文件夹，放弃本次下载
+        if (utils.isExistSameNameFolder(localFileName)) {
+            const nextFileName = `${localFileName}/${utils.getLastItemWithSlash(localFileName)}`;
+            if (utils.isExistSameNameFolder(nextFileName)) {
+                core.info(`download file ${localFileName} failed.`);
+                return;
+            }
+            else {
+                localFileName = nextFileName;
+            }
+        }
         core.info(`download ${obsPath} to local: ${localFileName}`);
         yield obsClient.getObject({
             Bucket: inputs.bucket_name,

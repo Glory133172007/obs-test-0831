@@ -190,3 +190,13 @@ export function getStringDelLastSlash(str: string): string {
 export function isFileOverSize(filepath: string): boolean {
     return fs.lstatSync(filepath).size > FILE_MAX_SIZE;
 }
+
+// 本地是否存在同名文件夹
+export function isExistSameNameFolder(localPath: string): boolean {
+    return fs.existsSync(localPath) && fs.statSync(localPath).isDirectory();
+}
+
+// 本地是否存在同名文件
+export function isExistSameNameFile(localPath: string): boolean {
+    return fs.existsSync(getStringDelLastSlash(localPath)) && fs.statSync(getStringDelLastSlash(localPath)).isFile();
+}

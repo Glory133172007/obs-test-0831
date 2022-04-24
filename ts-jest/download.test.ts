@@ -64,6 +64,23 @@ test('download a nonexist file to local', async () => {
     });
 });
 
+test('download a file to local that local has same name folder', async () => {
+    const inputs = {
+        access_key: '******',
+        secret_key: '******',
+        bucket_name: '******',
+        operation_type: 'download',
+        obs_file_path: 'uploadDir/test/yasuobao.txt',
+        local_file_path: ['resource/downloadDir/d5'],
+        region: 'cn-north-6'
+    }
+    const obs = getObsClient(inputs);
+    await download.downloadFileOrFolder(obs, inputs).then(() => {
+        const isExist = fs.existsSync('resource/downloadDir/d5/yasuobao.txt/yasuobao.txt');
+        expect(isExist).toBeTruthy();
+    });
+});
+
 // ------------------------folder-------------------------
 
 test('download a exist folder to local and exclude folder "test-mult" and file "yasuobao.txt"', async () => {
@@ -202,4 +219,20 @@ test('getDownloadList and delUselessPath', async () => {
     expect(res1.indexOf('uploadDir/file2.txt')).toEqual(-1);
     expect(res1.indexOf('uploadDir/test-mult/other1/other1-1.txt')).toEqual(-1);
     expect(res1.indexOf('uploadDir/test-mult/') > -1).toBeTruthy();
+});
+
+test('download a folder to local that local has same name file', async () => {
+    const inputs = {
+        access_key: '******',
+        secret_key: '******',
+        bucket_name: '******',
+        operation_type: 'download',
+        obs_file_path: 'uploadDir/test-mult',
+        local_file_path: ['resource/downloadDir/d6'],
+        include_self_folder: 'y',
+        region: 'cn-north-6',
+    };
+    const obs = getObsClient(inputs);
+    await download.downloadFile(obs, inputs, inputs.obs_file_path, inputs.local_file_path[0]);
+    expect(fs.existsSync('resource/downloadDir/d6/test-mult/other2.txt')).toBeFalsy();
 });
