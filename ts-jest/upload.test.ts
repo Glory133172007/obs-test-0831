@@ -1,7 +1,7 @@
 import { expect, test } from '@jest/globals';
 import * as bucket from '../src/bucket';
 import * as upload from '../src/upload';
-import { Inputs } from '../src/interface';
+import { Inputs } from '../src/types';
 
 const ObsClient = require('esdk-obs-nodejs');
 function getObsClient(inputs: Inputs) {

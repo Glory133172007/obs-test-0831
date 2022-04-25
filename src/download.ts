@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as utils from './utils';
 import * as core from '@actions/core';
-import { Inputs, ObjectItem, ListBucketResult } from './interface';
+import { Inputs, ObjectItem, ListBucketResult } from './types';
 
 /**
  * 下载文件或者文件夹

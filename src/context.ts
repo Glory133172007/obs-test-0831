@@ -1,5 +1,5 @@
 import * as core from '@actions/core';
-import { Inputs } from './interface';
+import { Inputs } from './types';
 
 export function getInputs(): Inputs {
     return {

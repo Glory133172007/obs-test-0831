@@ -113,7 +113,7 @@ export interface GetObjectInterfaceResult {
     SseCKeyMd5: string;
     Expiration: string;
     Content: string | stream.Readable;
-    // Metadata参数官网描述类型为Object, 描述为'对象自定义元数据',未明确说明包含数据类型
+    // 因Metadata参数官网描述类型为Object, 描述为'对象自定义元数据', 未明确说明包含数据类型，故使用any
     Metadata: any;
 }
 

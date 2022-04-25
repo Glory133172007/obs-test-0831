@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as core from '@actions/core';
-import { Inputs } from './interface';
+import { Inputs } from './types';
 
 /**
  * 目前支持obs功能的region列表
@@ -41,24 +41,40 @@ export const includeSelfFolderArray = {
     excludeItem: ['n', 'no', 'false'],
 };
 
-// 检查aksk是否合法
+/**
+ * 检查ak/sk是否合法
+ * @param inputs
+ * @returns
+ */
 export function checkAkSk(inputs: Inputs): boolean {
     const akReg = new RegExp('^[a-zA-Z0-9]{10,30}$');
     const skReg = new RegExp('^[a-zA-Z0-9]{30,50}$');
     return akReg.test(inputs.access_key) && skReg.test(inputs.secret_key);
 }
 
-// 检查region是否合法
+/**
+ * 检查region是否合法
+ * @param region
+ * @returns
+ */
 export function checkRegion(region: string): boolean {
     return regionArray.includes(region);
 }
 
-// 检查operation_type参数是否合法
+/**
+ * 检查operation_type是否合法
+ * @param operation_type
+ * @returns
+ */
 export function checkOperationType(operation_type: string): boolean {
     return operation_type.toLowerCase() === 'upload' || operation_type.toLowerCase() === 'download';
 }
 
-// 检查上传时的input_file_path和obs_file_path是否合法
+/**
+ * 检查上传时的input_file_path和参数obs_file_path是否合法
+ * @param inputs
+ * @returns
+ */
 export function checkUploadFilePath(inputs: Inputs): boolean {
     if (inputs.local_file_path.length === 0) {
         core.setFailed('please input localFilePath.');
@@ -77,7 +93,11 @@ export function checkUploadFilePath(inputs: Inputs): boolean {
     return true;
 }
 
-// 检查下载时的input_file_path和obs_file_path是否合法
+/**
+ * 检查下载时的input_file_path和obs_file_path是否合法
+ * @param inputs
+ * @returns
+ */
 export function checkDownloadFilePath(inputs: Inputs): boolean {
     if (inputs.local_file_path.length !== 1) {
         core.setFailed('you should input one local_file_path.');
@@ -94,7 +114,11 @@ export function checkDownloadFilePath(inputs: Inputs): boolean {
     return true;
 }
 
-// 检查includeSelfFolder参数是否合法
+/**
+ * 检查includeSelfFolder是否合法
+ * @param input
+ * @returns
+ */
 export function checkIncludeSelfFolder(input: string): boolean {
     return (
         includeSelfFolderArray.includeItem.indexOf(input.toLowerCase()) > -1 ||
@@ -102,7 +126,11 @@ export function checkIncludeSelfFolder(input: string): boolean {
     );
 }
 
-// 检查输入的各参数是否正常
+/**
+ * 检查输入的各参数是否合法
+ * @param inputs
+ * @returns
+ */
 export function checkInputs(inputs: Inputs): boolean {
     if (!checkAkSk(inputs)) {
         core.setFailed('ak or sk is not correct.');
@@ -132,12 +160,20 @@ export function checkInputs(inputs: Inputs): boolean {
     return true;
 }
 
-// 替换路径中的'\'为'/'
-export function replaceSlash(dir: string): string {
-    return dir.replace(/\\/g, '/');
+/**
+ * 将传入的路径中的'\'替换为'/'
+ * @param path
+ * @returns
+ */
+export function replaceSlash(path: string): string {
+    return path.replace(/\\/g, '/');
 }
 
-// 从文件路径中获取到最后一个'/'后的名称
+/**
+ * 获得路径中最后一个'/'之后的名称
+ * @param path
+ * @returns
+ */
 export function getLastItemWithSlash(path: string): string {
     if (path.indexOf('/') === -1) {
         return path;
@@ -146,7 +182,13 @@ export function getLastItemWithSlash(path: string): string {
     return pathArray[pathArray.length - 1];
 }
 
-// 获得以rootPath开头， 并删除rootPath的path
+/**
+ * 获得以rootPath开头， 并删除rootPath的path
+ * 用于获得从obs下载对象时，对象应下载在本地的相对路径
+ * @param rootPath
+ * @param path
+ * @returns
+ */
 export function getPathWithoutRootPath(rootPath: string, path: string): string {
     try {
         const aimPath = path.match(`^${rootPath}`);
@@ -161,7 +203,10 @@ export function getPathWithoutRootPath(rootPath: string, path: string): string {
     }
 }
 
-// 创建文件夹
+/**
+ * 创建文件夹
+ * @param path
+ */
 export function createFolder(path: string): void {
     if (!fs.existsSync(path)) {
         core.info('create folder: ' + path);
@@ -169,7 +214,11 @@ export function createFolder(path: string): void {
     }
 }
 
-// 判断路径是否以'/'结尾
+/**
+ * 判断路径是否以'/'结尾
+ * @param path
+ * @returns
+ */
 export function isEndWithSlash(path: string): boolean {
     try {
         return path.slice(-1) === '/';
@@ -178,7 +227,11 @@ export function isEndWithSlash(path: string): boolean {
     }
 }
 
-// 删除字符串末尾的字符'/'
+/**
+ * 删除字符串末尾的字符'/'
+ * @param str
+ * @returns
+ */
 export function getStringDelLastSlash(str: string): string {
     if (str) {
         return isEndWithSlash(str) ? str.substring(0, str.length - 1) : str;
@@ -186,17 +239,30 @@ export function getStringDelLastSlash(str: string): string {
     return str;
 }
 
-// 检查文件是否超过5GB
+/**
+ * 检查文件是否超过5GB
+ * @param filepath
+ * @returns
+ */
 export function isFileOverSize(filepath: string): boolean {
     return fs.lstatSync(filepath).size > FILE_MAX_SIZE;
 }
 
-// 本地是否存在同名文件夹
+/**
+ * 检查本地是否存在同名文件夹
+ * @param localPath
+ * @returns
+ */
 export function isExistSameNameFolder(localPath: string): boolean {
     return fs.existsSync(localPath) && fs.statSync(localPath).isDirectory();
 }
 
-// 本地是否存在同名文件
+/**
+ * 检查本地是否存在同名文件
+ *
+ * @param localPath
+ * @returns
+ */
 export function isExistSameNameFile(localPath: string): boolean {
     return fs.existsSync(getStringDelLastSlash(localPath)) && fs.statSync(getStringDelLastSlash(localPath)).isFile();
 }

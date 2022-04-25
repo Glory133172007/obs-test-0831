@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as utils from './utils';
 import * as core from '@actions/core';
-import { Inputs, UploadFileList } from './interface';
+import { Inputs, UploadFileList } from './types';
 
 /**
  * 上传文件/文件夹
