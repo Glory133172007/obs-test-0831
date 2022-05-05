@@ -18214,15 +18214,15 @@ const core = __importStar(__webpack_require__(470));
 function getInputs() {
     return {
         access_key: core.getInput('access_key', { required: true }),
-        secret_key: core.getInput('secretKey', { required: true }),
-        bucket_name: core.getInput('bucketName', { required: true }),
-        operation_type: core.getInput('operationType', { required: true }),
-        local_file_path: core.getMultilineInput('localFilePath', {
+        secret_key: core.getInput('secret_key', { required: true }),
+        bucket_name: core.getInput('bucket_name', { required: true }),
+        operation_type: core.getInput('operation_type', { required: true }),
+        local_file_path: core.getMultilineInput('local_file_path', {
             required: true,
         }),
-        obs_file_path: core.getInput('obsFilePath', { required: true }),
+        obs_file_path: core.getInput('obs_file_path', { required: true }),
         region: core.getInput('region', { required: true }),
-        include_self_folder: core.getInput('includeSelfFolder', {
+        include_self_folder: core.getInput('include_self_folder', {
             required: false,
         }),
         exclude: core.getMultilineInput('exclude', { required: false }),
@@ -21768,8 +21768,8 @@ exports.includeSelfFolderArray = {
  * @returns
  */
 function checkAkSk(inputs) {
-    const akReg = new RegExp('^[a-zA-Z0-9]{10,30}$');
-    const skReg = new RegExp('^[a-zA-Z0-9]{30,50}$');
+    const akReg = /^[a-zA-Z0-9]{10,30}$/;
+    const skReg = /^[a-zA-Z0-9]{30,50}$/;
     return akReg.test(inputs.access_key) && skReg.test(inputs.secret_key);
 }
 exports.checkAkSk = checkAkSk;

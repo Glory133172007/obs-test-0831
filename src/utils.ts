@@ -47,8 +47,8 @@ export const includeSelfFolderArray = {
  * @returns
  */
 export function checkAkSk(inputs: Inputs): boolean {
-    const akReg = new RegExp('^[a-zA-Z0-9]{10,30}$');
-    const skReg = new RegExp('^[a-zA-Z0-9]{30,50}$');
+    const akReg = /^[a-zA-Z0-9]{10,30}$/;
+    const skReg = /^[a-zA-Z0-9]{30,50}$/;
     return akReg.test(inputs.access_key) && skReg.test(inputs.secret_key);
 }
 
