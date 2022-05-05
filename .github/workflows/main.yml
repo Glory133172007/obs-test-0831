@@ -10,21 +10,21 @@ jobs:
         uses: ./
         id: upload_file_to_obs
         with:
-          accessKey: ${{ secrets.ACCESSKEY }}
-          secretKey: ${{ secrets.SECRETACCESSKEY }}
+          access_key: ${{ secrets.ACCESSKEY }}
+          secret_key: ${{ secrets.SECRETACCESSKEY }}
           region: cn-north-4
-          bucketName: hdn-github-action
-          localFilePath: README.md
-          obsFilePath: 
-          operationType: upload
+          bucket_name: hdn-github-action
+          local_file_path: README.md
+          obs_file_path: 
+          operation_type: upload
       - name: Download from Huawei OBS
         uses: ./
         id: download_file_from_obs
         with:
-          accessKey: ${{ secrets.ACCESSKEY }}
-          secretKey: ${{ secrets.SECRETACCESSKEY }}
+          access_key: ${{ secrets.ACCESSKEY }}
+          secret_key: ${{ secrets.SECRETACCESSKEY }}
           region: cn-north-4
-          bucketName: hdn-github-action
-          localFilePath: ${{ github.workspace }}
-          obsFilePath: test.txt
-          operationType: download
+          bucket_name: hdn-github-action
+          local_file_path: ${{ github.workspace }}
+          obs_file_path: test.txt
+          operation_type: download
