@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Upload To HuaweiCloud OBS
-        uses: huaweicloud/obs-helper@v1.0.0
+        uses: huaweicloud/obs-helper@v1.1.0
         id: upload_file_to_obs
         with:
           access_key: ${{ secrets.ACCESSKEY }}
@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Upload To HuaweiCloud OBS
-        uses: huaweicloud/obs-helper@v1.0.0
+        uses: huaweicloud/obs-helper@v1.1.0
         id: upload_file_to_obs
         with:
           access_key: ${{ secrets.ACCESSKEY }}
@@ -72,15 +72,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Upload To HuaweiCloud OBS
-        uses: huaweicloud/obs-helper@v1.0.0
+        uses: huaweicloud/obs-helper@v1.1.0
         id: upload_file_to_obs
         with:
           access_key: ${{ secrets.ACCESSKEY }}
           secret_key: ${{ secrets.SECRETACCESSKEY }}
           region: region
           bucket_name: 'bucket-test'
-          local_file_path: 'src1/src2/test1.txt'
-                          'src1/src3'
+          local_file_path: |
+                            'src1/src2/test1.txt'
+                            'src1/src3'
           obs_file_path: 'src'
           operation_type: 'upload'
           include_self_folder: 'no'
@@ -113,7 +114,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Upload To HuaweiCloud OBS
-        uses: huaweicloud/obs-helper@v1.0.0
+        uses: huaweicloud/obs-helper@v1.1.0
         id: upload_file_to_obs
         with:
           access_key: ${{ secrets.ACCESSKEY }}
@@ -137,7 +138,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Upload To HuaweiCloud OBS
-        uses: huaweicloud/obs-helper@v1.0.0
+        uses: huaweicloud/obs-helper@v1.1.0
         id: upload_file_to_obs
         with:
           access_key: ${{ secrets.ACCESSKEY }}
@@ -167,7 +168,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Upload To HuaweiCloud OBS
-        uses: huaweicloud/obs-helper@v1.0.0
+        uses: huaweicloud/obs-helper@v1.1.0
         id: upload_file_to_obs
         with:
           access_key: ${{ secrets.ACCESSKEY }}
@@ -178,8 +179,9 @@ jobs:
           obs_file_path: 'src1'
           operation_type: 'download'
           include_self_folder: 'no'
-          exclude: 'src1/src2/test1.txt'
-                  'src1/src3'
+          exclude: |
+                    'src1/src2/test1.txt'
+                    'src1/src3'
 ```
 下载完成后，本地生成的文件为：
 ```text
