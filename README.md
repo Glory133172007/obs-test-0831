@@ -58,11 +58,11 @@ jobs:
 ```text
   src
     └── src1
-        ├── src2
-            └── test1.txt
-            └── test2.txt
-        ├── src3
-            └── test3.txt
+          ├── src2
+                └── test1.txt
+                └── test2.txt
+          ├── src3
+                └── test3.txt
 ```
 
 ### 上传多个文件和文件夹(不包含文件夹自身)
@@ -88,9 +88,8 @@ jobs:
 ```
 成功上传后，桶内生成对象为：
 ```text
-  src
-    └── src2
-          └── test1.txt
+  src 
+    └── test1.txt
     ├── src3
           └── test3.txt
 ```
@@ -155,13 +154,13 @@ jobs:
 src
   └── src1
         ├── src2
-              └── test1.txt
               └── test2.txt
-        ├── src3
               └── test3.txt
+        ├── src3
+              └── test4.txt
 ```
 
-### 下载文件夹(不包含文件夹自身，排除下载桶内src1/sr2/test1.txt和src1/src3目录下的所有文件)
+### 下载文件夹(不包含文件夹自身，排除下载桶内src1/sr2/test3.txt和src1/src3目录下的所有文件)
 ```yaml
 jobs:
   upload_file:
@@ -180,7 +179,7 @@ jobs:
           operation_type: 'download'
           include_self_folder: 'no'
           exclude: |
-                    'src1/src2/test1.txt'
+                    'src1/src2/test3.txt'
                     'src1/src3'
 ```
 下载完成后，本地生成的文件为：
