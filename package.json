@@ -1,0 +1,50 @@
+{
+    "name": "obs-helper",
+    "version": "0.0.1",
+    "private": true,
+    "description": "Upload/Download files or folders to HuaweiCloud OBS.",
+    "main": "lib/main.js",
+    "scripts": {
+        "build": "tsc",
+        "package": "ncc build --source-map",
+        "format": "prettier --write \"src/*.{ts,tsx}\"",
+        "format-check": "prettier --check \"src/*.{ts,tsx}\"",
+        "test": "jest",
+        "lint": "eslint src  --ext .ts",
+        "all": "npm run format && npm run build && npm run package && npm run lint"
+    },
+    "repository": {
+        "type": "",
+        "url": ""
+    },
+    "keywords": [
+        "actions",
+        "obs",
+        "helper"
+    ],
+    "author": "lixinyu",
+    "license": "MIT",
+    "dependencies": {
+        "@actions/core": "^1.6.0",
+        "@vercel/ncc": "^0.31.1",
+        "esdk-obs-nodejs": "^3.21.6",
+        "fs": "0.0.1-security",
+        "path": "^0.12.7",
+        "proxy-agent": "^5.0.0"
+    },
+    "devDependencies": {
+        "@types/jest": "^27.4.1",
+        "@types/mime": "^2.0.3",
+        "@types/node": "^17.0.23",
+        "@typescript-eslint/eslint-plugin": "^5.19.0",
+        "@typescript-eslint/parser": "^5.19.0",
+        "babel-eslint": "^10.1.0",
+        "eslint": "^7.32.0",
+        "eslint-config-bevry": "^3.27.0",
+        "eslint-plugin-mocha": "^9.0.0",
+        "jest": "^27.5.1",
+        "ts-jest": "^27.1.4",
+        "typescript": "^4.6.3",
+        "prettier": "2.6.1"
+    }
+}

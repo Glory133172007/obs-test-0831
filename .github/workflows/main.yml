@@ -15,10 +15,8 @@ jobs:
           region: cn-north-4
           bucket_name: hdn-github-action
           local_file_path: README.md
+          obs_file_path: 
           operation_type: upload
-      - name: List files in the repository
-        run: |
-          ls -al ${{ github.workspace }}
       - name: Download from Huawei OBS
         uses: ./
         id: download_file_from_obs
@@ -30,6 +28,3 @@ jobs:
           local_file_path: ${{ github.workspace }}
           obs_file_path: test.txt
           operation_type: download
-      - name: List files in the repository
-        run: |
-          ls ${{ github.workspace }}
