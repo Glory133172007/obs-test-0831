@@ -12,7 +12,7 @@ export function getInputs(): Inputs {
         }),
         obs_file_path: core.getInput('obs_file_path', { required: true }),
         region: core.getInput('region', { required: true }),
-        include_self_folder: core.getInput('include_self_folder', {
+        include_self_folder: core.getBooleanInput('include_self_folder', {
             required: false,
         }),
         exclude: core.getMultilineInput('exclude', { required: false }),

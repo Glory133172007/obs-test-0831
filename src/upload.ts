@@ -38,7 +38,7 @@ export async function uploadFileOrFolder(obsClient: any, inputs: Inputs): Promis
             if (fsStat.isDirectory()) {
                 const localFileRootPath = inputs.include_self_folder
                     ? getObsRootFile(inputs.include_self_folder, inputs.obs_file_path, localRoot)
-                    : getObsRootFile('', inputs.obs_file_path, localRoot);
+                    : getObsRootFile(false, inputs.obs_file_path, localRoot);
                 const uploadList = {
                     file: [],
                     folder: [],
@@ -74,8 +74,8 @@ export async function uploadFileOrFolder(obsClient: any, inputs: Inputs): Promis
  * @param objectName 对象在本地的名称
  * @returns
  */
-export function getObsRootFile(includeSelf: string, obsfile: string, objectName: string): string {
-    if (utils.includeSelfFolderArray.includeItem.indexOf(includeSelf.toLowerCase()) > -1) {
+export function getObsRootFile(includeSelf: boolean, obsfile: string, objectName: string): string {
+    if (includeSelf) {
         const obsFinalFilePath = obsfile ? utils.getStringDelLastSlash(obsfile) + '/' + objectName : objectName;
         return obsFinalFilePath;
     } else {

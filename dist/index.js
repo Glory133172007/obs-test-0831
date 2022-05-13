@@ -13240,7 +13240,7 @@ function uploadFileOrFolder(obsClient, inputs) {
                 if (fsStat.isDirectory()) {
                     const localFileRootPath = inputs.include_self_folder
                         ? getObsRootFile(inputs.include_self_folder, inputs.obs_file_path, localRoot)
-                        : getObsRootFile('', inputs.obs_file_path, localRoot);
+                        : getObsRootFile(false, inputs.obs_file_path, localRoot);
                     const uploadList = {
                         file: [],
                         folder: [],
@@ -13275,7 +13275,7 @@ exports.uploadFileOrFolder = uploadFileOrFolder;
  * @returns
  */
 function getObsRootFile(includeSelf, obsfile, objectName) {
-    if (utils.includeSelfFolderArray.includeItem.indexOf(includeSelf.toLowerCase()) > -1) {
+    if (includeSelf) {
         const obsFinalFilePath = obsfile ? utils.getStringDelLastSlash(obsfile) + '/' + objectName : objectName;
         return obsFinalFilePath;
     }
@@ -18222,7 +18222,7 @@ function getInputs() {
         }),
         obs_file_path: core.getInput('obs_file_path', { required: true }),
         region: core.getInput('region', { required: true }),
-        include_self_folder: core.getInput('include_self_folder', {
+        include_self_folder: core.getBooleanInput('include_self_folder', {
             required: false,
         }),
         exclude: core.getMultilineInput('exclude', { required: false }),
@@ -21723,9 +21723,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.isExistSameNameFile = exports.isExistSameNameFolder = exports.isFileOverSize = exports.getStringDelLastSlash = exports.isEndWithSlash = exports.createFolder = exports.getPathWithoutRootPath = exports.getLastItemWithSlash = exports.replaceSlash = exports.checkInputs = exports.checkIncludeSelfFolder = exports.checkDownloadFilePath = exports.checkUploadFilePath = exports.checkOperationType = exports.checkRegion = exports.checkAkSk = exports.includeSelfFolderArray = void 0;
-const fs = __importStar(__webpack_require__(747));
+exports.isExistSameNameFile = exports.isExistSameNameFolder = exports.isFileOverSize = exports.getStringDelLastSlash = exports.isEndWithSlash = exports.createFolder = exports.getPathWithoutRootPath = exports.getLastItemWithSlash = exports.replaceSlash = exports.checkInputs = exports.checkDownloadFilePath = exports.checkUploadFilePath = exports.checkOperationType = exports.checkRegion = exports.checkAkSk = void 0;
 const core = __importStar(__webpack_require__(470));
+const fs = __importStar(__webpack_require__(747));
 /**
  * 目前支持obs功能的region列表
  * LA-Santiago	la-south-2
@@ -21758,10 +21758,6 @@ const regionArray = [
     'ap-southeast-1',
 ];
 const FILE_MAX_SIZE = 5 * 1024 * 1024 * 1024;
-exports.includeSelfFolderArray = {
-    includeItem: ['y', 'yes', 'true'],
-    excludeItem: ['n', 'no', 'false'],
-};
 /**
  * 检查ak/sk是否合法
  * @param inputs
@@ -21836,16 +21832,6 @@ function checkDownloadFilePath(inputs) {
 }
 exports.checkDownloadFilePath = checkDownloadFilePath;
 /**
- * 检查includeSelfFolder是否合法
- * @param input
- * @returns
- */
-function checkIncludeSelfFolder(input) {
-    return (exports.includeSelfFolderArray.includeItem.indexOf(input.toLowerCase()) > -1 ||
-        exports.includeSelfFolderArray.excludeItem.indexOf(input.toLowerCase()) > -1);
-}
-exports.checkIncludeSelfFolder = checkIncludeSelfFolder;
-/**
  * 检查输入的各参数是否合法
  * @param inputs
  * @returns
@@ -21866,12 +21852,6 @@ function checkInputs(inputs) {
     const checkFilePath = inputs.operation_type.toLowerCase() === 'upload' ? checkUploadFilePath(inputs) : checkDownloadFilePath(inputs);
     if (!checkFilePath) {
         return false;
-    }
-    if (inputs === null || inputs === void 0 ? void 0 : inputs.include_self_folder) {
-        if (!checkIncludeSelfFolder(inputs.include_self_folder)) {
-            core.setFailed('include_self_folder is not legal, you should input y(Y)/n(N)/yes(YES)/no(NO)/true(TRUE)/false(FALSE).');
-            return false;
-        }
     }
     return true;
 }
@@ -28997,9 +28977,8 @@ exports.pathIsSingleFile = pathIsSingleFile;
  * @param localPath 本地path
  */
 function downloadFilesFromObs(obsClient, inputs, downloadList, localPath) {
-    var _a;
     return __awaiter(this, void 0, void 0, function* () {
-        const localRoot = createEmptyRootFolders(localPath, inputs.obs_file_path, (_a = inputs.include_self_folder) !== null && _a !== void 0 ? _a : '');
+        const localRoot = createEmptyRootFolders(localPath, inputs.obs_file_path, !!inputs.include_self_folder);
         // 如果obs对象是文件夹且本地存在同名文件，不进行下载，记录需要跳过下载的文件夹开头
         let delFolderPath = '';
         for (const path of downloadList) {
@@ -29034,7 +29013,7 @@ function downloadFilesFromObs(obsClient, inputs, downloadList, localPath) {
  */
 function createEmptyRootFolders(localPath, obsPath, includeSelfFolder) {
     let local = utils.getStringDelLastSlash(localPath);
-    if (utils.includeSelfFolderArray.includeItem.indexOf(includeSelfFolder.toLowerCase()) > -1) {
+    if (includeSelfFolder) {
         local += `/${utils.getStringDelLastSlash(obsPath).split('/').pop()}`;
         utils.createFolder(local);
     }

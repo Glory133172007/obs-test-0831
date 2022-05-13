@@ -1,7 +1,7 @@
 import { expect, test } from '@jest/globals';
 import * as fs from 'fs';
 import * as download from '../src/download';
-import { Inputs } from '../src/interface';
+import { Inputs } from '../src/types';
 
 const ObsClient = require('esdk-obs-nodejs');
 function getObsClient(inputs: Inputs) {
@@ -112,7 +112,7 @@ test('download a exist folder to local and include folder itselt', async () => {
         obs_file_path: 'uploadDir/test/',
         local_file_path: ['resource/downloadDir/d2'],
         region: 'cn-north-6',
-        include_self_folder: 'y',
+        include_self_folder: true,
         exclude: ['uploadDir/test-mult', "uploadDir/test/yasuobao.txt"]
     }
     const obs = getObsClient(inputs);
@@ -170,13 +170,13 @@ test('pathIsSingleFile', () => {
 });
 
 test('createEmptyRootFolders', () => {
-    const localpath1 = download.createEmptyRootFolders('resource/downloadDir', 'obs1/obs2', 'y');
+    const localpath1 = download.createEmptyRootFolders('resource/downloadDir', 'obs1/obs2', true);
     expect(localpath1).toEqual('resource/downloadDir/obs2');
-    const localpath2 = download.createEmptyRootFolders('resource/downloadDir', 'obs1/obs2', 'n');
+    const localpath2 = download.createEmptyRootFolders('resource/downloadDir', 'obs1/obs2', false);
     expect(localpath2).toEqual('resource/downloadDir');
-    const localpath3 = download.createEmptyRootFolders('resource/downloadDir', 'obs1/obs2', 'yes');
+    const localpath3 = download.createEmptyRootFolders('resource/downloadDir', 'obs1/obs2', true);
     expect(localpath3).toEqual('resource/downloadDir/obs2');
-    const localpath4 = download.createEmptyRootFolders('resource/downloadDir', 'obs1/obs2', 'not');
+    const localpath4 = download.createEmptyRootFolders('resource/downloadDir', 'obs1/obs2', false);
     expect(localpath4).toEqual('resource/downloadDir');
 });
 
@@ -229,7 +229,7 @@ test('download a folder to local that local has same name file', async () => {
         operation_type: 'download',
         obs_file_path: 'uploadDir/test-mult',
         local_file_path: ['resource/downloadDir/d6'],
-        include_self_folder: 'y',
+        include_self_folder: true,
         region: 'cn-north-6',
     };
     const obs = getObsClient(inputs);

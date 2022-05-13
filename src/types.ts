@@ -9,7 +9,7 @@ export interface Inputs {
     local_file_path: string[];
     obs_file_path: string;
     // 是否包含文件夹自身
-    include_self_folder?: string;
+    include_self_folder?: boolean;
     // 下载时要排除的文件夹/文件
     exclude?: string[];
 }

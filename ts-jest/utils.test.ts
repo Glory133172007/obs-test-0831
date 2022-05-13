@@ -125,27 +125,6 @@ test('test get last item with slash from Path', () => {
    expect(legal2).toBeFalsy();
 });
 
- // 检查includeSelfFolder
- test('test includeSelfFolder is legal', () => {
-   const legal1 = utils.checkIncludeSelfFolder('y');
-   expect(legal1).toBeTruthy();
-
-   const legal2 = utils.checkIncludeSelfFolder('N');
-   expect(legal2).toBeTruthy();
-
-   const legal3 = utils.checkIncludeSelfFolder('yes');
-   expect(legal3).toBeTruthy();
-
-   const legal4 = utils.checkIncludeSelfFolder('FALSE');
-   expect(legal4).toBeTruthy();
-
-   const legal5 = utils.checkIncludeSelfFolder('not');
-   expect(legal5).toBeFalsy();
-
-   const legal6 = utils.checkIncludeSelfFolder('ok');
-   expect(legal6).toBeFalsy();
-});
-
 test('check operation_type', () => {
   expect(utils.checkOperationType('upload')).toBeTruthy();
   expect(utils.checkOperationType('DownLoad')).toBeTruthy();
@@ -251,11 +230,11 @@ test('check local_file_path and obs_file_path when download', () => {
 });
 
 test('isExistSameNameFile', () => {
-   expect(utils.isExistSameNameFile('D:/project/obs-helper/resource/uploadDir/file1.txt')).toBeTruthy();
-   expect(utils.isExistSameNameFile('D:/project/obs-helper/resource/uploadDir/file2.txt')).toBeFalsy();
+   expect(utils.isExistSameNameFile('resource/uploadDir/file1.txt')).toBeTruthy();
+   expect(utils.isExistSameNameFile('resource/uploadDir/file2.txt')).toBeFalsy();
 });
 
 test('isExistSameNameFolder', () => {
-   expect(utils.isExistSameNameFolder('D:/project/obs-helper/resource/uploadDir/test1')).toBeTruthy();
-   expect(utils.isExistSameNameFolder('D:/project/obs-helper/resource/uploadDir/test2')).toBeFalsy();
+   expect(utils.isExistSameNameFolder('resource/uploadDir/test1')).toBeTruthy();
+   expect(utils.isExistSameNameFolder('resource/uploadDir/test2')).toBeFalsy();
 });

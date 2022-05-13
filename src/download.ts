@@ -53,7 +53,7 @@ async function downloadFilesFromObs(
     downloadList: string[],
     localPath: string
 ): Promise<void> {
-    const localRoot = createEmptyRootFolders(localPath, inputs.obs_file_path, inputs.include_self_folder ?? '');
+    const localRoot = createEmptyRootFolders(localPath, inputs.obs_file_path, !!inputs.include_self_folder);
     // 如果obs对象是文件夹且本地存在同名文件，不进行下载，记录需要跳过下载的文件夹开头
     let delFolderPath = '';
     for (const path of downloadList) {
@@ -85,9 +85,9 @@ async function downloadFilesFromObs(
  * @param includeSelfFolder 是否包含文件夹自身
  * @returns
  */
-export function createEmptyRootFolders(localPath: string, obsPath: string, includeSelfFolder: string): string {
+export function createEmptyRootFolders(localPath: string, obsPath: string, includeSelfFolder: boolean): string {
     let local = utils.getStringDelLastSlash(localPath);
-    if (utils.includeSelfFolderArray.includeItem.indexOf(includeSelfFolder.toLowerCase()) > -1) {
+    if (includeSelfFolder) {
         local += `/${utils.getStringDelLastSlash(obsPath).split('/').pop()}`;
         utils.createFolder(local);
     }

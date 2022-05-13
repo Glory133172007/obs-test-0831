@@ -36,11 +36,6 @@ const regionArray = [
 
 const FILE_MAX_SIZE = 5 * 1024 * 1024 * 1024;
 
-export const includeSelfFolderArray = {
-    includeItem: ['y', 'yes', 'true'],
-    excludeItem: ['n', 'no', 'false'],
-};
-
 /**
  * 检查ak/sk是否合法
  * @param inputs
@@ -115,18 +110,6 @@ export function checkDownloadFilePath(inputs: Inputs): boolean {
 }
 
 /**
- * 检查includeSelfFolder是否合法
- * @param input
- * @returns
- */
-export function checkIncludeSelfFolder(input: string): boolean {
-    return (
-        includeSelfFolderArray.includeItem.indexOf(input.toLowerCase()) > -1 ||
-        includeSelfFolderArray.excludeItem.indexOf(input.toLowerCase()) > -1
-    );
-}
-
-/**
  * 检查输入的各参数是否合法
  * @param inputs
  * @returns
@@ -148,14 +131,6 @@ export function checkInputs(inputs: Inputs): boolean {
         inputs.operation_type.toLowerCase() === 'upload' ? checkUploadFilePath(inputs) : checkDownloadFilePath(inputs);
     if (!checkFilePath) {
         return false;
-    }
-    if (inputs?.include_self_folder) {
-        if (!checkIncludeSelfFolder(inputs.include_self_folder)) {
-            core.setFailed(
-                'include_self_folder is not legal, you should input y(Y)/n(N)/yes(YES)/no(NO)/true(TRUE)/false(FALSE).'
-            );
-            return false;
-        }
     }
     return true;
 }

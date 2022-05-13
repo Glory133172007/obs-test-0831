@@ -55,7 +55,7 @@ test('upload a nonexist file to obs root', async () => {
         obs_file_path: '',
         local_file_path: ['resource/uploadDir/file2.txt'],
         region: 'cn-north-6',
-        include_self_folder: 'true'
+        include_self_folder: true
     }
     const obs = getObsClient(inputs);
     await upload.uploadFileOrFolder(obs, inputs);
@@ -90,7 +90,7 @@ test('upload a exist empty folder to obs "obsTest2"', async () => {
         obs_file_path: 'obsTest2',
         local_file_path: ['resource/uploadDir/test1'],
         region: 'cn-north-6',
-        include_self_folder: 'y'
+        include_self_folder: true
     }
     const obs = getObsClient(inputs);
     await upload.uploadFileOrFolder(obs, inputs);
@@ -107,7 +107,7 @@ test('upload a exist folder to obs "obsTest3" and include local folder "uploadDi
         obs_file_path: 'obsTest3',
         local_file_path: ['resource/uploadDir/'],
         region: 'cn-north-6',
-        include_self_folder: 'Y'
+        include_self_folder: true
     }
     const obs = getObsClient(inputs);
     await upload.uploadFileOrFolder(obs, inputs);
@@ -155,7 +155,7 @@ test('upload a exist folder include lots of files to obs "obsTest5" ', async () 
         operation_type: 'upload',
         obs_file_path: 'obsTest5',
         local_file_path: ['D:/project/spring-boot-main'],
-        include_self_folder: 'y',
+        include_self_folder: true,
         region: 'cn-north-6'
     }
     const obs = getObsClient(inputs);
@@ -186,8 +186,8 @@ test('fileDisplay', async () => {
 });
 
 test('getObsRootFile', () => {
-    expect(upload.getObsRootFile('Y', 'obs', 'local')).toEqual('obs/local');
-    expect(upload.getObsRootFile('n', 'obs', 'local')).toEqual('obs');
+    expect(upload.getObsRootFile(true, 'obs', 'local')).toEqual('obs/local');
+    expect(upload.getObsRootFile(false, 'obs', 'local')).toEqual('obs');
 });
 
 test('uploadFile', async () => {
