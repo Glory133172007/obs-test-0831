@@ -161,7 +161,7 @@ test('upload a exist folder include lots of files to obs "obsTest5" ', async () 
     const obs = getObsClient(inputs);
     await upload.uploadFileOrFolder(obs, inputs);
     const objList = await bucket.listObjects(obs, inputs.bucket_name);
-    expect(objList.indexOf('obsTest5/spring-boot-mai/')).toEqual(-1);
+    expect(objList.indexOf('obsTest5/spring-boot-main/')).toEqual(-1);
 });
 
 // ----------------------------------------funciton----------------------------------------
