@@ -1,7 +1,8 @@
 import * as fs from 'fs';
 import * as utils from './utils';
 import * as core from '@actions/core';
-import { Inputs, ObjectItem, ListBucketResult } from './types';
+import * as bucket from './bucket';
+import { Inputs, ObjectItem } from './types';
 
 /**
  * 下载文件或者文件夹
@@ -146,6 +147,7 @@ export function getLocalFileName(localPath: string, obsPath: string): string {
 /**
  * 获取在obs上待下载的对象列表
  * 官方提供的getObject方法最大请求1000个文件，若请求的文件大于1000个则返回对象名按照字典序排序后的前1000个文件
+ * result.InterfaceResult.IsTruncated表明本次请求是否返回了全部结果，“true”表示没有返回全部结果；“false”表示已返回了全部结果
  * result.InterfaceResult.NextMarker会记录下次起始位置
  * @param obsClient Obs客户端
  * @param inputs 用户输入的参数
@@ -154,36 +156,19 @@ export function getLocalFileName(localPath: string, obsPath: string): string {
  */
 export async function getDownloadList(obsClient: any, inputs: Inputs, obsPath: string): Promise<string[]> {
     const obsFilePath = utils.getStringDelLastSlash(obsPath);
-    let result = await listDownloadObjects(obsClient, inputs, obsFilePath);
-    let resultList = delUselessPath(result.InterfaceResult.Contents, inputs);
-    let marker = result.InterfaceResult.NextMarker;
-    while (marker !== '') {
-        result = await listDownloadObjects(obsClient, inputs, obsFilePath, marker);
-        marker = result.InterfaceResult.NextMarker;
+
+    let resultList: string[] = [];
+    let isTruncated = true;
+    let marker = '';
+
+    while (isTruncated) {
+        const result = await bucket.listObjects(obsClient, inputs, obsFilePath, marker);
         resultList = resultList.concat(delUselessPath(result.InterfaceResult.Contents, inputs));
+
+        isTruncated = result.InterfaceResult.IsTruncated === 'true';
+        marker = result.InterfaceResult.NextMarker;
     }
     return resultList;
-}
-
-/**
- * 根据前缀和起始位置，列举桶内对象
- * @param obsClient Obs客户端
- * @param inputs 用户输入的参数
- * @param obsPath obs上请求的对象前缀
- * @param marker 起始位置
- * @returns
- */
-async function listDownloadObjects(
-    obsClient: any,
-    inputs: Inputs,
-    obsPath: string,
-    marker?: string
-): Promise<ListBucketResult> {
-    return await obsClient.listObjects({
-        Bucket: inputs.bucket_name,
-        Prefix: obsPath,
-        Marker: marker ?? '',
-    });
 }
 
 /**

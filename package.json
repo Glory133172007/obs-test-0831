@@ -11,7 +11,7 @@
         "format-check": "prettier --check \"src/*.{ts,tsx}\"",
         "test": "jest",
         "lint": "eslint src  --ext .ts",
-        "all": "npm run format && npm run build && npm run package && npm run lint"
+        "all": "npm run format && npm run lint && npm run build && npm run package"
     },
     "repository": {
         "type": "",
