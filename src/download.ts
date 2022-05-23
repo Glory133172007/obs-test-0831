@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as utils from './utils';
 import * as core from '@actions/core';
 import * as bucket from './bucket';
-import { Inputs, ObjectItem } from './types';
+import { ObjectInputs, ListBucketContentItem } from './types';
 
 /**
  * 下载文件或者文件夹
@@ -10,7 +10,7 @@ import { Inputs, ObjectItem } from './types';
  * @param inputs 用户输入的参数
  * @returns
  */
-export async function downloadFileOrFolder(obsClient: any, inputs: Inputs): Promise<void> {
+export async function downloadFileOrFolder(obsClient: any, inputs: ObjectInputs): Promise<void> {
     const inputLocalFilePath = inputs.local_file_path[0];
     const downloadPathList = await getDownloadList(obsClient, inputs, inputs.obs_file_path);
     if (downloadPathList.length < 1) {
@@ -50,7 +50,7 @@ export function pathIsSingleFile(downloadPathList: string[], obsPath: string): b
  */
 async function downloadFilesFromObs(
     obsClient: any,
-    inputs: Inputs,
+    inputs: ObjectInputs,
     downloadList: string[],
     localPath: string
 ): Promise<void> {
@@ -102,7 +102,12 @@ export function createEmptyRootFolders(localPath: string, obsPath: string, inclu
  * @param obsPath 对象在obs上的路径
  * @param localPath 文件要下载在本地的路径
  */
-export async function downloadFile(obsClient: any, inputs: Inputs, obsPath: string, localPath?: string): Promise<void> {
+export async function downloadFile(
+    obsClient: any,
+    inputs: ObjectInputs,
+    obsPath: string,
+    localPath?: string
+): Promise<void> {
     let localFileName = localPath
         ? localPath
         : getLocalFileName(utils.getStringDelLastSlash(inputs.local_file_path[0]), obsPath);
@@ -154,7 +159,7 @@ export function getLocalFileName(localPath: string, obsPath: string): string {
  * @param obsPath 对象在obs上的路径
  * @returns
  */
-export async function getDownloadList(obsClient: any, inputs: Inputs, obsPath: string): Promise<string[]> {
+export async function getDownloadList(obsClient: any, inputs: ObjectInputs, obsPath: string): Promise<string[]> {
     const obsFilePath = utils.getStringDelLastSlash(obsPath);
 
     let resultList: string[] = [];
@@ -162,7 +167,7 @@ export async function getDownloadList(obsClient: any, inputs: Inputs, obsPath: s
     let marker = '';
 
     while (isTruncated) {
-        const result = await bucket.listObjects(obsClient, inputs, obsFilePath, marker);
+        const result = await bucket.listObjects(obsClient, inputs.bucket_name, obsFilePath, marker);
         resultList = resultList.concat(delUselessPath(result.InterfaceResult.Contents, inputs));
 
         isTruncated = result.InterfaceResult.IsTruncated === 'true';
@@ -177,9 +182,9 @@ export async function getDownloadList(obsClient: any, inputs: Inputs, obsPath: s
  * @param inputs 用户输入的参数
  * @returns
  */
-function delUselessPath(objList: ObjectItem[], inputs: Inputs): string[] {
+function delUselessPath(objList: ListBucketContentItem[], inputs: ObjectInputs): string[] {
     const resultList: string[] = [];
-    objList.forEach((element: ObjectItem) => {
+    objList.forEach((element: ListBucketContentItem) => {
         // 删除不需要的path，仅保留inputs.obsFilePath相关的文件路径
         let isInclude = true;
         if (!!inputs.exclude && inputs.exclude.length > 0) {

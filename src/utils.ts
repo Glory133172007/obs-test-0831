@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 import * as fs from 'fs';
-import { Inputs } from './types';
+import { BucketInputs, ObjectInputs } from './types';
 
 /**
  * 目前支持obs功能的region列表
@@ -34,17 +34,23 @@ const regionArray = [
     'ap-southeast-1',
 ];
 
+export const OPERATION_TYPE = {
+    object: ['upload', 'download'],
+    bucket: ['createbucket', 'deletebucket'],
+};
 const FILE_MAX_SIZE = 5 * 1024 * 1024 * 1024;
+export const PART_MAX_SIZE = 1024 * 1024;
 
 /**
  * 检查ak/sk是否合法
- * @param inputs
+ * @param ak
+ * @param sk
  * @returns
  */
-export function checkAkSk(inputs: Inputs): boolean {
+export function checkAkSk(ak: string, sk: string): boolean {
     const akReg = /^[a-zA-Z0-9]{10,30}$/;
     const skReg = /^[a-zA-Z0-9]{30,50}$/;
-    return akReg.test(inputs.access_key) && skReg.test(inputs.secret_key);
+    return akReg.test(ak) && skReg.test(sk);
 }
 
 /**
@@ -57,12 +63,18 @@ export function checkRegion(region: string): boolean {
 }
 
 /**
- * 检查operation_type是否合法
+ * 获得operation_type类型
  * @param operation_type
  * @returns
  */
-export function checkOperationType(operation_type: string): boolean {
-    return operation_type.toLowerCase() === 'upload' || operation_type.toLowerCase() === 'download';
+export function getOperationType(operation_type: string): string {
+    if (OPERATION_TYPE.object.includes(operation_type.toLowerCase())) {
+        return 'object';
+    }
+    if (OPERATION_TYPE.bucket.includes(operation_type.toLowerCase())) {
+        return 'bucket';
+    }
+    return '';
 }
 
 /**
@@ -70,7 +82,7 @@ export function checkOperationType(operation_type: string): boolean {
  * @param inputs
  * @returns
  */
-export function checkUploadFilePath(inputs: Inputs): boolean {
+export function checkUploadFilePath(inputs: ObjectInputs): boolean {
     if (inputs.local_file_path.length === 0) {
         core.setFailed('please input localFilePath.');
         return false;
@@ -93,7 +105,7 @@ export function checkUploadFilePath(inputs: Inputs): boolean {
  * @param inputs
  * @returns
  */
-export function checkDownloadFilePath(inputs: Inputs): boolean {
+export function checkDownloadFilePath(inputs: ObjectInputs): boolean {
     if (inputs.local_file_path.length !== 1) {
         core.setFailed('you should input one local_file_path.');
         return false;
@@ -110,12 +122,12 @@ export function checkDownloadFilePath(inputs: Inputs): boolean {
 }
 
 /**
- * 检查输入的各参数是否合法
+ * 检查操作对象时输入的各参数是否合法
  * @param inputs
  * @returns
  */
-export function checkInputs(inputs: Inputs): boolean {
-    if (!checkAkSk(inputs)) {
+export function checkObjectInputs(inputs: ObjectInputs): boolean {
+    if (!checkAkSk(inputs.access_key, inputs.secret_key)) {
         core.setFailed('ak or sk is not correct.');
         return false;
     }
@@ -123,13 +135,26 @@ export function checkInputs(inputs: Inputs): boolean {
         core.setFailed('region is not correct.');
         return false;
     }
-    if (!checkOperationType(inputs.operation_type)) {
-        core.setFailed('operation_type is not correct, you should input "upload" or "download".');
-        return false;
-    }
     const checkFilePath =
         inputs.operation_type.toLowerCase() === 'upload' ? checkUploadFilePath(inputs) : checkDownloadFilePath(inputs);
     if (!checkFilePath) {
+        return false;
+    }
+    return true;
+}
+
+/**
+ * 检查操作桶时输入的各参数是否合法
+ * @param inputs
+ * @returns
+ */
+export function checkBucketInputs(inputs: BucketInputs): boolean {
+    if (!checkRegion(inputs.location)) {
+        core.setFailed('location is not correct.');
+        return false;
+    }
+    if (!checkAkSk(inputs.access_key, inputs.secret_key)) {
+        core.setFailed('ak or sk is not correct.');
         return false;
     }
     return true;

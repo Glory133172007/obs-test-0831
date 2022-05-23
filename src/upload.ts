@@ -2,14 +2,14 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as utils from './utils';
 import * as core from '@actions/core';
-import { Inputs, UploadFileList } from './types';
+import { ObjectInputs, UploadFileList } from './types';
 
 /**
  * 上传文件/文件夹
  * @param obsClient  Obs客户端，因obsClient为引入的obs库的类型，本身并未导出其类型，故使用any，下同
  * @param inputs 用户输入的参数
  */
-export async function uploadFileOrFolder(obsClient: any, inputs: Inputs): Promise<void> {
+export async function uploadFileOrFolder(obsClient: any, inputs: ObjectInputs): Promise<void> {
     for (const path of inputs.local_file_path) {
         const localFilePath = utils.getStringDelLastSlash(path); // 文件或者文件夹
         const localRoot = utils.getLastItemWithSlash(localFilePath);
@@ -93,7 +93,7 @@ export function getObsRootFile(includeSelf: boolean, obsfile: string, objectName
  */
 export async function fileDisplay(
     obsClient: any,
-    inputs: Inputs,
+    inputs: ObjectInputs,
     localFilePath: string,
     obsFileRootPath: string,
     uploadList: UploadFileList
@@ -204,5 +204,140 @@ export async function obsCreateRootFolder(obsClient: any, bucketName: string, ob
             Bucket: bucketName,
             Key: obsPath,
         });
+    }
+}
+
+/**
+ * 分段上传
+ * @param obs
+ * @param bucketName
+ * @param objKey
+ * @param filePath
+ */
+export async function multipartUpload(obs: any, bucketName: string, objKey: string, filePath: string): Promise<void> {
+    const uploadId = await initMultipartUpload(obs, bucketName, objKey);
+    if (uploadId) {
+        const parts = await uploadParts(obs, bucketName, objKey, uploadId, filePath);
+        if (parts.length > 0) {
+            await mergeParts(obs, bucketName, objKey, uploadId, parts);
+        }
+    }
+}
+
+/**
+ * 初始化分段上传任务
+ * @param obs
+ * @param bucketName
+ * @param objKey
+ * @returns
+ */
+export async function initMultipartUpload(obs: any, bucketName: string, objKey: string): Promise<string> {
+    const result = await obs.initiateMultipartUpload({
+        Bucket: bucketName,
+        Key: objKey,
+    });
+
+    if (result.CommonMsg.Status < 300) {
+        core.info('init multipart upload successfully.');
+        return result.InterfaceResult.UploadId;
+    } else {
+        core.info('init multipart upload failed.');
+        return '';
+    }
+}
+
+/**
+ * 上传分段
+ * @param obs
+ * @param bucketName
+ * @param objKey
+ * @param uploadId
+ * @param filePath
+ * @returns
+ */
+export async function uploadParts(
+    obs: any,
+    bucketName: string,
+    objKey: string,
+    uploadId: string,
+    filePath: string
+): Promise<{ PartNumber: number; ETag: any }[]> {
+    const partSize = utils.PART_MAX_SIZE;
+
+    const fileLength = fs.lstatSync(filePath).size;
+    const partCount =
+        fileLength % partSize === 0 ? Math.floor(fileLength / partSize) : Math.floor(fileLength / partSize) + 1;
+
+    core.info(`total parts count ${partCount}.`);
+
+    const parts: { PartNumber: number; ETag: any }[] = [];
+
+    core.info('Begin to upload multiparts to OBS from a file');
+    for (let i = 0; i < partCount; i++) {
+        const offset = i * partSize;
+        const currPartSize = i + 1 === partCount ? fileLength - offset : partSize;
+        const partNumber = i + 1;
+
+        const result = await obs.uploadPart({
+            Bucket: bucketName,
+            Key: objKey,
+            PartNumber: partNumber,
+            UploadId: uploadId,
+            SourceFile: filePath,
+            Offset: offset,
+            PartSize: currPartSize,
+        });
+        if (result.CommonMsg.Status < 300) {
+            parts.push({
+                PartNumber: partNumber,
+                ETag: result.InterfaceResult.ETag,
+            });
+        } else {
+            throw new Error(result.CommonMsg.Code);
+        }
+    }
+
+    if (parts.length === partCount) {
+        // Sort parts order by partNumber asc
+        const _parts = parts.sort((a, b) => {
+            if (a.PartNumber >= b.PartNumber) {
+                return 1;
+            }
+            return -1;
+        });
+        return _parts;
+    }
+    return parts;
+}
+
+/**
+ * 合并分段
+ * @param obs
+ * @param bucketName
+ * @param objKey
+ * @param uploadId
+ * @param parts
+ * @returns
+ */
+export async function mergeParts(
+    obs: any,
+    bucketName: string,
+    objKey: string,
+    uploadId: string,
+    parts: any[]
+): Promise<boolean> {
+    const result = await obs.completeMultipartUpload({
+        Bucket: bucketName,
+        Key: objKey,
+        UploadId: uploadId,
+        Parts: parts,
+    });
+
+    if (result.CommonMsg.Status < 300) {
+        core.info('Complete to upload multiparts finished.');
+        return true;
+    } else {
+        core.info(result.CommonMsg.Code);
+        return false;
     }
 }

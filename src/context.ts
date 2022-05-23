@@ -1,7 +1,11 @@
 import * as core from '@actions/core';
-import { Inputs } from './types';
+import { ObjectInputs, BucketInputs } from './types';
 
-export function getInputs(): Inputs {
+export function getOperationType(): string {
+    return core.getInput('operation_type', { required: true });
+}
+
+export function getObjectInputs(): ObjectInputs {
     return {
         access_key: core.getInput('access_key', { required: true }),
         secret_key: core.getInput('secret_key', { required: true }),
@@ -16,6 +20,19 @@ export function getInputs(): Inputs {
             required: false,
         }),
         exclude: core.getMultilineInput('exclude', { required: false }),
+    };
+}
+
+export function getBucketInputs(): BucketInputs {
+    return {
+        access_key: core.getInput('access_key', { required: true }),
+        secret_key: core.getInput('secret_key', { required: true }),
+        operation_type: core.getInput('operation_type', { required: true }),
+        bucket_name: core.getInput('bucket_name', { required: true }),
+        location: core.getInput('location', { required: true }),
+        ACL: core.getInput('ACL', { required: false }),
+        storage_class: core.getInput('storage_class', { required: false }),
+        clear_bucket: core.getBooleanInput('clear_bucket', { required: false }),
     };
 }
 

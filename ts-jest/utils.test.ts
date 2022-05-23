@@ -109,7 +109,7 @@ test('test get last item with slash from Path', () => {
       local_file_path: ['resource/bigFile.zip'],
       region: 'cn-north-6',
    }
-   const legal1 = utils.checkAkSk(input1);
+   const legal1 = utils.checkAkSk(input1.access_key, input1.secret_key);
    expect(legal1).toBeTruthy();
 
    const input2 = {
@@ -121,15 +121,15 @@ test('test get last item with slash from Path', () => {
       local_file_path: ['resource/bigFile.zip'],
       region: 'cn-north-6',
    }
-   const legal2 = utils.checkAkSk(input2);
+   const legal2 = utils.checkAkSk(input2.access_key, input2.secret_key);
    expect(legal2).toBeFalsy();
 });
 
 test('check operation_type', () => {
-  expect(utils.checkOperationType('upload')).toBeTruthy();
-  expect(utils.checkOperationType('DownLoad')).toBeTruthy();
-  expect(utils.checkOperationType('xiazai')).toBeFalsy();
-  expect(utils.checkOperationType('上传')).toBeFalsy();
+  expect(utils.checkOperationType('upload')).toEqual('object');
+  expect(utils.checkOperationType('DownLoad')).toEqual('object');
+  expect(utils.checkOperationType('xiazai')).toEqual('');
+  expect(utils.checkOperationType('上传')).toEqual('');
 });
 
 test('check local_file_path and obs_file_path when upload', () => {

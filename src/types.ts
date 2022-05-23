@@ -1,6 +1,6 @@
 import stream from 'stream';
 
-export interface Inputs {
+export interface ObjectInputs {
     access_key: string;
     secret_key: string;
     bucket_name: string;
@@ -12,6 +12,17 @@ export interface Inputs {
     include_self_folder?: boolean;
     // 下载时要排除的文件夹/文件
     exclude?: string[];
+}
+
+export interface BucketInputs {
+    access_key: string;
+    secret_key: string;
+    operation_type: string;
+    bucket_name: string;
+    location: string;
+    ACL?: string;
+    storage_class?: string;
+    clear_bucket?: boolean;
 }
 
 export interface CommonResult {
@@ -34,12 +45,12 @@ export interface CommonInterfaceResult {
     Id2: string;
 }
 
-export interface ListBucketResult {
+export interface ListObjectsResult {
     CommonMsg: CommonMsg;
-    InterfaceResult: ListBucketInterfaceResult;
+    InterfaceResult: ListObjectsInterfaceResult;
 }
 
-export interface ListBucketInterfaceResult extends CommonInterfaceResult {
+export interface ListObjectsInterfaceResult extends CommonInterfaceResult {
     RequestId: string;
     Location: string;
     Bucket: string;
@@ -49,11 +60,11 @@ export interface ListBucketInterfaceResult extends CommonInterfaceResult {
     Marker: string;
     NextMarker: string;
     MaxKeys: string;
-    Contents: ObjectItem[];
+    Contents: ListBucketContentItem[];
     CommonPrefixes: string[];
 }
 
-export interface ObjectItem {
+export interface ListBucketContentItem {
     ETag: string;
     Size: string;
     Key: string;
@@ -65,12 +76,91 @@ export interface ObjectItem {
     Type: string;
 }
 
-export interface PutObjectResult {
+export interface ListVersionsResult {
     CommonMsg: CommonMsg;
-    InterfaceResult: PutObjectInterfaceResult;
+    InterfaceResult: ListVersionsBucketInterfaceResult;
 }
 
-export interface PutObjectInterfaceResult extends CommonInterfaceResult {
+export interface ListVersionsBucketInterfaceResult extends CommonInterfaceResult {
+    RequestId: string;
+    Location: string;
+    Bucket: string;
+    Delimiter: string;
+    Prefix: string;
+    IsTruncated: string;
+    KeyMarker: string;
+    VersionIdMarker: string;
+    NextKeyMarker: string;
+    NextVersionIdMarker: string;
+    MaxKeys: string;
+    Versions: VersionsItem[];
+    DeleteMarkers: DeleteMarkersItem[];
+    CommonPrefixes: string[];
+}
+
+export interface VersionsItem {
+    ETag: string;
+    Size: string;
+    Key: string;
+    VersionId: string;
+    IsLatest: string;
+    LastModified: string;
+    Owner: {
+        ID: string;
+    };
+    StorageClass: string;
+    Type: string;
+}
+
+export interface DeleteMarkersItem {
+    Owner: {
+        ID: string;
+    };
+    Key: string;
+    VersionId: string;
+    IsLatest: string;
+    LastModified: string;
+}
+
+export interface ListMultipartResult {
+    CommonMsg: CommonMsg;
+    InterfaceResult: ListMultipartInterfaceResult;
+}
+
+export interface ListMultipartInterfaceResult {
+    RequestId: string;
+    Bucket: string;
+    KeyMarker: string;
+    UploadIdMarker: string;
+    NextKeyMarker: string;
+    NextUploadIdMarker: string;
+    Delimiter: string;
+    Prefix: string;
+    MaxUploads: string;
+    IsTruncated: string;
+    Uploads: PartUploads[];
+    CommonPrefixes: string[];
+}
+
+export interface PartUploads {
+    Key: string;
+    UploadId: string;
+    Initiator: {
+        ID: string;
+    };
+    Owner: {
+        ID: string;
+    };
+    Initiated: string;
+    StorageClass: string;
+}
+
+export interface UploadObjectResult {
+    CommonMsg: CommonMsg;
+    InterfaceResult: UploadObjectInterfaceResult;
+}
+
+export interface UploadObjectInterfaceResult extends CommonInterfaceResult {
     RequestId: string;
     ETag: string;
     VersionId: string;
@@ -81,12 +171,12 @@ export interface PutObjectInterfaceResult extends CommonInterfaceResult {
     SseCKeyMd5: string;
 }
 
-export interface GetObjectResult {
+export interface DownloadObjectResult {
     CommonMsg: CommonMsg;
-    InterfaceResult: GetObjectInterfaceResult;
+    InterfaceResult: DownloadObjectInterfaceResult;
 }
 
-export interface GetObjectInterfaceResult {
+export interface DownloadObjectInterfaceResult {
     RequestId: string;
     DeleteMarker: string;
     LastModified: string;
@@ -125,4 +215,29 @@ export interface UploadFileList {
 export interface UploadFile {
     local: string;
     obs: string;
+}
+
+export interface DeleteObjectsResult {
+    CommonMsg: CommonMsg;
+    InterfaceResult: DeleteObjectsInterfaceResult;
+}
+
+export interface DeleteObjectsInterfaceResult {
+    RequestId: string;
+    Deleteds: DeleteSuccess[];
+    Errors: DeleteErrors[];
+}
+
+export interface DeleteSuccess {
+    Key: string;
+    VersionId: string;
+    DeleteMarker: string;
+    DeleteMarkerVersionId: string;
+}
+
+export interface DeleteErrors {
+    Key: string;
+    VersionId: string;
+    Code: string;
+    Message: string;
 }
