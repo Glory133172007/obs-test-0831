@@ -19,7 +19,7 @@ export interface BucketInputs {
     secret_key: string;
     operation_type: string;
     bucket_name: string;
-    location: string;
+    region: string;
     ACL?: string;
     storage_class?: string;
     clear_bucket?: boolean;

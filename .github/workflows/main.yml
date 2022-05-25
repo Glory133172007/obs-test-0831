@@ -28,3 +28,22 @@ jobs:
           local_file_path: ${{ github.workspace }}
           obs_file_path: test.txt
           operation_type: download
+      - name: Create Bucket on HuaweiCloud OBS
+        uses: huaweicloud/obs-helper@v1.2.0
+        id: create_bucket_on_obs
+        with:
+          access_key: ${{ secrets.ACCESSKEY }}
+          secret_key: ${{ secrets.SECRETACCESSKEY }}
+          region: ${region}
+          bucket_name: 'new-bucket'
+          operation_type: 'createBucket'
+      - name: Delete Bucket on HuaweiCloud OBS
+        uses: huaweicloud/obs-helper@v1.2.0
+        id: delete_bucket_on_obs
+        with:
+          access_key: ${{ secrets.ACCESSKEY }}
+          secret_key: ${{ secrets.SECRETACCESSKEY }}
+          region: ${region}
+          bucket_name: 'new-bucket'
+          operation_type: 'deleteBucket'
+          clear_bucket: true

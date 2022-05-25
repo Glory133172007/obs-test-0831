@@ -22,14 +22,14 @@ export async function hasBucket(obsClient: any, bucketName: string): Promise<boo
 export async function createBucket(
     obsClient: any,
     bucketName: string,
-    location: string,
+    region: string,
     ACL?: string,
     storageClass?: string
 ): Promise<boolean> {
     obsClient
         .createBucket({
             Bucket: bucketName,
-            Location: location,
+            Location: region,
             ACL: ACL,
             StorageClass: storageClass,
         })

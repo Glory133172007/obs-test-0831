@@ -6,7 +6,7 @@ const inputs = {
     access_key: '******',
     secret_key: '******',
     bucket_name: '******',
-    location: 'cn-north-6',
+    region: 'cn-north-6',
     operation_type: 'deleteBucket',
     clear_bucket: false
 };
@@ -15,7 +15,7 @@ const ObsClient = require('esdk-obs-nodejs');
 const obs = new ObsClient({
     access_key_id: inputs.access_key,       
     secret_key: inputs.secret_key,       
-    server : `https://obs.${inputs.location}.myhuaweicloud.com`,
+    server : `https://obs.${inputs.region}.myhuaweicloud.com`,
 });
 
 test('check bucket exist in bucket', () => {

@@ -31,7 +31,7 @@ const regionArray = [
     'sa-brazil-1',
     'ap-southeast-2',
     'ap-southeast-3',
-    'ap-southeast-1',
+    'ap-southeast-1'
 ];
 
 export const OPERATION_TYPE = {
@@ -149,8 +149,8 @@ export function checkObjectInputs(inputs: ObjectInputs): boolean {
  * @returns
  */
 export function checkBucketInputs(inputs: BucketInputs): boolean {
-    if (!checkRegion(inputs.location)) {
-        core.setFailed('location is not correct.');
+    if (!checkRegion(inputs.region)) {
+        core.setFailed('region is not correct.');
         return false;
     }
     if (!checkAkSk(inputs.access_key, inputs.secret_key)) {

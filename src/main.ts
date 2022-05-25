@@ -7,8 +7,10 @@ import * as utils from './utils';
 
 async function run() {
 
+    const operation_type = utils.getOperationType(context.getOperationType());
+
     // 对象操作
-    if (utils.getOperationType(context.getOperationType()) === 'object') {
+    if (operation_type === 'object') {
         const inputs = context.getObjectInputs();
 
         if (!utils.checkObjectInputs(inputs)) {
@@ -37,7 +39,7 @@ async function run() {
         } else {
             core.setFailed('operation type error, you should input "upload" or "download"');
         }
-    } else if (utils.getOperationType(context.getOperationType()) === 'bucket') {
+    } else if (operation_type === 'bucket') {
         const inputs = context.getBucketInputs();
 
         // 检查桶输入
@@ -50,7 +52,7 @@ async function run() {
         const obs = context.getObsClient(
             inputs.access_key,
             inputs.secret_key,
-            `https://obs.${inputs.location}.myhuaweicloud.com`
+            `https://obs.${inputs.region}.myhuaweicloud.com`
         );
 
         const isBucketExist = await bucket.hasBucket(obs, inputs.bucket_name);
@@ -60,7 +62,7 @@ async function run() {
                 core.setFailed('bucket already exist.');
                 return;
             }
-            await bucket.createBucket(obs, inputs.bucket_name, inputs.location, inputs.ACL, inputs.storage_class);
+            await bucket.createBucket(obs, inputs.bucket_name, inputs.region, inputs.ACL, inputs.storage_class);
         } else if (inputs.operation_type.toLowerCase() === 'deletebucket') {
             // 若桶不存在，退出
             if (!isBucketExist) {

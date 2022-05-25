@@ -29,7 +29,7 @@ export function getBucketInputs(): BucketInputs {
         secret_key: core.getInput('secret_key', { required: true }),
         operation_type: core.getInput('operation_type', { required: true }),
         bucket_name: core.getInput('bucket_name', { required: true }),
-        location: core.getInput('location', { required: true }),
+        region: core.getInput('region', { required: true }),
         ACL: core.getInput('ACL', { required: false }),
         storage_class: core.getInput('storage_class', { required: false }),
         clear_bucket: core.getBooleanInput('clear_bucket', { required: false }),
