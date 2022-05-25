@@ -6,7 +6,6 @@ import * as bucket from './bucket';
 import * as utils from './utils';
 
 async function run() {
-
     const operation_type = utils.getOperationType(context.getOperationType());
 
     // 对象操作

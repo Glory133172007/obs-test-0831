@@ -31,7 +31,7 @@ const regionArray = [
     'sa-brazil-1',
     'ap-southeast-2',
     'ap-southeast-3',
-    'ap-southeast-1'
+    'ap-southeast-1',
 ];
 
 export const OPERATION_TYPE = {

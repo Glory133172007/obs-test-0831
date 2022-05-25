@@ -61,12 +61,12 @@ exports.hasBucket = hasBucket;
  * @param obsClient
  * @param bucketName
  */
-function createBucket(obsClient, bucketName, location, ACL, storageClass) {
+function createBucket(obsClient, bucketName, region, ACL, storageClass) {
     return __awaiter(this, void 0, void 0, function* () {
         obsClient
             .createBucket({
             Bucket: bucketName,
-            Location: location,
+            Location: region,
             ACL: ACL,
             StorageClass: storageClass,
         })
@@ -475,7 +475,7 @@ function getBucketInputs() {
         secret_key: core.getInput('secret_key', { required: true }),
         operation_type: core.getInput('operation_type', { required: true }),
         bucket_name: core.getInput('bucket_name', { required: true }),
-        location: core.getInput('location', { required: true }),
+        region: core.getInput('region', { required: true }),
         ACL: core.getInput('ACL', { required: false }),
         storage_class: core.getInput('storage_class', { required: false }),
         clear_bucket: core.getBooleanInput('clear_bucket', { required: false }),
@@ -793,9 +793,9 @@ const bucket = __importStar(__nccwpck_require__(8129));
 const utils = __importStar(__nccwpck_require__(918));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
-        process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '1';
+        const operation_type = utils.getOperationType(context.getOperationType());
         // 对象操作
-        if (utils.getOperationType(context.getOperationType()) === 'object') {
+        if (operation_type === 'object') {
             const inputs = context.getObjectInputs();
             if (!utils.checkObjectInputs(inputs)) {
                 core.setFailed('input parameters is not correct.');
@@ -819,7 +819,7 @@ function run() {
                 core.setFailed('operation type error, you should input "upload" or "download"');
             }
         }
-        else if (utils.getOperationType(context.getOperationType()) === 'bucket') {
+        else if (operation_type === 'bucket') {
             const inputs = context.getBucketInputs();
             // 检查桶输入
             if (!utils.checkBucketInputs(inputs)) {
@@ -827,7 +827,7 @@ function run() {
                 return;
             }
             // 初始化OBS客户端
-            const obs = context.getObsClient(inputs.access_key, inputs.secret_key, `https://obs.${inputs.location}.myhuaweicloud.com`);
+            const obs = context.getObsClient(inputs.access_key, inputs.secret_key, `https://obs.${inputs.region}.myhuaweicloud.com`);
             const isBucketExist = yield bucket.hasBucket(obs, inputs.bucket_name);
             if (inputs.operation_type.toLowerCase() === 'createbucket') {
                 // 若桶已经存在，退出
@@ -835,7 +835,7 @@ function run() {
                     core.setFailed('bucket already exist.');
                     return;
                 }
-                yield bucket.createBucket(obs, inputs.bucket_name, inputs.location, inputs.ACL, inputs.storage_class);
+                yield bucket.createBucket(obs, inputs.bucket_name, inputs.region, inputs.ACL, inputs.storage_class);
             }
             else if (inputs.operation_type.toLowerCase() === 'deletebucket') {
                 // 若桶不存在，退出
@@ -1413,8 +1413,8 @@ exports.checkObjectInputs = checkObjectInputs;
  * @returns
  */
 function checkBucketInputs(inputs) {
-    if (!checkRegion(inputs.location)) {
-        core.setFailed('location is not correct.');
+    if (!checkRegion(inputs.region)) {
+        core.setFailed('region is not correct.');
         return false;
     }
     if (!checkAkSk(inputs.access_key, inputs.secret_key)) {
