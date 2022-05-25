@@ -261,12 +261,13 @@ exports.getAllMultipartUploads = getAllMultipartUploads;
  */
 function isBucketEmpty(obsClient, bucketName) {
     return __awaiter(this, void 0, void 0, function* () {
-        if ((yield getBucketVersioning(obsClient, bucketName)) === 'Enabled') {
+        const bucketVersioning = yield getBucketVersioning(obsClient, bucketName);
+        if (bucketVersioning === 'Enabled') {
             return ((yield getAllVersionObjects(obsClient, bucketName)).length +
                 (yield getAllMultipartUploads(obsClient, bucketName)).length ===
                 0);
         }
-        else if ((yield getBucketVersioning(obsClient, bucketName)) === 'Suspended') {
+        else if (bucketVersioning === 'Suspended' || bucketVersioning === undefined) {
             return ((yield getAllObjects(obsClient, bucketName)).length +
                 (yield getAllMultipartUploads(obsClient, bucketName)).length ===
                 0);
@@ -279,16 +280,15 @@ exports.isBucketEmpty = isBucketEmpty;
  * 清空桶内全部对象和任务
  * @param obsClient
  * @param bucketName
- * @param clearBucket
  * @returns
  */
-function clearBuckets(obsClient, bucketName, clearBucket) {
+function clearBuckets(obsClient, bucketName) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (!clearBucket) {
-            return false;
-        }
-        if ((yield deleteAllObjects(obsClient, bucketName)) && (yield abortAllMultipartUpload(obsClient, bucketName))) {
-            core.info(`The bucket : ${bucketName} is cleared successfully.`);
+        core.info('start clear bucket');
+        const clearObject = yield deleteAllObjects(obsClient, bucketName);
+        const clearPart = yield abortAllMultipartUpload(obsClient, bucketName);
+        if (clearObject && clearPart) {
+            core.info(`bucket: ${bucketName} cleared successfully.`);
             return true;
         }
         return false;
@@ -303,11 +303,12 @@ exports.clearBuckets = clearBuckets;
  */
 function deleteAllObjects(obsClient, bucketName) {
     return __awaiter(this, void 0, void 0, function* () {
+        const bucketVersioning = yield getBucketVersioning(obsClient, bucketName);
         let objectList = [];
-        if ((yield getBucketVersioning(obsClient, bucketName)) === 'Enabled') {
+        if (bucketVersioning === 'Enabled') {
             objectList = yield getAllVersionObjects(obsClient, bucketName);
         }
-        else if ((yield getBucketVersioning(obsClient, bucketName)) === 'Suspended') {
+        else if (bucketVersioning === 'Suspended' || bucketVersioning === undefined) {
             objectList = yield getAllObjects(obsClient, bucketName);
         }
         else {
@@ -316,6 +317,7 @@ function deleteAllObjects(obsClient, bucketName) {
         if (objectList.length === 0) {
             return true;
         }
+        core.info('start clear objects.');
         // 批量删除一次仅支持最大1000个
         while (objectList.length > 1000) {
             yield deleteObjects(obsClient, bucketName, objectList.splice(0, 1000));
@@ -327,6 +329,7 @@ function deleteAllObjects(obsClient, bucketName) {
             return false;
         }
         else {
+            core.info('finish clear objects.');
             return true;
         }
     });
@@ -340,7 +343,7 @@ exports.deleteAllObjects = deleteAllObjects;
  */
 function deleteObjects(obsClient, bucketName, delList) {
     return __awaiter(this, void 0, void 0, function* () {
-        obsClient
+        yield obsClient
             .deleteObjects({
             Bucket: bucketName,
             Quiet: false,
@@ -371,6 +374,7 @@ function abortAllMultipartUpload(obsClient, bucketName) {
         if (partList.length === 0) {
             return true;
         }
+        core.info('start clear part.');
         for (const part of partList) {
             yield obsClient.abortMultipartUpload({
                 Bucket: bucketName,
@@ -378,6 +382,7 @@ function abortAllMultipartUpload(obsClient, bucketName) {
                 UploadId: part.UploadId,
             });
         }
+        core.info('finish clear part.');
         return true;
     });
 }
@@ -385,23 +390,23 @@ exports.abortAllMultipartUpload = abortAllMultipartUpload;
 /**
  * 删除桶
  * @param obsClient
- * @param bucketNme
+ * @param bucketName
  * @returns
  */
-function deleteBucket(obsClient, bucketNme, isBucketEmpty) {
+function deleteBucket(obsClient, bucketName, isBucketEmpty) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!isBucketEmpty) {
-            clearBuckets(obsClient, bucketNme);
+            yield clearBuckets(obsClient, bucketName);
         }
         const result = yield obsClient.deleteBucket({
-            Bucket: bucketNme,
+            Bucket: bucketName,
         });
         if (result.CommonMsg.Status < 300) {
-            core.info(`delete bucket: ${bucketNme} successfully.`);
+            core.info(`delete bucket: ${bucketName} successfully.`);
             return true;
         }
         else {
-            core.setFailed(`delete bucket: ${bucketNme} failed, because ${result.CommonMsg.Message}.`);
+            core.setFailed(`delete bucket: ${bucketName} failed, ${result.CommonMsg.Message}.`);
             return false;
         }
     });
@@ -823,15 +828,21 @@ function run() {
             }
             // 初始化OBS客户端
             const obs = context.getObsClient(inputs.access_key, inputs.secret_key, `https://obs.${inputs.location}.myhuaweicloud.com`);
+            const isBucketExist = yield bucket.hasBucket(obs, inputs.bucket_name);
             if (inputs.operation_type.toLowerCase() === 'createbucket') {
                 // 若桶已经存在，退出
-                if (yield bucket.hasBucket(obs, inputs.bucket_name)) {
+                if (isBucketExist) {
                     core.setFailed('bucket already exist.');
                     return;
                 }
                 yield bucket.createBucket(obs, inputs.bucket_name, inputs.location, inputs.ACL, inputs.storage_class);
             }
             else if (inputs.operation_type.toLowerCase() === 'deletebucket') {
+                // 若桶不存在，退出
+                if (!isBucketExist) {
+                    core.setFailed('bucket not exist.');
+                    return;
+                }
                 const isEmpty = yield bucket.isBucketEmpty(obs, inputs.bucket_name);
                 if (!isEmpty && !inputs.clear_bucket) {
                     core.setFailed('please clear all objects and parts in the bucket before delete it, you can set "clear_bucket" as true to allow us clear the bucket.');

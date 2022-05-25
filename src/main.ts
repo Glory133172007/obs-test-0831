@@ -53,14 +53,20 @@ async function run() {
             `https://obs.${inputs.location}.myhuaweicloud.com`
         );
 
+        const isBucketExist = await bucket.hasBucket(obs, inputs.bucket_name);
         if (inputs.operation_type.toLowerCase() === 'createbucket') {
             // 若桶已经存在，退出
-            if (await bucket.hasBucket(obs, inputs.bucket_name)) {
+            if (isBucketExist) {
                 core.setFailed('bucket already exist.');
                 return;
             }
             await bucket.createBucket(obs, inputs.bucket_name, inputs.location, inputs.ACL, inputs.storage_class);
         } else if (inputs.operation_type.toLowerCase() === 'deletebucket') {
+            // 若桶不存在，退出
+            if (!isBucketExist) {
+                core.setFailed('bucket not exist.');
+                return;
+            }
             const isEmpty = await bucket.isBucketEmpty(obs, inputs.bucket_name);
             if (!isEmpty && !inputs.clear_bucket) {
                 core.setFailed(

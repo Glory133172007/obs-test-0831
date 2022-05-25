@@ -245,13 +245,14 @@ export async function getAllMultipartUploads(
  * @returns
  */
 export async function isBucketEmpty(obsClient: any, bucketName: string): Promise<boolean> {
-    if ((await getBucketVersioning(obsClient, bucketName)) === 'Enabled') {
+    const bucketVersioning = await getBucketVersioning(obsClient, bucketName);
+    if (bucketVersioning === 'Enabled') {
         return (
             (await getAllVersionObjects(obsClient, bucketName)).length +
                 (await getAllMultipartUploads(obsClient, bucketName)).length ===
             0
         );
-    } else if ((await getBucketVersioning(obsClient, bucketName)) === 'Suspended') {
+    } else if (bucketVersioning === 'Suspended' || bucketVersioning === undefined) {
         return (
             (await getAllObjects(obsClient, bucketName)).length +
                 (await getAllMultipartUploads(obsClient, bucketName)).length ===
@@ -265,15 +266,14 @@ export async function isBucketEmpty(obsClient: any, bucketName: string): Promise
  * 清空桶内全部对象和任务
  * @param obsClient
  * @param bucketName
- * @param clearBucket
  * @returns
  */
-export async function clearBuckets(obsClient: any, bucketName: string, clearBucket?: boolean): Promise<boolean> {
-    if (!clearBucket) {
-        return false;
-    }
-    if ((await deleteAllObjects(obsClient, bucketName)) && (await abortAllMultipartUpload(obsClient, bucketName))) {
-        core.info(`The bucket : ${bucketName} is cleared successfully.`);
+export async function clearBuckets(obsClient: any, bucketName: string): Promise<boolean> {
+    core.info('start clear bucket');
+    const clearObject = await deleteAllObjects(obsClient, bucketName);
+    const clearPart = await abortAllMultipartUpload(obsClient, bucketName);
+    if (clearObject && clearPart) {
+        core.info(`bucket: ${bucketName} cleared successfully.`);
         return true;
     }
     return false;
@@ -286,10 +286,12 @@ export async function clearBuckets(obsClient: any, bucketName: string, clearBuck
  * @returns
  */
 export async function deleteAllObjects(obsClient: any, bucketName: string): Promise<boolean> {
+    const bucketVersioning = await getBucketVersioning(obsClient, bucketName);
+
     let objectList: { Key: string; VersionId: string }[] | { Key: string }[] = [];
-    if ((await getBucketVersioning(obsClient, bucketName)) === 'Enabled') {
+    if (bucketVersioning === 'Enabled') {
         objectList = await getAllVersionObjects(obsClient, bucketName);
-    } else if ((await getBucketVersioning(obsClient, bucketName)) === 'Suspended') {
+    } else if (bucketVersioning === 'Suspended' || bucketVersioning === undefined) {
         objectList = await getAllObjects(obsClient, bucketName);
     } else {
         return false;
@@ -298,6 +300,8 @@ export async function deleteAllObjects(obsClient: any, bucketName: string): Prom
     if (objectList.length === 0) {
         return true;
     }
+
+    core.info('start clear objects.');
     // 批量删除一次仅支持最大1000个
     while (objectList.length > 1000) {
         await deleteObjects(obsClient, bucketName, objectList.splice(0, 1000));
@@ -309,6 +313,7 @@ export async function deleteAllObjects(obsClient: any, bucketName: string): Prom
         core.info('delete all objects failed, please try again or delete objects by yourself.');
         return false;
     } else {
+        core.info('finish clear objects.');
         return true;
     }
 }
@@ -324,7 +329,7 @@ async function deleteObjects(
     bucketName: string,
     delList: { Key: string; VersionId: string }[] | { Key: string }[]
 ) {
-    obsClient
+    await obsClient
         .deleteObjects({
             Bucket: bucketName,
             Quiet: false,
@@ -353,6 +358,7 @@ export async function abortAllMultipartUpload(obsClient: any, bucketName: string
         return true;
     }
 
+    core.info('start clear part.');
     for (const part of partList) {
         await obsClient.abortMultipartUpload({
             Bucket: bucketName,
@@ -360,30 +366,30 @@ export async function abortAllMultipartUpload(obsClient: any, bucketName: string
             UploadId: part.UploadId,
         });
     }
-
+    core.info('finish clear part.');
     return true;
 }
 
 /**
  * 删除桶
  * @param obsClient
- * @param bucketNme
+ * @param bucketName
  * @returns
  */
-export async function deleteBucket(obsClient: any, bucketNme: string, isBucketEmpty: boolean): Promise<boolean> {
+export async function deleteBucket(obsClient: any, bucketName: string, isBucketEmpty: boolean): Promise<boolean> {
     if (!isBucketEmpty) {
-        clearBuckets(obsClient, bucketNme);
+        await clearBuckets(obsClient, bucketName);
     }
 
     const result = await obsClient.deleteBucket({
-        Bucket: bucketNme,
+        Bucket: bucketName,
     });
 
     if (result.CommonMsg.Status < 300) {
-        core.info(`delete bucket: ${bucketNme} successfully.`);
+        core.info(`delete bucket: ${bucketName} successfully.`);
         return true;
     } else {
-        core.setFailed(`delete bucket: ${bucketNme} failed, because ${result.CommonMsg.Message}.`);
+        core.setFailed(`delete bucket: ${bucketName} failed, ${result.CommonMsg.Message}.`);
         return false;
     }
 }
