@@ -58,8 +58,12 @@ function hasBucket(obsClient, bucketName) {
 exports.hasBucket = hasBucket;
 /**
  * 创建桶
- * @param obsClient
- * @param bucketName
+ * @param obsClient obs客户端
+ * @param bucketName 桶名
+ * @param region 桶所在区域
+ * @param ACL 预定义访问策略
+ * @param storageClass 存储类型
+ * @returns
  */
 function createBucket(obsClient, bucketName, region, ACL, storageClass) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -92,8 +96,8 @@ function createBucket(obsClient, bucketName, region, ACL, storageClass) {
 exports.createBucket = createBucket;
 /**
  * 获取桶的多版本状态
- * @param obsClient
- * @param bucketName
+ * @param obsClient obs客户端
+ * @param bucketName 桶名
  * @returns
  */
 function getBucketVersioning(obsClient, bucketName) {
@@ -131,9 +135,9 @@ function listObjects(obsClient, bucketName, obsPath, marker) {
 exports.listObjects = listObjects;
 /**
  * 列举桶内全部对象
- * @param obsClient
- * @param bucketName
- * @param nextMarker
+ * @param obsClient obs客户端
+ * @param bucketName 桶名
+ * @param nextMarker 起始位置
  */
 function getAllObjects(obsClient, bucketName, nextMarker) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -157,7 +161,7 @@ exports.getAllObjects = getAllObjects;
  * @param obsClient Obs客户端
  * @param bucketName 桶名
  * @param nextKeyMarker 列举多版本对象的起始位置
- * @param nextVersionIdMarker 多版本对象的版本, 与nextKeyMarker配合使用
+ * @param nextVersionIdMarker 作为标记的多版本对象的版本, 与nextKeyMarker配合使用
  * @returns
  */
 function listVersionObjects(obsClient, bucketName, nextKeyMarker, nextVersionIdMarker) {
@@ -172,10 +176,10 @@ function listVersionObjects(obsClient, bucketName, nextKeyMarker, nextVersionIdM
 exports.listVersionObjects = listVersionObjects;
 /**
  * 列举桶内全部多版本对象
- * @param obsClient
- * @param inputs
- * @param nextKeyMarker
- * @param nextVersionMaker
+ * @param obsClient obs客户端
+ * @param bucketName 桶名
+ * @param nextKeyMarker 多版本对象的起始位置
+ * @param nextVersionMaker 作为标记的多版本对象的版本
  */
 function getAllVersionObjects(obsClient, bucketName, nextKeyMarker, nextVersionMaker) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -207,10 +211,10 @@ function getAllVersionObjects(obsClient, bucketName, nextKeyMarker, nextVersionM
 exports.getAllVersionObjects = getAllVersionObjects;
 /**
  * 列举桶内分段上传任务
- * @param obsClient
- * @param bucketName
- * @param nextKeyMarker
- * @param nextUploadIdMarker
+ * @param obsClient obs客户端
+ * @param bucketName 桶名
+ * @param nextKeyMarker 分段上传任务的起始位置
+ * @param nextUploadIdMarker 指定起始位置任务的uploadid
  * @returns
  */
 function listMultipartUploads(obsClient, bucketName, nextKeyMarker, nextUploadIdMarker) {
@@ -225,10 +229,10 @@ function listMultipartUploads(obsClient, bucketName, nextKeyMarker, nextUploadId
 exports.listMultipartUploads = listMultipartUploads;
 /**
  * 列举桶内全部分段上传任务
- * @param obsClient
- * @param bucketName
- * @param nextKeyMarker
- * @param nextUploadIdMarker
+ * @param obsClient obs客户端
+ * @param bucketName 桶名
+ * @param nextKeyMarker 分段上传任务的起始位置
+ * @param nextUploadIdMarker 起始位置任务的uploadid
  * @returns
  */
 function getAllMultipartUploads(obsClient, bucketName, nextKeyMarker, nextUploadIdMarker) {
@@ -255,8 +259,8 @@ function getAllMultipartUploads(obsClient, bucketName, nextKeyMarker, nextUpload
 exports.getAllMultipartUploads = getAllMultipartUploads;
 /**
  * 判断桶内是否存在对象/多版本对象/任务
- * @param obsClient
- * @param bucketName
+ * @param obsClient obs客户端
+ * @param bucketName 桶名
  * @returns
  */
 function isBucketEmpty(obsClient, bucketName) {
@@ -278,8 +282,8 @@ function isBucketEmpty(obsClient, bucketName) {
 exports.isBucketEmpty = isBucketEmpty;
 /**
  * 清空桶内全部对象和任务
- * @param obsClient
- * @param bucketName
+ * @param obsClient obs客户端
+ * @param bucketName 桶名
  * @returns
  */
 function clearBuckets(obsClient, bucketName) {
@@ -297,8 +301,8 @@ function clearBuckets(obsClient, bucketName) {
 exports.clearBuckets = clearBuckets;
 /**
  * 删除桶内全部对象/多版本对象
- * @param obsClient
- * @param bucketName
+ * @param obsClient obs客户端
+ * @param bucketName 桶名
  * @returns
  */
 function deleteAllObjects(obsClient, bucketName) {
@@ -337,9 +341,9 @@ function deleteAllObjects(obsClient, bucketName) {
 exports.deleteAllObjects = deleteAllObjects;
 /**
  * 批量删除对象/多版本对象
- * @param obsClient
- * @param bucketName
- * @param delList
+ * @param obsClient obs客户端
+ * @param bucketName 桶名
+ * @param delList 待删除对象列表
  */
 function deleteObjects(obsClient, bucketName, delList) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -364,8 +368,8 @@ function deleteObjects(obsClient, bucketName, delList) {
 }
 /**
  * 取消桶内所有分段上传任务
- * @param obsClient
- * @param bucketName
+ * @param obsClient obs客户端
+ * @param bucketName 桶名
  * @returns
  */
 function abortAllMultipartUpload(obsClient, bucketName) {
@@ -389,8 +393,9 @@ function abortAllMultipartUpload(obsClient, bucketName) {
 exports.abortAllMultipartUpload = abortAllMultipartUpload;
 /**
  * 删除桶
- * @param obsClient
- * @param bucketName
+ * @param obsClient obs客户端
+ * @param bucketName 桶名
+ * @param isBucketEmpty 是否为空桶
  * @returns
  */
 function deleteBucket(obsClient, bucketName, isBucketEmpty) {
@@ -1110,10 +1115,10 @@ function obsCreateRootFolder(obsClient, bucketName, obsFile) {
 exports.obsCreateRootFolder = obsCreateRootFolder;
 /**
  * 分段上传
- * @param obs
- * @param bucketName
- * @param objKey
- * @param filePath
+ * @param obs obs客户端
+ * @param bucketName 桶名
+ * @param objKey 上传对象在obs上的名称
+ * @param filePath 上传对象的本地路径
  */
 function multipartUpload(obs, bucketName, objKey, filePath) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -1129,9 +1134,9 @@ function multipartUpload(obs, bucketName, objKey, filePath) {
 exports.multipartUpload = multipartUpload;
 /**
  * 初始化分段上传任务
- * @param obs
- * @param bucketName
- * @param objKey
+ * @param obs obs客户端
+ * @param bucketName 桶名
+ * @param objKey 上传对象在obs上的名称
  * @returns
  */
 function initMultipartUpload(obs, bucketName, objKey) {
@@ -1153,11 +1158,11 @@ function initMultipartUpload(obs, bucketName, objKey) {
 exports.initMultipartUpload = initMultipartUpload;
 /**
  * 上传分段
- * @param obs
- * @param bucketName
- * @param objKey
- * @param uploadId
- * @param filePath
+ * @param obs obs客户端
+ * @param bucketName 桶名
+ * @param objKey 上传对象在obs上的名称
+ * @param uploadId 分段上传任务的uploadid
+ * @param filePath 上传对象的本地路径
  * @returns
  */
 function uploadParts(obs, bucketName, objKey, uploadId, filePath) {
@@ -1207,11 +1212,11 @@ function uploadParts(obs, bucketName, objKey, uploadId, filePath) {
 exports.uploadParts = uploadParts;
 /**
  * 合并分段
- * @param obs
- * @param bucketName
- * @param objKey
- * @param uploadId
- * @param parts
+ * @param obs obs客户端
+ * @param bucketName 桶名
+ * @param objKey 上传对象在obs上的名称
+ * @param uploadId 分段上传任务的uploadid
+ * @param parts 分段上传任务的分段信息
  * @returns
  */
 function mergeParts(obs, bucketName, objKey, uploadId, parts) {

@@ -209,10 +209,10 @@ export async function obsCreateRootFolder(obsClient: any, bucketName: string, ob
 
 /**
  * 分段上传
- * @param obs
- * @param bucketName
- * @param objKey
- * @param filePath
+ * @param obs obs客户端
+ * @param bucketName 桶名
+ * @param objKey 上传对象在obs上的名称
+ * @param filePath 上传对象的本地路径
  */
 export async function multipartUpload(obs: any, bucketName: string, objKey: string, filePath: string): Promise<void> {
     const uploadId = await initMultipartUpload(obs, bucketName, objKey);
@@ -226,9 +226,9 @@ export async function multipartUpload(obs: any, bucketName: string, objKey: stri
 
 /**
  * 初始化分段上传任务
- * @param obs
- * @param bucketName
- * @param objKey
+ * @param obs obs客户端
+ * @param bucketName 桶名
+ * @param objKey 上传对象在obs上的名称
  * @returns
  */
 export async function initMultipartUpload(obs: any, bucketName: string, objKey: string): Promise<string> {
@@ -248,11 +248,11 @@ export async function initMultipartUpload(obs: any, bucketName: string, objKey: 
 
 /**
  * 上传分段
- * @param obs
- * @param bucketName
- * @param objKey
- * @param uploadId
- * @param filePath
+ * @param obs obs客户端
+ * @param bucketName 桶名
+ * @param objKey 上传对象在obs上的名称
+ * @param uploadId 分段上传任务的uploadid
+ * @param filePath 上传对象的本地路径
  * @returns
  */
 export async function uploadParts(
@@ -312,11 +312,11 @@ export async function uploadParts(
 
 /**
  * 合并分段
- * @param obs
- * @param bucketName
- * @param objKey
- * @param uploadId
- * @param parts
+ * @param obs obs客户端
+ * @param bucketName 桶名
+ * @param objKey 上传对象在obs上的名称
+ * @param uploadId 分段上传任务的uploadid
+ * @param parts 分段上传任务的分段信息
  * @returns
  */
 export async function mergeParts(

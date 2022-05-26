@@ -16,8 +16,12 @@ export async function hasBucket(obsClient: any, bucketName: string): Promise<boo
 
 /**
  * 创建桶
- * @param obsClient
- * @param bucketName
+ * @param obsClient obs客户端
+ * @param bucketName 桶名
+ * @param region 桶所在区域
+ * @param ACL 预定义访问策略
+ * @param storageClass 存储类型
+ * @returns
  */
 export async function createBucket(
     obsClient: any,
@@ -53,8 +57,8 @@ export async function createBucket(
 
 /**
  * 获取桶的多版本状态
- * @param obsClient
- * @param bucketName
+ * @param obsClient obs客户端
+ * @param bucketName 桶名
  * @returns
  */
 export async function getBucketVersioning(obsClient: any, bucketName: string): Promise<string> {
@@ -92,9 +96,9 @@ export async function listObjects(
 
 /**
  * 列举桶内全部对象
- * @param obsClient
- * @param bucketName
- * @param nextMarker
+ * @param obsClient obs客户端
+ * @param bucketName 桶名
+ * @param nextMarker 起始位置
  */
 export async function getAllObjects(
     obsClient: any,
@@ -122,7 +126,7 @@ export async function getAllObjects(
  * @param obsClient Obs客户端
  * @param bucketName 桶名
  * @param nextKeyMarker 列举多版本对象的起始位置
- * @param nextVersionIdMarker 多版本对象的版本, 与nextKeyMarker配合使用
+ * @param nextVersionIdMarker 作为标记的多版本对象的版本, 与nextKeyMarker配合使用
  * @returns
  */
 export async function listVersionObjects(
@@ -140,10 +144,10 @@ export async function listVersionObjects(
 
 /**
  * 列举桶内全部多版本对象
- * @param obsClient
- * @param inputs
- * @param nextKeyMarker
- * @param nextVersionMaker
+ * @param obsClient obs客户端
+ * @param bucketName 桶名
+ * @param nextKeyMarker 多版本对象的起始位置
+ * @param nextVersionMaker 作为标记的多版本对象的版本
  */
 export async function getAllVersionObjects(
     obsClient: any,
@@ -182,10 +186,10 @@ export async function getAllVersionObjects(
 
 /**
  * 列举桶内分段上传任务
- * @param obsClient
- * @param bucketName
- * @param nextKeyMarker
- * @param nextUploadIdMarker
+ * @param obsClient obs客户端
+ * @param bucketName 桶名
+ * @param nextKeyMarker 分段上传任务的起始位置
+ * @param nextUploadIdMarker 指定起始位置任务的uploadid
  * @returns
  */
 export async function listMultipartUploads(
@@ -203,10 +207,10 @@ export async function listMultipartUploads(
 
 /**
  * 列举桶内全部分段上传任务
- * @param obsClient
- * @param bucketName
- * @param nextKeyMarker
- * @param nextUploadIdMarker
+ * @param obsClient obs客户端
+ * @param bucketName 桶名
+ * @param nextKeyMarker 分段上传任务的起始位置
+ * @param nextUploadIdMarker 起始位置任务的uploadid
  * @returns
  */
 export async function getAllMultipartUploads(
@@ -240,8 +244,8 @@ export async function getAllMultipartUploads(
 
 /**
  * 判断桶内是否存在对象/多版本对象/任务
- * @param obsClient
- * @param bucketName
+ * @param obsClient obs客户端
+ * @param bucketName 桶名
  * @returns
  */
 export async function isBucketEmpty(obsClient: any, bucketName: string): Promise<boolean> {
@@ -264,8 +268,8 @@ export async function isBucketEmpty(obsClient: any, bucketName: string): Promise
 
 /**
  * 清空桶内全部对象和任务
- * @param obsClient
- * @param bucketName
+ * @param obsClient obs客户端
+ * @param bucketName 桶名
  * @returns
  */
 export async function clearBuckets(obsClient: any, bucketName: string): Promise<boolean> {
@@ -281,8 +285,8 @@ export async function clearBuckets(obsClient: any, bucketName: string): Promise<
 
 /**
  * 删除桶内全部对象/多版本对象
- * @param obsClient
- * @param bucketName
+ * @param obsClient obs客户端
+ * @param bucketName 桶名
  * @returns
  */
 export async function deleteAllObjects(obsClient: any, bucketName: string): Promise<boolean> {
@@ -320,9 +324,9 @@ export async function deleteAllObjects(obsClient: any, bucketName: string): Prom
 
 /**
  * 批量删除对象/多版本对象
- * @param obsClient
- * @param bucketName
- * @param delList
+ * @param obsClient obs客户端
+ * @param bucketName 桶名
+ * @param delList 待删除对象列表
  */
 async function deleteObjects(
     obsClient: any,
@@ -348,8 +352,8 @@ async function deleteObjects(
 
 /**
  * 取消桶内所有分段上传任务
- * @param obsClient
- * @param bucketName
+ * @param obsClient obs客户端
+ * @param bucketName 桶名
  * @returns
  */
 export async function abortAllMultipartUpload(obsClient: any, bucketName: string): Promise<boolean> {
@@ -372,8 +376,9 @@ export async function abortAllMultipartUpload(obsClient: any, bucketName: string
 
 /**
  * 删除桶
- * @param obsClient
- * @param bucketName
+ * @param obsClient obs客户端
+ * @param bucketName 桶名
+ * @param isBucketEmpty 是否为空桶
  * @returns
  */
 export async function deleteBucket(obsClient: any, bucketName: string, isBucketEmpty: boolean): Promise<boolean> {
