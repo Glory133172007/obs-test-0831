@@ -71,8 +71,8 @@ function createBucket(obsClient, bucketName, region, ACL, storageClass) {
             .createBucket({
             Bucket: bucketName,
             Location: region,
-            ACL: ACL,
-            StorageClass: storageClass,
+            ACL: ACL ? obsClient.enums[ACL] : '',
+            StorageClass: storageClass ? obsClient.enums[storageClass] : '',
         })
             .then((result) => {
             if (result.CommonMsg.Status < 300) {
@@ -458,32 +458,29 @@ function getOperationType() {
 exports.getOperationType = getOperationType;
 function getObjectInputs() {
     return {
-        access_key: core.getInput('access_key', { required: true }),
-        secret_key: core.getInput('secret_key', { required: true }),
-        bucket_name: core.getInput('bucket_name', { required: true }),
-        operation_type: core.getInput('operation_type', { required: true }),
-        local_file_path: core.getMultilineInput('local_file_path', {
-            required: true,
-        }),
-        obs_file_path: core.getInput('obs_file_path', { required: true }),
+        accessKey: core.getInput('access_key', { required: true }),
+        secretKey: core.getInput('secret_key', { required: true }),
+        operationType: core.getInput('operation_type', { required: true }),
+        bucketName: core.getInput('bucket_name', { required: true }),
         region: core.getInput('region', { required: true }),
-        include_self_folder: core.getBooleanInput('include_self_folder', {
-            required: false,
-        }),
+        localFilePath: core.getMultilineInput('local_file_path', { required: false }),
+        obsFilePath: core.getInput('obs_file_path', { required: false }),
+        includeSelfFolder: core.getBooleanInput('include_self_folder', { required: false }),
         exclude: core.getMultilineInput('exclude', { required: false }),
     };
 }
 exports.getObjectInputs = getObjectInputs;
 function getBucketInputs() {
+    var _a;
     return {
-        access_key: core.getInput('access_key', { required: true }),
-        secret_key: core.getInput('secret_key', { required: true }),
-        operation_type: core.getInput('operation_type', { required: true }),
-        bucket_name: core.getInput('bucket_name', { required: true }),
+        accessKey: core.getInput('access_key', { required: true }),
+        secretKey: core.getInput('secret_key', { required: true }),
+        operationType: core.getInput('operation_type', { required: true }),
+        bucketName: core.getInput('bucket_name', { required: true }),
         region: core.getInput('region', { required: true }),
         ACL: core.getInput('ACL', { required: false }),
-        storage_class: core.getInput('storage_class', { required: false }),
-        clear_bucket: core.getBooleanInput('clear_bucket', { required: false }),
+        storageClass: core.getInput('storage_class', { required: false }),
+        clearBucket: (_a = core.getBooleanInput('clear_bucket', { required: false })) !== null && _a !== void 0 ? _a : true,
     };
 }
 exports.getBucketInputs = getBucketInputs;
@@ -564,13 +561,13 @@ const bucket = __importStar(__nccwpck_require__(8129));
  */
 function downloadFileOrFolder(obsClient, inputs) {
     return __awaiter(this, void 0, void 0, function* () {
-        const inputLocalFilePath = inputs.local_file_path[0];
-        const downloadPathList = yield getDownloadList(obsClient, inputs, inputs.obs_file_path);
+        const inputLocalFilePath = inputs.localFilePath[0];
+        const downloadPathList = yield getDownloadList(obsClient, inputs, inputs.obsFilePath);
         if (downloadPathList.length < 1) {
             core.setFailed('object not exist in obs or no object needed downloaded.');
             return;
         }
-        else if (pathIsSingleFile(downloadPathList, inputs.obs_file_path)) {
+        else if (pathIsSingleFile(downloadPathList, inputs.obsFilePath)) {
             yield downloadFile(obsClient, inputs, downloadPathList[0]);
             return;
         }
@@ -604,12 +601,12 @@ exports.pathIsSingleFile = pathIsSingleFile;
  */
 function downloadFilesFromObs(obsClient, inputs, downloadList, localPath) {
     return __awaiter(this, void 0, void 0, function* () {
-        const localRoot = createEmptyRootFolders(localPath, inputs.obs_file_path, !!inputs.include_self_folder);
+        const localRoot = createEmptyRootFolders(localPath, inputs.obsFilePath, !!inputs.includeSelfFolder);
         // 如果obs对象是文件夹且本地存在同名文件，不进行下载，记录需要跳过下载的文件夹开头
         let delFolderPath = '';
         for (const path of downloadList) {
             if (delFolderPath === '' || !path.match(`^${delFolderPath}`)) {
-                let finalLocalPath = localRoot + utils.getPathWithoutRootPath(utils.getStringDelLastSlash(inputs.obs_file_path), path);
+                let finalLocalPath = localRoot + utils.getPathWithoutRootPath(utils.getStringDelLastSlash(inputs.obsFilePath), path);
                 // 如果下载列表中有和文件同目录同名的文件夹，给文件名加后缀下载
                 if (downloadList.indexOf(`${path}/`) !== -1) {
                     finalLocalPath += new Date().valueOf();
@@ -657,7 +654,7 @@ function downloadFile(obsClient, inputs, obsPath, localPath) {
     return __awaiter(this, void 0, void 0, function* () {
         let localFileName = localPath
             ? localPath
-            : getLocalFileName(utils.getStringDelLastSlash(inputs.local_file_path[0]), obsPath);
+            : getLocalFileName(utils.getStringDelLastSlash(inputs.localFilePath[0]), obsPath);
         // 若本地存在同名文件夹，下载到此文件夹中。若此文件夹中还存在同名文件夹，放弃本次下载
         if (utils.isExistSameNameFolder(localFileName)) {
             const nextFileName = `${localFileName}/${utils.getLastItemWithSlash(localFileName)}`;
@@ -671,7 +668,7 @@ function downloadFile(obsClient, inputs, obsPath, localPath) {
         }
         core.info(`download ${obsPath} to local: ${localFileName}`);
         yield obsClient.getObject({
-            Bucket: inputs.bucket_name,
+            Bucket: inputs.bucketName,
             Key: obsPath,
             SaveAsFile: localFileName,
         });
@@ -715,7 +712,7 @@ function getDownloadList(obsClient, inputs, obsPath) {
         let isTruncated = true;
         let marker = '';
         while (isTruncated) {
-            const result = yield bucket.listObjects(obsClient, inputs.bucket_name, obsFilePath, marker);
+            const result = yield bucket.listObjects(obsClient, inputs.bucketName, obsFilePath, marker);
             resultList = resultList.concat(delUselessPath(result.InterfaceResult.Contents, inputs));
             isTruncated = result.InterfaceResult.IsTruncated === 'true';
             marker = result.InterfaceResult.NextMarker;
@@ -797,34 +794,32 @@ const download = __importStar(__nccwpck_require__(5933));
 const bucket = __importStar(__nccwpck_require__(8129));
 const utils = __importStar(__nccwpck_require__(918));
 function run() {
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
-        const operation_type = utils.getOperationType(context.getOperationType());
+        const operationCategory = utils.getOperationCategory(context.getOperationType());
         // 对象操作
-        if (operation_type === 'object') {
+        if (operationCategory === 'object') {
             const inputs = context.getObjectInputs();
             if (!utils.checkObjectInputs(inputs)) {
                 core.setFailed('input parameters is not correct.');
                 return;
             }
             // 初始化OBS客户端
-            const obs = context.getObsClient(inputs.access_key, inputs.secret_key, `https://obs.${inputs.region}.myhuaweicloud.com`);
+            const obs = context.getObsClient(inputs.accessKey, inputs.secretKey, `https://obs.${inputs.region}.myhuaweicloud.com`);
             // 若桶不存在，退出
-            if (!(yield bucket.hasBucket(obs, inputs.bucket_name))) {
+            if (!(yield bucket.hasBucket(obs, inputs.bucketName))) {
                 core.setFailed('bucket not exist.');
                 return;
             }
             // 执行上传/下载操作
-            if (inputs.operation_type === 'upload') {
+            if (inputs.operationType === 'upload') {
                 yield upload.uploadFileOrFolder(obs, inputs);
             }
-            else if (inputs.operation_type === 'download') {
+            if (inputs.operationType === 'download') {
                 yield download.downloadFileOrFolder(obs, inputs);
             }
-            else {
-                core.setFailed('operation type error, you should input "upload" or "download"');
-            }
         }
-        else if (operation_type === 'bucket') {
+        else if (operationCategory === 'bucket') {
             const inputs = context.getBucketInputs();
             // 检查桶输入
             if (!utils.checkBucketInputs(inputs)) {
@@ -832,32 +827,28 @@ function run() {
                 return;
             }
             // 初始化OBS客户端
-            const obs = context.getObsClient(inputs.access_key, inputs.secret_key, `https://obs.${inputs.region}.myhuaweicloud.com`);
-            const isBucketExist = yield bucket.hasBucket(obs, inputs.bucket_name);
-            if (inputs.operation_type.toLowerCase() === 'createbucket') {
+            const obs = context.getObsClient(inputs.accessKey, inputs.secretKey, `https://obs.${inputs.region}.myhuaweicloud.com`);
+            const isBucketExist = yield bucket.hasBucket(obs, inputs.bucketName);
+            if (inputs.operationType.toLowerCase() === 'createbucket') {
                 // 若桶已经存在，退出
                 if (isBucketExist) {
-                    core.setFailed('bucket already exist.');
+                    core.setFailed(`The bucket: ${inputs.bucketName} already exists.`);
                     return;
                 }
-                yield bucket.createBucket(obs, inputs.bucket_name, inputs.region, inputs.ACL, inputs.storage_class);
+                yield bucket.createBucket(obs, inputs.bucketName, inputs.region, (_a = inputs.ACL) !== null && _a !== void 0 ? _a : '', (_b = inputs.storageClass) !== null && _b !== void 0 ? _b : '');
             }
-            else if (inputs.operation_type.toLowerCase() === 'deletebucket') {
+            if (inputs.operationType.toLowerCase() === 'deletebucket') {
                 // 若桶不存在，退出
                 if (!isBucketExist) {
-                    core.setFailed('bucket not exist.');
+                    core.setFailed(`The bucket: ${inputs.bucketName} not exists.`);
                     return;
                 }
-                const isEmpty = yield bucket.isBucketEmpty(obs, inputs.bucket_name);
-                if (!isEmpty && !inputs.clear_bucket) {
-                    core.setFailed('please clear all objects and parts in the bucket before delete it, you can set "clear_bucket" as true to allow us clear the bucket.');
+                const isEmpty = yield bucket.isBucketEmpty(obs, inputs.bucketName);
+                if (!isEmpty && inputs.clearBucket === false) {
+                    core.setFailed('some object or parts already exist in bucket, please delete them first or not set parameter "clear_bucket" as false.');
                     return;
                 }
-                yield bucket.deleteBucket(obs, inputs.bucket_name, isEmpty);
-            }
-            else {
-                core.setFailed('operation type error, you should input "createBucket" or "deleteBucket"');
-                return;
+                yield bucket.deleteBucket(obs, inputs.bucketName, isEmpty);
             }
         }
         else {
@@ -920,35 +911,33 @@ const core = __importStar(__nccwpck_require__(2186));
  */
 function uploadFileOrFolder(obsClient, inputs) {
     return __awaiter(this, void 0, void 0, function* () {
-        for (const path of inputs.local_file_path) {
+        for (const path of inputs.localFilePath) {
             const localFilePath = utils.getStringDelLastSlash(path); // 文件或者文件夹
             const localRoot = utils.getLastItemWithSlash(localFilePath);
             try {
                 const fsStat = fs.lstatSync(localFilePath);
                 if (fsStat.isFile()) {
                     let obsFilePath = '';
-                    if (inputs.obs_file_path) {
-                        if (utils.isEndWithSlash(inputs.obs_file_path)) {
-                            obsFilePath = inputs.obs_file_path + localRoot;
+                    if (inputs.obsFilePath) {
+                        if (utils.isEndWithSlash(inputs.obsFilePath)) {
+                            obsFilePath = inputs.obsFilePath + localRoot;
                         }
                         else {
                             // 若是多路径上传时的文件,不存在重命名,默认传至obs_file_path文件夹下
                             obsFilePath =
-                                inputs.local_file_path.length > 1
-                                    ? `${inputs.obs_file_path}/${localRoot}`
-                                    : inputs.obs_file_path;
+                                inputs.localFilePath.length > 1 ? `${inputs.obsFilePath}/${localRoot}` : inputs.obsFilePath;
                         }
                     }
                     else {
                         // 若obs_file_path为空,上传所有对象至根目录
                         obsFilePath = localRoot;
                     }
-                    yield uploadFile(obsClient, inputs.bucket_name, localFilePath, obsFilePath);
+                    yield uploadFile(obsClient, inputs.bucketName, localFilePath, obsFilePath);
                 }
                 if (fsStat.isDirectory()) {
-                    const localFileRootPath = inputs.include_self_folder
-                        ? getObsRootFile(inputs.include_self_folder, inputs.obs_file_path, localRoot)
-                        : getObsRootFile(false, inputs.obs_file_path, localRoot);
+                    const localFileRootPath = inputs.includeSelfFolder
+                        ? getObsRootFile(inputs.includeSelfFolder, inputs.obsFilePath, localRoot)
+                        : getObsRootFile(false, inputs.obsFilePath, localRoot);
                     const uploadList = {
                         file: [],
                         folder: [],
@@ -957,10 +946,10 @@ function uploadFileOrFolder(obsClient, inputs) {
                     // 若总文件数大于1000，取消上传
                     const uploadListLength = uploadList.file.length + uploadList.folder.length;
                     if (uploadListLength <= 1000) {
-                        if (inputs.obs_file_path) {
-                            yield obsCreateRootFolder(obsClient, inputs.bucket_name, utils.getStringDelLastSlash(inputs.obs_file_path));
+                        if (inputs.obsFilePath) {
+                            yield obsCreateRootFolder(obsClient, inputs.bucketName, utils.getStringDelLastSlash(inputs.obsFilePath));
                         }
-                        yield uploadFileAndFolder(obsClient, inputs.bucket_name, uploadList);
+                        yield uploadFileAndFolder(obsClient, inputs.bucketName, uploadList);
                     }
                     else {
                         core.setFailed(`local dirctory: '${path}' has ${uploadListLength} files and folders,`);
@@ -1271,7 +1260,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.isExistSameNameFile = exports.isExistSameNameFolder = exports.isFileOverSize = exports.getStringDelLastSlash = exports.isEndWithSlash = exports.createFolder = exports.getPathWithoutRootPath = exports.getLastItemWithSlash = exports.replaceSlash = exports.checkBucketInputs = exports.checkObjectInputs = exports.checkDownloadFilePath = exports.checkUploadFilePath = exports.getOperationType = exports.checkRegion = exports.checkAkSk = exports.PART_MAX_SIZE = exports.OPERATION_TYPE = void 0;
+exports.isExistSameNameFile = exports.isExistSameNameFolder = exports.isFileOverSize = exports.getStringDelLastSlash = exports.isEndWithSlash = exports.createFolder = exports.getPathWithoutRootPath = exports.getLastItemWithSlash = exports.replaceSlash = exports.checkBucketInputs = exports.checkObjectInputs = exports.checkDownloadFilePath = exports.checkUploadFilePath = exports.getOperationCategory = exports.checkRegion = exports.checkAkSk = exports.PART_MAX_SIZE = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const fs = __importStar(__nccwpck_require__(5747));
 /**
@@ -1305,11 +1294,44 @@ const regionArray = [
     'ap-southeast-3',
     'ap-southeast-1',
 ];
-exports.OPERATION_TYPE = {
+/**
+ * 目前支持的预定义访问策略
+ * 私有读写 AclPrivate
+ * 公共读 AclPublicRead
+ * 公共读写 AclPublicReadWrite
+ * 桶公共读，桶内对象公共读 AclPublicReadDelivered
+ * 桶公共读写，桶内对象公共读写 AclPublicReadWriteDelivered
+ */
+const ACLArray = [
+    'AclPrivate',
+    'AclPublicRead',
+    'AclPublicReadWrite',
+    'AclPublicReadDelivered',
+    'AclPublicReadWriteDelivered',
+];
+/**
+ * 目前支持的存储类型
+ * 标准存储 StorageClassStandard
+ * 低频访问存储 StorageClassWarm
+ * 归档存储 StorageClassCold
+ */
+const storageClassArray = ['StorageClassStandard', 'StorageClassWarm', 'StorageClassCold'];
+/**
+ * 目前支持的操作类型
+ * 对象操作 upload  download
+ * 桶操作 createbucket  deletebucket
+ */
+const OPERATION_TYPE = {
     object: ['upload', 'download'],
     bucket: ['createbucket', 'deletebucket'],
 };
+/**
+ * 允许上传的最大文件大小（单位：B）
+ */
 const FILE_MAX_SIZE = 5 * 1024 * 1024 * 1024;
+/**
+ * 分段上传的段大小（单位：B）
+ */
 exports.PART_MAX_SIZE = 1024 * 1024;
 /**
  * 检查ak/sk是否合法
@@ -1333,31 +1355,31 @@ function checkRegion(region) {
 }
 exports.checkRegion = checkRegion;
 /**
- * 获得operation_type类型
+ * 获得操作类型
  * @param operation_type
  * @returns
  */
-function getOperationType(operation_type) {
-    if (exports.OPERATION_TYPE.object.includes(operation_type.toLowerCase())) {
+function getOperationCategory(operationType) {
+    if (OPERATION_TYPE.object.includes(operationType.toLowerCase())) {
         return 'object';
     }
-    if (exports.OPERATION_TYPE.bucket.includes(operation_type.toLowerCase())) {
+    if (OPERATION_TYPE.bucket.includes(operationType.toLowerCase())) {
         return 'bucket';
     }
     return '';
 }
-exports.getOperationType = getOperationType;
+exports.getOperationCategory = getOperationCategory;
 /**
  * 检查上传时的input_file_path和参数obs_file_path是否合法
  * @param inputs
  * @returns
  */
 function checkUploadFilePath(inputs) {
-    if (inputs.local_file_path.length === 0) {
+    if (inputs.localFilePath.length === 0) {
         core.setFailed('please input localFilePath.');
         return false;
     }
-    for (const path of inputs.local_file_path) {
+    for (const path of inputs.localFilePath) {
         if (path === '') {
             core.setFailed('you should not input a empty string as local_file_path.');
             return false;
@@ -1376,15 +1398,15 @@ exports.checkUploadFilePath = checkUploadFilePath;
  * @returns
  */
 function checkDownloadFilePath(inputs) {
-    if (inputs.local_file_path.length !== 1) {
+    if (inputs.localFilePath.length !== 1) {
         core.setFailed('you should input one local_file_path.');
         return false;
     }
-    if (inputs.local_file_path[0] === '') {
+    if (inputs.localFilePath[0] === '') {
         core.setFailed('you should not input a empty string as local_file_path.');
         return false;
     }
-    if (!inputs.obs_file_path) {
+    if (!inputs.obsFilePath) {
         core.setFailed('you should input one obs_file_path.');
         return false;
     }
@@ -1397,7 +1419,7 @@ exports.checkDownloadFilePath = checkDownloadFilePath;
  * @returns
  */
 function checkObjectInputs(inputs) {
-    if (!checkAkSk(inputs.access_key, inputs.secret_key)) {
+    if (!checkAkSk(inputs.accessKey, inputs.secretKey)) {
         core.setFailed('ak or sk is not correct.');
         return false;
     }
@@ -1405,13 +1427,29 @@ function checkObjectInputs(inputs) {
         core.setFailed('region is not correct.');
         return false;
     }
-    const checkFilePath = inputs.operation_type.toLowerCase() === 'upload' ? checkUploadFilePath(inputs) : checkDownloadFilePath(inputs);
+    const checkFilePath = inputs.operationType.toLowerCase() === 'upload' ? checkUploadFilePath(inputs) : checkDownloadFilePath(inputs);
     if (!checkFilePath) {
         return false;
     }
     return true;
 }
 exports.checkObjectInputs = checkObjectInputs;
+/**
+ * 检查预定义访问策略是否合法
+ * @param acl
+ * @returns
+ */
+function checkACL(acl) {
+    return ACLArray.includes(acl);
+}
+/**
+ * 检查存储类型是否合法
+ * @param storageClass
+ * @returns
+ */
+function checkStorageClass(storageClass) {
+    return storageClassArray.includes(storageClass);
+}
 /**
  * 检查操作桶时输入的各参数是否合法
  * @param inputs
@@ -1422,9 +1460,21 @@ function checkBucketInputs(inputs) {
         core.setFailed('region is not correct.');
         return false;
     }
-    if (!checkAkSk(inputs.access_key, inputs.secret_key)) {
+    if (!checkAkSk(inputs.accessKey, inputs.secretKey)) {
         core.setFailed('ak or sk is not correct.');
         return false;
+    }
+    if (inputs.ACL) {
+        if (!checkACL(inputs.ACL)) {
+            core.setFailed('ACL is not correct.');
+            return false;
+        }
+    }
+    if (inputs.storageClass) {
+        if (!checkStorageClass(inputs.storageClass)) {
+            core.setFailed('storageClass is not correct.');
+            return false;
+        }
     }
     return true;
 }

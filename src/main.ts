@@ -6,10 +6,10 @@ import * as bucket from './bucket';
 import * as utils from './utils';
 
 async function run() {
-    const operation_type = utils.getOperationType(context.getOperationType());
+    const operationCategory = utils.getOperationCategory(context.getOperationType());
 
     // 对象操作
-    if (operation_type === 'object') {
+    if (operationCategory === 'object') {
         const inputs = context.getObjectInputs();
 
         if (!utils.checkObjectInputs(inputs)) {
@@ -19,26 +19,26 @@ async function run() {
 
         // 初始化OBS客户端
         const obs = context.getObsClient(
-            inputs.access_key,
-            inputs.secret_key,
+            inputs.accessKey,
+            inputs.secretKey,
             `https://obs.${inputs.region}.myhuaweicloud.com`
         );
 
         // 若桶不存在，退出
-        if (!(await bucket.hasBucket(obs, inputs.bucket_name))) {
+        if (!(await bucket.hasBucket(obs, inputs.bucketName))) {
             core.setFailed('bucket not exist.');
             return;
         }
 
         // 执行上传/下载操作
-        if (inputs.operation_type === 'upload') {
+        if (inputs.operationType === 'upload') {
             await upload.uploadFileOrFolder(obs, inputs);
-        } else if (inputs.operation_type === 'download') {
-            await download.downloadFileOrFolder(obs, inputs);
-        } else {
-            core.setFailed('operation type error, you should input "upload" or "download"');
         }
-    } else if (operation_type === 'bucket') {
+
+        if (inputs.operationType === 'download') {
+            await download.downloadFileOrFolder(obs, inputs);
+        }
+    } else if (operationCategory === 'bucket') {
         const inputs = context.getBucketInputs();
 
         // 检查桶输入
@@ -49,36 +49,40 @@ async function run() {
 
         // 初始化OBS客户端
         const obs = context.getObsClient(
-            inputs.access_key,
-            inputs.secret_key,
+            inputs.accessKey,
+            inputs.secretKey,
             `https://obs.${inputs.region}.myhuaweicloud.com`
         );
 
-        const isBucketExist = await bucket.hasBucket(obs, inputs.bucket_name);
-        if (inputs.operation_type.toLowerCase() === 'createbucket') {
+        const isBucketExist = await bucket.hasBucket(obs, inputs.bucketName);
+        if (inputs.operationType.toLowerCase() === 'createbucket') {
             // 若桶已经存在，退出
             if (isBucketExist) {
-                core.setFailed('bucket already exist.');
+                core.setFailed(`The bucket: ${inputs.bucketName} already exists.`);
                 return;
             }
-            await bucket.createBucket(obs, inputs.bucket_name, inputs.region, inputs.ACL, inputs.storage_class);
-        } else if (inputs.operation_type.toLowerCase() === 'deletebucket') {
+            await bucket.createBucket(
+                obs,
+                inputs.bucketName,
+                inputs.region,
+                inputs.ACL ?? '',
+                inputs.storageClass ?? ''
+            );
+        }
+        if (inputs.operationType.toLowerCase() === 'deletebucket') {
             // 若桶不存在，退出
             if (!isBucketExist) {
-                core.setFailed('bucket not exist.');
+                core.setFailed(`The bucket: ${inputs.bucketName} not exists.`);
                 return;
             }
-            const isEmpty = await bucket.isBucketEmpty(obs, inputs.bucket_name);
-            if (!isEmpty && !inputs.clear_bucket) {
+            const isEmpty = await bucket.isBucketEmpty(obs, inputs.bucketName);
+            if (!isEmpty && inputs.clearBucket === false) {
                 core.setFailed(
-                    'please clear all objects and parts in the bucket before delete it, you can set "clear_bucket" as true to allow us clear the bucket.'
+                    'some object or parts already exist in bucket, please delete them first or not set parameter "clear_bucket" as false.'
                 );
                 return;
             }
-            await bucket.deleteBucket(obs, inputs.bucket_name, isEmpty);
-        } else {
-            core.setFailed('operation type error, you should input "createBucket" or "deleteBucket"');
-            return;
+            await bucket.deleteBucket(obs, inputs.bucketName, isEmpty);
         }
     } else {
         core.setFailed(`please check your operation_type.`);

@@ -34,8 +34,8 @@ export async function createBucket(
         .createBucket({
             Bucket: bucketName,
             Location: region,
-            ACL: ACL,
-            StorageClass: storageClass,
+            ACL: ACL ? obsClient.enums[ACL] : '',
+            StorageClass: storageClass ? obsClient.enums[storageClass] : '',
         })
         .then((result: CommonResult) => {
             if (result.CommonMsg.Status < 300) {

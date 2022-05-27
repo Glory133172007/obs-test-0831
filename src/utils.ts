@@ -34,11 +34,48 @@ const regionArray = [
     'ap-southeast-1',
 ];
 
-export const OPERATION_TYPE = {
+/**
+ * 目前支持的预定义访问策略
+ * 私有读写 AclPrivate
+ * 公共读 AclPublicRead
+ * 公共读写 AclPublicReadWrite
+ * 桶公共读，桶内对象公共读 AclPublicReadDelivered
+ * 桶公共读写，桶内对象公共读写 AclPublicReadWriteDelivered
+ */
+const ACLArray = [
+    'AclPrivate',
+    'AclPublicRead',
+    'AclPublicReadWrite',
+    'AclPublicReadDelivered',
+    'AclPublicReadWriteDelivered',
+];
+
+/**
+ * 目前支持的存储类型
+ * 标准存储 StorageClassStandard
+ * 低频访问存储 StorageClassWarm
+ * 归档存储 StorageClassCold
+ */
+const storageClassArray = ['StorageClassStandard', 'StorageClassWarm', 'StorageClassCold'];
+
+/**
+ * 目前支持的操作类型
+ * 对象操作 upload  download
+ * 桶操作 createbucket  deletebucket
+ */
+const OPERATION_TYPE = {
     object: ['upload', 'download'],
     bucket: ['createbucket', 'deletebucket'],
 };
+
+/**
+ * 允许上传的最大文件大小（单位：B）
+ */
 const FILE_MAX_SIZE = 5 * 1024 * 1024 * 1024;
+
+/**
+ * 分段上传的段大小（单位：B）
+ */
 export const PART_MAX_SIZE = 1024 * 1024;
 
 /**
@@ -63,15 +100,15 @@ export function checkRegion(region: string): boolean {
 }
 
 /**
- * 获得operation_type类型
+ * 获得操作类型
  * @param operation_type
  * @returns
  */
-export function getOperationType(operation_type: string): string {
-    if (OPERATION_TYPE.object.includes(operation_type.toLowerCase())) {
+export function getOperationCategory(operationType: string): string {
+    if (OPERATION_TYPE.object.includes(operationType.toLowerCase())) {
         return 'object';
     }
-    if (OPERATION_TYPE.bucket.includes(operation_type.toLowerCase())) {
+    if (OPERATION_TYPE.bucket.includes(operationType.toLowerCase())) {
         return 'bucket';
     }
     return '';
@@ -83,11 +120,11 @@ export function getOperationType(operation_type: string): string {
  * @returns
  */
 export function checkUploadFilePath(inputs: ObjectInputs): boolean {
-    if (inputs.local_file_path.length === 0) {
+    if (inputs.localFilePath.length === 0) {
         core.setFailed('please input localFilePath.');
         return false;
     }
-    for (const path of inputs.local_file_path) {
+    for (const path of inputs.localFilePath) {
         if (path === '') {
             core.setFailed('you should not input a empty string as local_file_path.');
             return false;
@@ -106,15 +143,15 @@ export function checkUploadFilePath(inputs: ObjectInputs): boolean {
  * @returns
  */
 export function checkDownloadFilePath(inputs: ObjectInputs): boolean {
-    if (inputs.local_file_path.length !== 1) {
+    if (inputs.localFilePath.length !== 1) {
         core.setFailed('you should input one local_file_path.');
         return false;
     }
-    if (inputs.local_file_path[0] === '') {
+    if (inputs.localFilePath[0] === '') {
         core.setFailed('you should not input a empty string as local_file_path.');
         return false;
     }
-    if (!inputs.obs_file_path) {
+    if (!inputs.obsFilePath) {
         core.setFailed('you should input one obs_file_path.');
         return false;
     }
@@ -127,7 +164,7 @@ export function checkDownloadFilePath(inputs: ObjectInputs): boolean {
  * @returns
  */
 export function checkObjectInputs(inputs: ObjectInputs): boolean {
-    if (!checkAkSk(inputs.access_key, inputs.secret_key)) {
+    if (!checkAkSk(inputs.accessKey, inputs.secretKey)) {
         core.setFailed('ak or sk is not correct.');
         return false;
     }
@@ -136,11 +173,29 @@ export function checkObjectInputs(inputs: ObjectInputs): boolean {
         return false;
     }
     const checkFilePath =
-        inputs.operation_type.toLowerCase() === 'upload' ? checkUploadFilePath(inputs) : checkDownloadFilePath(inputs);
+        inputs.operationType.toLowerCase() === 'upload' ? checkUploadFilePath(inputs) : checkDownloadFilePath(inputs);
     if (!checkFilePath) {
         return false;
     }
     return true;
+}
+
+/**
+ * 检查预定义访问策略是否合法
+ * @param acl
+ * @returns
+ */
+function checkACL(acl: string): boolean {
+    return ACLArray.includes(acl);
+}
+
+/**
+ * 检查存储类型是否合法
+ * @param storageClass
+ * @returns
+ */
+function checkStorageClass(storageClass: string): boolean {
+    return storageClassArray.includes(storageClass);
 }
 
 /**
@@ -153,9 +208,21 @@ export function checkBucketInputs(inputs: BucketInputs): boolean {
         core.setFailed('region is not correct.');
         return false;
     }
-    if (!checkAkSk(inputs.access_key, inputs.secret_key)) {
+    if (!checkAkSk(inputs.accessKey, inputs.secretKey)) {
         core.setFailed('ak or sk is not correct.');
         return false;
+    }
+    if (inputs.ACL) {
+        if (!checkACL(inputs.ACL)) {
+            core.setFailed('ACL is not correct.');
+            return false;
+        }
+    }
+    if (inputs.storageClass) {
+        if (!checkStorageClass(inputs.storageClass)) {
+            core.setFailed('storageClass is not correct.');
+            return false;
+        }
     }
     return true;
 }

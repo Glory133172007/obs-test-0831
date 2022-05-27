@@ -7,32 +7,28 @@ export function getOperationType(): string {
 
 export function getObjectInputs(): ObjectInputs {
     return {
-        access_key: core.getInput('access_key', { required: true }),
-        secret_key: core.getInput('secret_key', { required: true }),
-        bucket_name: core.getInput('bucket_name', { required: true }),
-        operation_type: core.getInput('operation_type', { required: true }),
-        local_file_path: core.getMultilineInput('local_file_path', {
-            required: true,
-        }),
-        obs_file_path: core.getInput('obs_file_path', { required: true }),
+        accessKey: core.getInput('access_key', { required: true }),
+        secretKey: core.getInput('secret_key', { required: true }),
+        operationType: core.getInput('operation_type', { required: true }),
+        bucketName: core.getInput('bucket_name', { required: true }),
         region: core.getInput('region', { required: true }),
-        include_self_folder: core.getBooleanInput('include_self_folder', {
-            required: false,
-        }),
+        localFilePath: core.getMultilineInput('local_file_path', { required: false }),
+        obsFilePath: core.getInput('obs_file_path', { required: false }),
+        includeSelfFolder: core.getBooleanInput('include_self_folder', { required: false }),
         exclude: core.getMultilineInput('exclude', { required: false }),
     };
 }
 
 export function getBucketInputs(): BucketInputs {
     return {
-        access_key: core.getInput('access_key', { required: true }),
-        secret_key: core.getInput('secret_key', { required: true }),
-        operation_type: core.getInput('operation_type', { required: true }),
-        bucket_name: core.getInput('bucket_name', { required: true }),
+        accessKey: core.getInput('access_key', { required: true }),
+        secretKey: core.getInput('secret_key', { required: true }),
+        operationType: core.getInput('operation_type', { required: true }),
+        bucketName: core.getInput('bucket_name', { required: true }),
         region: core.getInput('region', { required: true }),
         ACL: core.getInput('ACL', { required: false }),
-        storage_class: core.getInput('storage_class', { required: false }),
-        clear_bucket: core.getBooleanInput('clear_bucket', { required: false }),
+        storageClass: core.getInput('storage_class', { required: false }),
+        clearBucket: core.getBooleanInput('clear_bucket', { required: false }) ?? true,
     };
 }
 

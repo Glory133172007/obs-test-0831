@@ -10,35 +10,33 @@ import { ObjectInputs, UploadFileList } from './types';
  * @param inputs 用户输入的参数
  */
 export async function uploadFileOrFolder(obsClient: any, inputs: ObjectInputs): Promise<void> {
-    for (const path of inputs.local_file_path) {
+    for (const path of inputs.localFilePath) {
         const localFilePath = utils.getStringDelLastSlash(path); // 文件或者文件夹
         const localRoot = utils.getLastItemWithSlash(localFilePath);
         try {
             const fsStat = fs.lstatSync(localFilePath);
             if (fsStat.isFile()) {
                 let obsFilePath = '';
-                if (inputs.obs_file_path) {
-                    if (utils.isEndWithSlash(inputs.obs_file_path)) {
-                        obsFilePath = inputs.obs_file_path + localRoot;
+                if (inputs.obsFilePath) {
+                    if (utils.isEndWithSlash(inputs.obsFilePath)) {
+                        obsFilePath = inputs.obsFilePath + localRoot;
                     } else {
                         // 若是多路径上传时的文件,不存在重命名,默认传至obs_file_path文件夹下
                         obsFilePath =
-                            inputs.local_file_path.length > 1
-                                ? `${inputs.obs_file_path}/${localRoot}`
-                                : inputs.obs_file_path;
+                            inputs.localFilePath.length > 1 ? `${inputs.obsFilePath}/${localRoot}` : inputs.obsFilePath;
                     }
                 } else {
                     // 若obs_file_path为空,上传所有对象至根目录
                     obsFilePath = localRoot;
                 }
 
-                await uploadFile(obsClient, inputs.bucket_name, localFilePath, obsFilePath);
+                await uploadFile(obsClient, inputs.bucketName, localFilePath, obsFilePath);
             }
 
             if (fsStat.isDirectory()) {
-                const localFileRootPath = inputs.include_self_folder
-                    ? getObsRootFile(inputs.include_self_folder, inputs.obs_file_path, localRoot)
-                    : getObsRootFile(false, inputs.obs_file_path, localRoot);
+                const localFileRootPath = inputs.includeSelfFolder
+                    ? getObsRootFile(inputs.includeSelfFolder, inputs.obsFilePath, localRoot)
+                    : getObsRootFile(false, inputs.obsFilePath, localRoot);
                 const uploadList = {
                     file: [],
                     folder: [],
@@ -48,14 +46,14 @@ export async function uploadFileOrFolder(obsClient: any, inputs: ObjectInputs): 
                 // 若总文件数大于1000，取消上传
                 const uploadListLength = uploadList.file.length + uploadList.folder.length;
                 if (uploadListLength <= 1000) {
-                    if (inputs.obs_file_path) {
+                    if (inputs.obsFilePath) {
                         await obsCreateRootFolder(
                             obsClient,
-                            inputs.bucket_name,
-                            utils.getStringDelLastSlash(inputs.obs_file_path)
+                            inputs.bucketName,
+                            utils.getStringDelLastSlash(inputs.obsFilePath)
                         );
                     }
-                    await uploadFileAndFolder(obsClient, inputs.bucket_name, uploadList);
+                    await uploadFileAndFolder(obsClient, inputs.bucketName, uploadList);
                 } else {
                     core.setFailed(`local dirctory: '${path}' has ${uploadListLength} files and folders,`);
                     core.setFailed(`please upload a dirctory include less than 1000 files and folders.`);

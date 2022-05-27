@@ -1,28 +1,28 @@
 import stream from 'stream';
 
 export interface ObjectInputs {
-    access_key: string;
-    secret_key: string;
-    bucket_name: string;
-    operation_type: string;
+    accessKey: string;
+    secretKey: string;
+    bucketName: string;
+    operationType: string;
     region: string;
-    local_file_path: string[];
-    obs_file_path: string;
+    localFilePath: string[];
+    obsFilePath: string;
     // 是否包含文件夹自身
-    include_self_folder?: boolean;
+    includeSelfFolder?: boolean;
     // 下载时要排除的文件夹/文件
     exclude?: string[];
 }
 
 export interface BucketInputs {
-    access_key: string;
-    secret_key: string;
-    operation_type: string;
-    bucket_name: string;
+    accessKey: string;
+    secretKey: string;
+    bucketName: string;
+    operationType: string;
     region: string;
     ACL?: string;
-    storage_class?: string;
-    clear_bucket?: boolean;
+    storageClass?: string;
+    clearBucket?: boolean;
 }
 
 export interface CommonResult {
