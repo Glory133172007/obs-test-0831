@@ -206,7 +206,7 @@ src
   低频访问存储：StorageClassWarm
   归档存储： StorageClassCold
 ```
-### 新增名为'new-bucket'的桶（公共读写、低频访问存储）
+### 创建名为'new-bucket'的桶（公共读写、低频访问存储）
 假设您的OBS中不存在名为'new-bucket'的桶
 ```yaml
 jobs:
