@@ -400,20 +400,29 @@ exports.abortAllMultipartUpload = abortAllMultipartUpload;
  */
 function deleteBucket(obsClient, bucketName, isBucketEmpty) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (!isBucketEmpty) {
-            yield clearBuckets(obsClient, bucketName);
+        let isEmpty = isBucketEmpty;
+        if (!isEmpty) {
+            isEmpty = yield clearBuckets(obsClient, bucketName);
         }
-        const result = yield obsClient.deleteBucket({
-            Bucket: bucketName,
-        });
-        if (result.CommonMsg.Status < 300) {
-            core.info(`delete bucket: ${bucketName} successfully.`);
-            return true;
+        if (isEmpty) {
+            obsClient
+                .deleteBucket({
+                Bucket: bucketName,
+            })
+                .then((result) => {
+                if (result.CommonMsg.Status < 300) {
+                    core.info(`delete bucket: ${bucketName} successfully.`);
+                    return true;
+                }
+                else {
+                    core.setFailed(`delete bucket: ${bucketName} failed, ${result.CommonMsg.Message}.`);
+                }
+            })
+                .catch((err) => {
+                core.info(`delete bucket: ${bucketName} failed, ${err}.`);
+            });
         }
-        else {
-            core.setFailed(`delete bucket: ${bucketName} failed, ${result.CommonMsg.Message}.`);
-            return false;
-        }
+        return false;
     });
 }
 exports.deleteBucket = deleteBucket;
@@ -457,6 +466,7 @@ function getOperationType() {
 }
 exports.getOperationType = getOperationType;
 function getObjectInputs() {
+    var _a;
     return {
         accessKey: core.getInput('access_key', { required: true }),
         secretKey: core.getInput('secret_key', { required: true }),
@@ -465,7 +475,7 @@ function getObjectInputs() {
         region: core.getInput('region', { required: true }),
         localFilePath: core.getMultilineInput('local_file_path', { required: false }),
         obsFilePath: core.getInput('obs_file_path', { required: false }),
-        includeSelfFolder: core.getBooleanInput('include_self_folder', { required: false }),
+        includeSelfFolder: (_a = core.getBooleanInput('include_self_folder', { required: false })) !== null && _a !== void 0 ? _a : false,
         exclude: core.getMultilineInput('exclude', { required: false }),
     };
 }
@@ -935,9 +945,7 @@ function uploadFileOrFolder(obsClient, inputs) {
                     yield uploadFile(obsClient, inputs.bucketName, localFilePath, obsFilePath);
                 }
                 if (fsStat.isDirectory()) {
-                    const localFileRootPath = inputs.includeSelfFolder
-                        ? getObsRootFile(inputs.includeSelfFolder, inputs.obsFilePath, localRoot)
-                        : getObsRootFile(false, inputs.obsFilePath, localRoot);
+                    const localFileRootPath = getObsRootFile(!!inputs.includeSelfFolder, inputs.obsFilePath, localRoot);
                     const uploadList = {
                         file: [],
                         folder: [],

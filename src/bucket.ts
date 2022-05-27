@@ -382,19 +382,27 @@ export async function abortAllMultipartUpload(obsClient: any, bucketName: string
  * @returns
  */
 export async function deleteBucket(obsClient: any, bucketName: string, isBucketEmpty: boolean): Promise<boolean> {
-    if (!isBucketEmpty) {
-        await clearBuckets(obsClient, bucketName);
+    let isEmpty = isBucketEmpty;
+    if (!isEmpty) {
+        isEmpty = await clearBuckets(obsClient, bucketName);
     }
 
-    const result = await obsClient.deleteBucket({
-        Bucket: bucketName,
-    });
-
-    if (result.CommonMsg.Status < 300) {
-        core.info(`delete bucket: ${bucketName} successfully.`);
-        return true;
-    } else {
-        core.setFailed(`delete bucket: ${bucketName} failed, ${result.CommonMsg.Message}.`);
-        return false;
+    if (isEmpty) {
+        obsClient
+            .deleteBucket({
+                Bucket: bucketName,
+            })
+            .then((result: CommonResult) => {
+                if (result.CommonMsg.Status < 300) {
+                    core.info(`delete bucket: ${bucketName} successfully.`);
+                    return true;
+                } else {
+                    core.setFailed(`delete bucket: ${bucketName} failed, ${result.CommonMsg.Message}.`);
+                }
+            })
+            .catch((err: string) => {
+                core.info(`delete bucket: ${bucketName} failed, ${err}.`);
+            });
     }
+    return false;
 }

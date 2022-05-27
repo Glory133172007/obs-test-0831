@@ -34,9 +34,7 @@ export async function uploadFileOrFolder(obsClient: any, inputs: ObjectInputs): 
             }
 
             if (fsStat.isDirectory()) {
-                const localFileRootPath = inputs.includeSelfFolder
-                    ? getObsRootFile(inputs.includeSelfFolder, inputs.obsFilePath, localRoot)
-                    : getObsRootFile(false, inputs.obsFilePath, localRoot);
+                const localFileRootPath = getObsRootFile(!!inputs.includeSelfFolder, inputs.obsFilePath, localRoot);
                 const uploadList = {
                     file: [],
                     folder: [],

@@ -27,6 +27,7 @@ inputs:
   include_self_folder:
     description: "Include root folder when upload or download"
     required: false
+    default: false
   exclude:
     description: "Exclude file or folder when download a folder"
     required: false
