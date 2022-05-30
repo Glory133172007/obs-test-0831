@@ -29,7 +29,7 @@ jobs:
           obs_file_path: test.txt
           operation_type: download
       - name: Create Bucket on HuaweiCloud OBS
-        uses: huaweicloud/obs-helper@v1.2.0
+        uses: ./
         id: create_bucket_on_obs
         with:
           access_key: ${{ secrets.ACCESSKEY }}
@@ -40,7 +40,7 @@ jobs:
           ACL: 'AclPublicReadWrite'
           storage_class: 'StorageClassWarm'
       - name: Delete Bucket on HuaweiCloud OBS
-        uses: huaweicloud/obs-helper@v1.2.0
+        uses: ./
         id: delete_bucket_on_obs
         with:
           access_key: ${{ secrets.ACCESSKEY }}

@@ -1,8 +1,18 @@
 import * as core from '@actions/core';
-import { ObjectInputs, BucketInputs } from './types';
+import { ObjectInputs, BucketInputs, CommonInputs } from './types';
 
 export function getOperationType(): string {
     return core.getInput('operation_type', { required: true });
+}
+
+export function getCommonInputs(): CommonInputs {
+    return {
+        accessKey: core.getInput('access_key', { required: true }),
+        secretKey: core.getInput('secret_key', { required: true }),
+        operationType: core.getInput('operation_type', { required: true }),
+        bucketName: core.getInput('bucket_name', { required: true }),
+        region: core.getInput('region', { required: true }),
+    };
 }
 
 export function getObjectInputs(): ObjectInputs {

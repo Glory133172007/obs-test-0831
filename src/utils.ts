@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 import * as fs from 'fs';
-import { BucketInputs, ObjectInputs } from './types';
+import { BucketInputs, CommonInputs, ObjectInputs } from './types';
 
 /**
  * 目前支持obs功能的region列表
@@ -100,6 +100,21 @@ export function checkRegion(region: string): boolean {
 }
 
 /**
+ * 检查桶名，规则如下
+ * 3～63个字符，数字或字母开头，支持小写字母、数字、“-”、“.”
+ * 禁止以“-”或“.”开头及结尾，禁止两个“.”相邻，禁止“.”和“-”相邻
+ * 禁止类IP地址
+ * @param bucketName
+ * @returns
+ */
+export function checkBucketName(bucketName: string): boolean {
+    const legalReg = /^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/;
+    const symbolReg = /([.]+[.-]+)|([-]+[.]+)/;
+    const ipReg = /(\.((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})){3}/;
+    return legalReg.test(bucketName) && !symbolReg.test(bucketName) && !ipReg.test(bucketName);
+}
+
+/**
  * 获得操作类型
  * @param operation_type
  * @returns
@@ -159,28 +174,6 @@ export function checkDownloadFilePath(inputs: ObjectInputs): boolean {
 }
 
 /**
- * 检查操作对象时输入的各参数是否合法
- * @param inputs
- * @returns
- */
-export function checkObjectInputs(inputs: ObjectInputs): boolean {
-    if (!checkAkSk(inputs.accessKey, inputs.secretKey)) {
-        core.setFailed('ak or sk is not correct.');
-        return false;
-    }
-    if (!checkRegion(inputs.region)) {
-        core.setFailed('region is not correct.');
-        return false;
-    }
-    const checkFilePath =
-        inputs.operationType.toLowerCase() === 'upload' ? checkUploadFilePath(inputs) : checkDownloadFilePath(inputs);
-    if (!checkFilePath) {
-        return false;
-    }
-    return true;
-}
-
-/**
  * 检查预定义访问策略是否合法
  * @param acl
  * @returns
@@ -199,19 +192,45 @@ function checkStorageClass(storageClass: string): boolean {
 }
 
 /**
- * 检查操作桶时输入的各参数是否合法
+ * 检查公共属性(ak,sk,region,bucketName)是否合法
  * @param inputs
  * @returns
  */
-export function checkBucketInputs(inputs: BucketInputs): boolean {
-    if (!checkRegion(inputs.region)) {
-        core.setFailed('region is not correct.');
-        return false;
-    }
+export function checkCommonInputs(inputs: CommonInputs): boolean {
     if (!checkAkSk(inputs.accessKey, inputs.secretKey)) {
         core.setFailed('ak or sk is not correct.');
         return false;
     }
+    if (!checkRegion(inputs.region)) {
+        core.setFailed('region is not correct.');
+        return false;
+    }
+    if (!checkBucketName(inputs.bucketName)) {
+        core.setFailed('bucket name is not correct.');
+    }
+    return true;
+}
+
+/**
+ * 检查操作对象时输入的参数(localFilePath,obsFilePath)是否合法
+ * @param inputs
+ * @returns
+ */
+export function checkObjectInputs(inputs: ObjectInputs): boolean {
+    const checkFilePath =
+        inputs.operationType.toLowerCase() === 'upload' ? checkUploadFilePath(inputs) : checkDownloadFilePath(inputs);
+    if (!checkFilePath) {
+        return false;
+    }
+    return true;
+}
+
+/**
+ * 检查操作桶时输入的参数(ACL,storageClass)是否合法
+ * @param inputs
+ * @returns
+ */
+export function checkBucketInputs(inputs: BucketInputs): boolean {
     if (inputs.ACL) {
         if (!checkACL(inputs.ACL)) {
             core.setFailed('ACL is not correct.');

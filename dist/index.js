@@ -66,32 +66,30 @@ exports.hasBucket = hasBucket;
  * @returns
  */
 function createBucket(obsClient, bucketName, region, ACL, storageClass) {
-    return __awaiter(this, void 0, void 0, function* () {
-        obsClient
-            .createBucket({
-            Bucket: bucketName,
-            Location: region,
-            ACL: ACL ? obsClient.enums[ACL] : '',
-            StorageClass: storageClass ? obsClient.enums[storageClass] : '',
-        })
-            .then((result) => {
-            if (result.CommonMsg.Status < 300) {
-                if (result.InterfaceResult) {
-                    core.info('create bucket Successfully.');
-                    return true;
-                }
+    obsClient
+        .createBucket({
+        Bucket: bucketName,
+        Location: region,
+        ACL: ACL ? obsClient.enums[ACL] : '',
+        StorageClass: storageClass ? obsClient.enums[storageClass] : '',
+    })
+        .then((result) => {
+        if (result.CommonMsg.Status < 300) {
+            if (result.InterfaceResult) {
+                core.info(`create bucket: ${bucketName} Successfully.`);
+                return true;
             }
-            else {
-                core.info('Message-->' + result.CommonMsg.Message);
-                return false;
-            }
-        })
-            .catch((err) => {
-            core.info('Error-->' + err);
+        }
+        else {
+            core.setFailed('Message-->' + result.CommonMsg.Message);
             return false;
-        });
+        }
+    })
+        .catch((err) => {
+        core.setFailed('Error-->' + err);
         return false;
     });
+    return false;
 }
 exports.createBucket = createBucket;
 /**
@@ -459,12 +457,22 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getObsClient = exports.getBucketInputs = exports.getObjectInputs = exports.getOperationType = void 0;
+exports.getObsClient = exports.getBucketInputs = exports.getObjectInputs = exports.getCommonInputs = exports.getOperationType = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 function getOperationType() {
     return core.getInput('operation_type', { required: true });
 }
 exports.getOperationType = getOperationType;
+function getCommonInputs() {
+    return {
+        accessKey: core.getInput('access_key', { required: true }),
+        secretKey: core.getInput('secret_key', { required: true }),
+        operationType: core.getInput('operation_type', { required: true }),
+        bucketName: core.getInput('bucket_name', { required: true }),
+        region: core.getInput('region', { required: true }),
+    };
+}
+exports.getCommonInputs = getCommonInputs;
 function getObjectInputs() {
     var _a;
     return {
@@ -512,7 +520,7 @@ function getObsClient(ak, sk, server) {
         return obs;
     }
     catch (error) {
-        core.setFailed('init obs client fail.');
+        core.setFailed('.');
     }
 }
 exports.getObsClient = getObsClient;
@@ -806,19 +814,22 @@ const utils = __importStar(__nccwpck_require__(918));
 function run() {
     var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
+        const commonInputs = context.getCommonInputs();
+        if (!utils.checkCommonInputs(commonInputs)) {
+            return;
+        }
+        // 初始化OBS客户端
+        const obs = context.getObsClient(commonInputs.accessKey, commonInputs.secretKey, `https://obs.${commonInputs.region}.myhuaweicloud.com`);
         const operationCategory = utils.getOperationCategory(context.getOperationType());
         // 对象操作
         if (operationCategory === 'object') {
             const inputs = context.getObjectInputs();
             if (!utils.checkObjectInputs(inputs)) {
-                core.setFailed('input parameters is not correct.');
                 return;
             }
-            // 初始化OBS客户端
-            const obs = context.getObsClient(inputs.accessKey, inputs.secretKey, `https://obs.${inputs.region}.myhuaweicloud.com`);
             // 若桶不存在，退出
             if (!(yield bucket.hasBucket(obs, inputs.bucketName))) {
-                core.setFailed('bucket not exist.');
+                core.setFailed(`The bucket: ${inputs.bucketName} does not exists.`);
                 return;
             }
             // 执行上传/下载操作
@@ -833,11 +844,8 @@ function run() {
             const inputs = context.getBucketInputs();
             // 检查桶输入
             if (!utils.checkBucketInputs(inputs)) {
-                core.setFailed('input parameters is not correct.');
                 return;
             }
-            // 初始化OBS客户端
-            const obs = context.getObsClient(inputs.accessKey, inputs.secretKey, `https://obs.${inputs.region}.myhuaweicloud.com`);
             const isBucketExist = yield bucket.hasBucket(obs, inputs.bucketName);
             if (inputs.operationType.toLowerCase() === 'createbucket') {
                 // 若桶已经存在，退出
@@ -845,12 +853,12 @@ function run() {
                     core.setFailed(`The bucket: ${inputs.bucketName} already exists.`);
                     return;
                 }
-                yield bucket.createBucket(obs, inputs.bucketName, inputs.region, (_a = inputs.ACL) !== null && _a !== void 0 ? _a : '', (_b = inputs.storageClass) !== null && _b !== void 0 ? _b : '');
+                bucket.createBucket(obs, inputs.bucketName, inputs.region, (_a = inputs.ACL) !== null && _a !== void 0 ? _a : '', (_b = inputs.storageClass) !== null && _b !== void 0 ? _b : '');
             }
             if (inputs.operationType.toLowerCase() === 'deletebucket') {
                 // 若桶不存在，退出
                 if (!isBucketExist) {
-                    core.setFailed(`The bucket: ${inputs.bucketName} not exists.`);
+                    core.setFailed(`The bucket: ${inputs.bucketName} does not exists.`);
                     return;
                 }
                 const isEmpty = yield bucket.isBucketEmpty(obs, inputs.bucketName);
@@ -1268,7 +1276,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.isExistSameNameFile = exports.isExistSameNameFolder = exports.isFileOverSize = exports.getStringDelLastSlash = exports.isEndWithSlash = exports.createFolder = exports.getPathWithoutRootPath = exports.getLastItemWithSlash = exports.replaceSlash = exports.checkBucketInputs = exports.checkObjectInputs = exports.checkDownloadFilePath = exports.checkUploadFilePath = exports.getOperationCategory = exports.checkRegion = exports.checkAkSk = exports.PART_MAX_SIZE = void 0;
+exports.isExistSameNameFile = exports.isExistSameNameFolder = exports.isFileOverSize = exports.getStringDelLastSlash = exports.isEndWithSlash = exports.createFolder = exports.getPathWithoutRootPath = exports.getLastItemWithSlash = exports.replaceSlash = exports.checkBucketInputs = exports.checkObjectInputs = exports.checkCommonInputs = exports.checkDownloadFilePath = exports.checkUploadFilePath = exports.getOperationCategory = exports.checkBucketName = exports.checkRegion = exports.checkAkSk = exports.PART_MAX_SIZE = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const fs = __importStar(__nccwpck_require__(5747));
 /**
@@ -1363,6 +1371,21 @@ function checkRegion(region) {
 }
 exports.checkRegion = checkRegion;
 /**
+ * 检查桶名，规则如下
+ * 3～63个字符，数字或字母开头，支持小写字母、数字、“-”、“.”
+ * 禁止以“-”或“.”开头及结尾，禁止两个“.”相邻，禁止“.”和“-”相邻
+ * 禁止类IP地址
+ * @param bucketName
+ * @returns
+ */
+function checkBucketName(bucketName) {
+    const legalReg = /^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/;
+    const symbolReg = /([.]+[.-]+)|([-]+[.]+)/;
+    const ipReg = /(\.((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})){3}/;
+    return legalReg.test(bucketName) && !symbolReg.test(bucketName) && !ipReg.test(bucketName);
+}
+exports.checkBucketName = checkBucketName;
+/**
  * 获得操作类型
  * @param operation_type
  * @returns
@@ -1422,27 +1445,6 @@ function checkDownloadFilePath(inputs) {
 }
 exports.checkDownloadFilePath = checkDownloadFilePath;
 /**
- * 检查操作对象时输入的各参数是否合法
- * @param inputs
- * @returns
- */
-function checkObjectInputs(inputs) {
-    if (!checkAkSk(inputs.accessKey, inputs.secretKey)) {
-        core.setFailed('ak or sk is not correct.');
-        return false;
-    }
-    if (!checkRegion(inputs.region)) {
-        core.setFailed('region is not correct.');
-        return false;
-    }
-    const checkFilePath = inputs.operationType.toLowerCase() === 'upload' ? checkUploadFilePath(inputs) : checkDownloadFilePath(inputs);
-    if (!checkFilePath) {
-        return false;
-    }
-    return true;
-}
-exports.checkObjectInputs = checkObjectInputs;
-/**
  * 检查预定义访问策略是否合法
  * @param acl
  * @returns
@@ -1459,19 +1461,44 @@ function checkStorageClass(storageClass) {
     return storageClassArray.includes(storageClass);
 }
 /**
- * 检查操作桶时输入的各参数是否合法
+ * 检查公共属性(ak,sk,region,bucketName)是否合法
  * @param inputs
  * @returns
  */
-function checkBucketInputs(inputs) {
-    if (!checkRegion(inputs.region)) {
-        core.setFailed('region is not correct.');
-        return false;
-    }
+function checkCommonInputs(inputs) {
     if (!checkAkSk(inputs.accessKey, inputs.secretKey)) {
         core.setFailed('ak or sk is not correct.');
         return false;
     }
+    if (!checkRegion(inputs.region)) {
+        core.setFailed('region is not correct.');
+        return false;
+    }
+    if (!checkBucketName(inputs.bucketName)) {
+        core.setFailed('bucket name is not correct.');
+    }
+    return true;
+}
+exports.checkCommonInputs = checkCommonInputs;
+/**
+ * 检查操作对象时输入的参数(localFilePath,obsFilePath)是否合法
+ * @param inputs
+ * @returns
+ */
+function checkObjectInputs(inputs) {
+    const checkFilePath = inputs.operationType.toLowerCase() === 'upload' ? checkUploadFilePath(inputs) : checkDownloadFilePath(inputs);
+    if (!checkFilePath) {
+        return false;
+    }
+    return true;
+}
+exports.checkObjectInputs = checkObjectInputs;
+/**
+ * 检查操作桶时输入的参数(ACL,storageClass)是否合法
+ * @param inputs
+ * @returns
+ */
+function checkBucketInputs(inputs) {
     if (inputs.ACL) {
         if (!checkACL(inputs.ACL)) {
             core.setFailed('ACL is not correct.');

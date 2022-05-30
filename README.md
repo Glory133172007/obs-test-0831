@@ -5,6 +5,7 @@
 2、下载文件/文件夹  
 3、创建桶  
 4、删除桶  
+本文件仅做基础功能示例，不同场景下的参数使用和使用样例请访问[OBS Helper Workflow Sample](https://github.com/huaweicloud/obs-helper-workflow-sample)  
 ## **前置工作**
 1、需要开通华为云的OBS服务，并建好桶，[OBS主页](https://www.huaweicloud.com/product/obs.html)，[OBS文档](https://support.huaweicloud.com/obs/)；  
 2、需要在项目的setting--Secret--Actions下添加华为云OBS服务的ACCESSKEY、SECRETACCESSKEY两个参数，[获取ak/sk方式](https://support.huaweicloud.com/api-obs/obs_04_0116.html)；  

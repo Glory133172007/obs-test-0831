@@ -6,6 +6,19 @@ import * as bucket from './bucket';
 import * as utils from './utils';
 
 async function run() {
+    const commonInputs = context.getCommonInputs();
+
+    if (!utils.checkCommonInputs(commonInputs)) {
+        return;
+    }
+
+    // 初始化OBS客户端
+    const obs = context.getObsClient(
+        commonInputs.accessKey,
+        commonInputs.secretKey,
+        `https://obs.${commonInputs.region}.myhuaweicloud.com`
+    );
+
     const operationCategory = utils.getOperationCategory(context.getOperationType());
 
     // 对象操作
@@ -13,20 +26,12 @@ async function run() {
         const inputs = context.getObjectInputs();
 
         if (!utils.checkObjectInputs(inputs)) {
-            core.setFailed('input parameters is not correct.');
             return;
         }
 
-        // 初始化OBS客户端
-        const obs = context.getObsClient(
-            inputs.accessKey,
-            inputs.secretKey,
-            `https://obs.${inputs.region}.myhuaweicloud.com`
-        );
-
         // 若桶不存在，退出
         if (!(await bucket.hasBucket(obs, inputs.bucketName))) {
-            core.setFailed('bucket not exist.');
+            core.setFailed(`The bucket: ${inputs.bucketName} does not exists.`);
             return;
         }
 
@@ -43,16 +48,8 @@ async function run() {
 
         // 检查桶输入
         if (!utils.checkBucketInputs(inputs)) {
-            core.setFailed('input parameters is not correct.');
             return;
         }
-
-        // 初始化OBS客户端
-        const obs = context.getObsClient(
-            inputs.accessKey,
-            inputs.secretKey,
-            `https://obs.${inputs.region}.myhuaweicloud.com`
-        );
 
         const isBucketExist = await bucket.hasBucket(obs, inputs.bucketName);
         if (inputs.operationType.toLowerCase() === 'createbucket') {
@@ -61,18 +58,12 @@ async function run() {
                 core.setFailed(`The bucket: ${inputs.bucketName} already exists.`);
                 return;
             }
-            await bucket.createBucket(
-                obs,
-                inputs.bucketName,
-                inputs.region,
-                inputs.ACL ?? '',
-                inputs.storageClass ?? ''
-            );
+            bucket.createBucket(obs, inputs.bucketName, inputs.region, inputs.ACL ?? '', inputs.storageClass ?? '');
         }
         if (inputs.operationType.toLowerCase() === 'deletebucket') {
             // 若桶不存在，退出
             if (!isBucketExist) {
-                core.setFailed(`The bucket: ${inputs.bucketName} not exists.`);
+                core.setFailed(`The bucket: ${inputs.bucketName} does not exists.`);
                 return;
             }
             const isEmpty = await bucket.isBucketEmpty(obs, inputs.bucketName);

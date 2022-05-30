@@ -23,13 +23,13 @@ export async function hasBucket(obsClient: any, bucketName: string): Promise<boo
  * @param storageClass 存储类型
  * @returns
  */
-export async function createBucket(
+export function createBucket(
     obsClient: any,
     bucketName: string,
     region: string,
     ACL?: string,
     storageClass?: string
-): Promise<boolean> {
+): boolean {
     obsClient
         .createBucket({
             Bucket: bucketName,
@@ -40,16 +40,16 @@ export async function createBucket(
         .then((result: CommonResult) => {
             if (result.CommonMsg.Status < 300) {
                 if (result.InterfaceResult) {
-                    core.info('create bucket Successfully.');
+                    core.info(`create bucket: ${bucketName} Successfully.`);
                     return true;
                 }
             } else {
-                core.info('Message-->' + result.CommonMsg.Message);
+                core.setFailed('Message-->' + result.CommonMsg.Message);
                 return false;
             }
         })
         .catch((err: string) => {
-            core.info('Error-->' + err);
+            core.setFailed('Error-->' + err);
             return false;
         });
     return false;

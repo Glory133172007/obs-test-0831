@@ -1,11 +1,14 @@
 import stream from 'stream';
 
-export interface ObjectInputs {
+export interface CommonInputs {
     accessKey: string;
     secretKey: string;
     bucketName: string;
     operationType: string;
     region: string;
+}
+
+export interface ObjectInputs extends CommonInputs {
     localFilePath: string[];
     obsFilePath: string;
     // 是否包含文件夹自身
@@ -14,12 +17,7 @@ export interface ObjectInputs {
     exclude?: string[];
 }
 
-export interface BucketInputs {
-    accessKey: string;
-    secretKey: string;
-    bucketName: string;
-    operationType: string;
-    region: string;
+export interface BucketInputs extends CommonInputs {
     ACL?: string;
     storageClass?: string;
     clearBucket?: boolean;

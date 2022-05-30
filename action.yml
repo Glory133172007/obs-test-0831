@@ -16,7 +16,7 @@ inputs:
     description: "The name of the bucket"
     required: true
   operation_type:
-    description: "download or upload object, create or delete bucket"
+    description: "Use 'download' to download object from obs, use 'upload' to upload object to obs, use 'createbucket' to create a new bucket, and use 'deletebucket' to delete a bucket."
     required: true
   local_file_path:
     description: "Local file/folder path"
