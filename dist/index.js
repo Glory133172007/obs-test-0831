@@ -520,7 +520,7 @@ function getObsClient(ak, sk, server) {
         return obs;
     }
     catch (error) {
-        core.setFailed('.');
+        core.setFailed('init obs client fail.');
     }
 }
 exports.getObsClient = getObsClient;
