@@ -2,43 +2,39 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as utils from './utils';
 import * as core from '@actions/core';
-import { Inputs, UploadFileList } from './types';
+import { ObjectInputs, UploadFileList } from './types';
 
 /**
  * 上传文件/文件夹
  * @param obsClient  Obs客户端，因obsClient为引入的obs库的类型，本身并未导出其类型，故使用any，下同
  * @param inputs 用户输入的参数
  */
-export async function uploadFileOrFolder(obsClient: any, inputs: Inputs): Promise<void> {
-    for (const path of inputs.local_file_path) {
+export async function uploadFileOrFolder(obsClient: any, inputs: ObjectInputs): Promise<void> {
+    for (const path of inputs.localFilePath) {
         const localFilePath = utils.getStringDelLastSlash(path); // 文件或者文件夹
         const localRoot = utils.getLastItemWithSlash(localFilePath);
         try {
             const fsStat = fs.lstatSync(localFilePath);
             if (fsStat.isFile()) {
                 let obsFilePath = '';
-                if (inputs.obs_file_path) {
-                    if (utils.isEndWithSlash(inputs.obs_file_path)) {
-                        obsFilePath = inputs.obs_file_path + localRoot;
+                if (inputs.obsFilePath) {
+                    if (utils.isEndWithSlash(inputs.obsFilePath)) {
+                        obsFilePath = inputs.obsFilePath + localRoot;
                     } else {
                         // 若是多路径上传时的文件,不存在重命名,默认传至obs_file_path文件夹下
                         obsFilePath =
-                            inputs.local_file_path.length > 1
-                                ? `${inputs.obs_file_path}/${localRoot}`
-                                : inputs.obs_file_path;
+                            inputs.localFilePath.length > 1 ? `${inputs.obsFilePath}/${localRoot}` : inputs.obsFilePath;
                     }
                 } else {
                     // 若obs_file_path为空,上传所有对象至根目录
                     obsFilePath = localRoot;
                 }
 
-                await uploadFile(obsClient, inputs.bucket_name, localFilePath, obsFilePath);
+                await uploadFile(obsClient, inputs.bucketName, localFilePath, obsFilePath);
             }
 
             if (fsStat.isDirectory()) {
-                const localFileRootPath = inputs.include_self_folder
-                    ? getObsRootFile(inputs.include_self_folder, inputs.obs_file_path, localRoot)
-                    : getObsRootFile('', inputs.obs_file_path, localRoot);
+                const localFileRootPath = getObsRootFile(!!inputs.includeSelfFolder, inputs.obsFilePath, localRoot);
                 const uploadList = {
                     file: [],
                     folder: [],
@@ -48,14 +44,14 @@ export async function uploadFileOrFolder(obsClient: any, inputs: Inputs): Promis
                 // 若总文件数大于1000，取消上传
                 const uploadListLength = uploadList.file.length + uploadList.folder.length;
                 if (uploadListLength <= 1000) {
-                    if (inputs.obs_file_path) {
+                    if (inputs.obsFilePath) {
                         await obsCreateRootFolder(
                             obsClient,
-                            inputs.bucket_name,
-                            utils.getStringDelLastSlash(inputs.obs_file_path)
+                            inputs.bucketName,
+                            utils.getStringDelLastSlash(inputs.obsFilePath)
                         );
                     }
-                    await uploadFileAndFolder(obsClient, inputs.bucket_name, uploadList);
+                    await uploadFileAndFolder(obsClient, inputs.bucketName, uploadList);
                 } else {
                     core.setFailed(`local dirctory: '${path}' has ${uploadListLength} files and folders,`);
                     core.setFailed(`please upload a dirctory include less than 1000 files and folders.`);
@@ -74,8 +70,8 @@ export async function uploadFileOrFolder(obsClient: any, inputs: Inputs): Promis
  * @param objectName 对象在本地的名称
  * @returns
  */
-export function getObsRootFile(includeSelf: string, obsfile: string, objectName: string): string {
-    if (utils.includeSelfFolderArray.includeItem.indexOf(includeSelf.toLowerCase()) > -1) {
+export function getObsRootFile(includeSelf: boolean, obsfile: string, objectName: string): string {
+    if (includeSelf) {
         const obsFinalFilePath = obsfile ? utils.getStringDelLastSlash(obsfile) + '/' + objectName : objectName;
         return obsFinalFilePath;
     } else {
@@ -93,7 +89,7 @@ export function getObsRootFile(includeSelf: string, obsfile: string, objectName:
  */
 export async function fileDisplay(
     obsClient: any,
-    inputs: Inputs,
+    inputs: ObjectInputs,
     localFilePath: string,
     obsFileRootPath: string,
     uploadList: UploadFileList
@@ -204,5 +200,140 @@ export async function obsCreateRootFolder(obsClient: any, bucketName: string, ob
             Bucket: bucketName,
             Key: obsPath,
         });
+    }
+}
+
+/**
+ * 分段上传
+ * @param obs obs客户端
+ * @param bucketName 桶名
+ * @param objKey 上传对象在obs上的名称
+ * @param filePath 上传对象的本地路径
+ */
+export async function multipartUpload(obs: any, bucketName: string, objKey: string, filePath: string): Promise<void> {
+    const uploadId = await initMultipartUpload(obs, bucketName, objKey);
+    if (uploadId) {
+        const parts = await uploadParts(obs, bucketName, objKey, uploadId, filePath);
+        if (parts.length > 0) {
+            await mergeParts(obs, bucketName, objKey, uploadId, parts);
+        }
+    }
+}
+
+/**
+ * 初始化分段上传任务
+ * @param obs obs客户端
+ * @param bucketName 桶名
+ * @param objKey 上传对象在obs上的名称
+ * @returns
+ */
+export async function initMultipartUpload(obs: any, bucketName: string, objKey: string): Promise<string> {
+    const result = await obs.initiateMultipartUpload({
+        Bucket: bucketName,
+        Key: objKey,
+    });
+
+    if (result.CommonMsg.Status < 300) {
+        core.info('init multipart upload successfully.');
+        return result.InterfaceResult.UploadId;
+    } else {
+        core.info('init multipart upload failed.');
+        return '';
+    }
+}
+
+/**
+ * 上传分段
+ * @param obs obs客户端
+ * @param bucketName 桶名
+ * @param objKey 上传对象在obs上的名称
+ * @param uploadId 分段上传任务的uploadid
+ * @param filePath 上传对象的本地路径
+ * @returns
+ */
+export async function uploadParts(
+    obs: any,
+    bucketName: string,
+    objKey: string,
+    uploadId: string,
+    filePath: string
+): Promise<{ PartNumber: number; ETag: any }[]> {
+    const partSize = utils.PART_MAX_SIZE;
+
+    const fileLength = fs.lstatSync(filePath).size;
+    const partCount =
+        fileLength % partSize === 0 ? Math.floor(fileLength / partSize) : Math.floor(fileLength / partSize) + 1;
+
+    core.info(`total parts count ${partCount}.`);
+
+    const parts: { PartNumber: number; ETag: any }[] = [];
+
+    core.info('Begin to upload multiparts to OBS from a file');
+    for (let i = 0; i < partCount; i++) {
+        const offset = i * partSize;
+        const currPartSize = i + 1 === partCount ? fileLength - offset : partSize;
+        const partNumber = i + 1;
+
+        const result = await obs.uploadPart({
+            Bucket: bucketName,
+            Key: objKey,
+            PartNumber: partNumber,
+            UploadId: uploadId,
+            SourceFile: filePath,
+            Offset: offset,
+            PartSize: currPartSize,
+        });
+        if (result.CommonMsg.Status < 300) {
+            parts.push({
+                PartNumber: partNumber,
+                ETag: result.InterfaceResult.ETag,
+            });
+        } else {
+            throw new Error(result.CommonMsg.Code);
+        }
+    }
+
+    if (parts.length === partCount) {
+        // Sort parts order by partNumber asc
+        const _parts = parts.sort((a, b) => {
+            if (a.PartNumber >= b.PartNumber) {
+                return 1;
+            }
+            return -1;
+        });
+        return _parts;
+    }
+    return parts;
+}
+
+/**
+ * 合并分段
+ * @param obs obs客户端
+ * @param bucketName 桶名
+ * @param objKey 上传对象在obs上的名称
+ * @param uploadId 分段上传任务的uploadid
+ * @param parts 分段上传任务的分段信息
+ * @returns
+ */
+export async function mergeParts(
+    obs: any,
+    bucketName: string,
+    objKey: string,
+    uploadId: string,
+    parts: any[]
+): Promise<boolean> {
+    const result = await obs.completeMultipartUpload({
+        Bucket: bucketName,
+        Key: objKey,
+        UploadId: uploadId,
+        Parts: parts,
+    });
+
+    if (result.CommonMsg.Status < 300) {
+        core.info('Complete to upload multiparts finished.');
+        return true;
+    } else {
+        core.info(result.CommonMsg.Code);
+        return false;
     }
 }

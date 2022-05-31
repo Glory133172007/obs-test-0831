@@ -1,7 +1,8 @@
 import * as fs from 'fs';
 import * as utils from './utils';
 import * as core from '@actions/core';
-import { Inputs, ObjectItem, ListBucketResult } from './types';
+import * as bucket from './bucket';
+import { ObjectInputs, ListBucketContentItem } from './types';
 
 /**
  * 下载文件或者文件夹
@@ -9,13 +10,13 @@ import { Inputs, ObjectItem, ListBucketResult } from './types';
  * @param inputs 用户输入的参数
  * @returns
  */
-export async function downloadFileOrFolder(obsClient: any, inputs: Inputs): Promise<void> {
-    const inputLocalFilePath = inputs.local_file_path[0];
-    const downloadPathList = await getDownloadList(obsClient, inputs, inputs.obs_file_path);
+export async function downloadFileOrFolder(obsClient: any, inputs: ObjectInputs): Promise<void> {
+    const inputLocalFilePath = inputs.localFilePath[0];
+    const downloadPathList = await getDownloadList(obsClient, inputs, inputs.obsFilePath);
     if (downloadPathList.length < 1) {
         core.setFailed('object not exist in obs or no object needed downloaded.');
         return;
-    } else if (pathIsSingleFile(downloadPathList, inputs.obs_file_path)) {
+    } else if (pathIsSingleFile(downloadPathList, inputs.obsFilePath)) {
         await downloadFile(obsClient, inputs, downloadPathList[0]);
         return;
     } else {
@@ -49,17 +50,17 @@ export function pathIsSingleFile(downloadPathList: string[], obsPath: string): b
  */
 async function downloadFilesFromObs(
     obsClient: any,
-    inputs: Inputs,
+    inputs: ObjectInputs,
     downloadList: string[],
     localPath: string
 ): Promise<void> {
-    const localRoot = createEmptyRootFolders(localPath, inputs.obs_file_path, inputs.include_self_folder ?? '');
+    const localRoot = createEmptyRootFolders(localPath, inputs.obsFilePath, !!inputs.includeSelfFolder);
     // 如果obs对象是文件夹且本地存在同名文件，不进行下载，记录需要跳过下载的文件夹开头
     let delFolderPath = '';
     for (const path of downloadList) {
         if (delFolderPath === '' || !path.match(`^${delFolderPath}`)) {
             let finalLocalPath =
-                localRoot + utils.getPathWithoutRootPath(utils.getStringDelLastSlash(inputs.obs_file_path), path);
+                localRoot + utils.getPathWithoutRootPath(utils.getStringDelLastSlash(inputs.obsFilePath), path);
             // 如果下载列表中有和文件同目录同名的文件夹，给文件名加后缀下载
             if (downloadList.indexOf(`${path}/`) !== -1) {
                 finalLocalPath += new Date().valueOf();
@@ -85,9 +86,9 @@ async function downloadFilesFromObs(
  * @param includeSelfFolder 是否包含文件夹自身
  * @returns
  */
-export function createEmptyRootFolders(localPath: string, obsPath: string, includeSelfFolder: string): string {
+export function createEmptyRootFolders(localPath: string, obsPath: string, includeSelfFolder: boolean): string {
     let local = utils.getStringDelLastSlash(localPath);
-    if (utils.includeSelfFolderArray.includeItem.indexOf(includeSelfFolder.toLowerCase()) > -1) {
+    if (includeSelfFolder) {
         local += `/${utils.getStringDelLastSlash(obsPath).split('/').pop()}`;
         utils.createFolder(local);
     }
@@ -101,10 +102,15 @@ export function createEmptyRootFolders(localPath: string, obsPath: string, inclu
  * @param obsPath 对象在obs上的路径
  * @param localPath 文件要下载在本地的路径
  */
-export async function downloadFile(obsClient: any, inputs: Inputs, obsPath: string, localPath?: string): Promise<void> {
+export async function downloadFile(
+    obsClient: any,
+    inputs: ObjectInputs,
+    obsPath: string,
+    localPath?: string
+): Promise<void> {
     let localFileName = localPath
         ? localPath
-        : getLocalFileName(utils.getStringDelLastSlash(inputs.local_file_path[0]), obsPath);
+        : getLocalFileName(utils.getStringDelLastSlash(inputs.localFilePath[0]), obsPath);
 
     // 若本地存在同名文件夹，下载到此文件夹中。若此文件夹中还存在同名文件夹，放弃本次下载
     if (utils.isExistSameNameFolder(localFileName)) {
@@ -119,7 +125,7 @@ export async function downloadFile(obsClient: any, inputs: Inputs, obsPath: stri
 
     core.info(`download ${obsPath} to local: ${localFileName}`);
     await obsClient.getObject({
-        Bucket: inputs.bucket_name,
+        Bucket: inputs.bucketName,
         Key: obsPath,
         SaveAsFile: localFileName,
     });
@@ -146,44 +152,28 @@ export function getLocalFileName(localPath: string, obsPath: string): string {
 /**
  * 获取在obs上待下载的对象列表
  * 官方提供的getObject方法最大请求1000个文件，若请求的文件大于1000个则返回对象名按照字典序排序后的前1000个文件
+ * result.InterfaceResult.IsTruncated表明本次请求是否返回了全部结果，“true”表示没有返回全部结果；“false”表示已返回了全部结果
  * result.InterfaceResult.NextMarker会记录下次起始位置
  * @param obsClient Obs客户端
  * @param inputs 用户输入的参数
  * @param obsPath 对象在obs上的路径
  * @returns
  */
-export async function getDownloadList(obsClient: any, inputs: Inputs, obsPath: string): Promise<string[]> {
+export async function getDownloadList(obsClient: any, inputs: ObjectInputs, obsPath: string): Promise<string[]> {
     const obsFilePath = utils.getStringDelLastSlash(obsPath);
-    let result = await listDownloadObjects(obsClient, inputs, obsFilePath);
-    let resultList = delUselessPath(result.InterfaceResult.Contents, inputs);
-    let marker = result.InterfaceResult.NextMarker;
-    while (marker !== '') {
-        result = await listDownloadObjects(obsClient, inputs, obsFilePath, marker);
-        marker = result.InterfaceResult.NextMarker;
+
+    let resultList: string[] = [];
+    let isTruncated = true;
+    let marker = '';
+
+    while (isTruncated) {
+        const result = await bucket.listObjects(obsClient, inputs.bucketName, obsFilePath, marker);
         resultList = resultList.concat(delUselessPath(result.InterfaceResult.Contents, inputs));
+
+        isTruncated = result.InterfaceResult.IsTruncated === 'true';
+        marker = result.InterfaceResult.NextMarker;
     }
     return resultList;
-}
-
-/**
- * 根据前缀和起始位置，列举桶内对象
- * @param obsClient Obs客户端
- * @param inputs 用户输入的参数
- * @param obsPath obs上请求的对象前缀
- * @param marker 起始位置
- * @returns
- */
-async function listDownloadObjects(
-    obsClient: any,
-    inputs: Inputs,
-    obsPath: string,
-    marker?: string
-): Promise<ListBucketResult> {
-    return await obsClient.listObjects({
-        Bucket: inputs.bucket_name,
-        Prefix: obsPath,
-        Marker: marker ?? '',
-    });
 }
 
 /**
@@ -192,9 +182,9 @@ async function listDownloadObjects(
  * @param inputs 用户输入的参数
  * @returns
  */
-function delUselessPath(objList: ObjectItem[], inputs: Inputs): string[] {
+function delUselessPath(objList: ListBucketContentItem[], inputs: ObjectInputs): string[] {
     const resultList: string[] = [];
-    objList.forEach((element: ObjectItem) => {
+    objList.forEach((element: ListBucketContentItem) => {
         // 删除不需要的path，仅保留inputs.obsFilePath相关的文件路径
         let isInclude = true;
         if (!!inputs.exclude && inputs.exclude.length > 0) {

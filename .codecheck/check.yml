@@ -7,4 +7,4 @@ steps:
 tool_params:
   secsolar:
     compile_root_dir: 
-    compile_script: 
+    compile_script:
