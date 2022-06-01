@@ -44,12 +44,12 @@ export function createBucket(
                     return true;
                 }
             } else {
-                core.setFailed('Message-->' + result.CommonMsg.Message);
+                core.setFailed(`create bucket: ${bucketName} failed, ${result.CommonMsg.Message}.`);
                 return false;
             }
         })
         .catch((err: string) => {
-            core.setFailed('Error-->' + err);
+            core.setFailed(`create bucket: ${bucketName} failed, ${err}.`);
             return false;
         });
     return false;
@@ -401,7 +401,7 @@ export async function deleteBucket(obsClient: any, bucketName: string, isBucketE
                 }
             })
             .catch((err: string) => {
-                core.info(`delete bucket: ${bucketName} failed, ${err}.`);
+                core.setFailed(`delete bucket: ${bucketName} failed, ${err}.`);
             });
     }
     return false;
