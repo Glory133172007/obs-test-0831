@@ -76,7 +76,9 @@ async function run() {
             await bucket.deleteBucket(obs, inputs.bucketName, isEmpty);
         }
     } else {
-        core.setFailed(`please check your operation_type.`);
+        core.setFailed(
+            `please check your operation_type. you can use 'download', 'upload', 'createbucket' or 'deletebucket'.`
+        );
     }
 }
 

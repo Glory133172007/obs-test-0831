@@ -207,6 +207,7 @@ export function checkCommonInputs(inputs: CommonInputs): boolean {
     }
     if (!checkBucketName(inputs.bucketName)) {
         core.setFailed('bucket name is not correct.');
+        return false;
     }
     return true;
 }

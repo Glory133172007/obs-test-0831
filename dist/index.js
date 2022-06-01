@@ -81,12 +81,12 @@ function createBucket(obsClient, bucketName, region, ACL, storageClass) {
             }
         }
         else {
-            core.setFailed('Message-->' + result.CommonMsg.Message);
+            core.setFailed(`create bucket: ${bucketName} failed, ${result.CommonMsg.Message}.`);
             return false;
         }
     })
         .catch((err) => {
-        core.setFailed('Error-->' + err);
+        core.setFailed(`create bucket: ${bucketName} failed, ${err}.`);
         return false;
     });
     return false;
@@ -417,7 +417,7 @@ function deleteBucket(obsClient, bucketName, isBucketEmpty) {
                 }
             })
                 .catch((err) => {
-                core.info(`delete bucket: ${bucketName} failed, ${err}.`);
+                core.setFailed(`delete bucket: ${bucketName} failed, ${err}.`);
             });
         }
         return false;
@@ -870,7 +870,7 @@ function run() {
             }
         }
         else {
-            core.setFailed(`please check your operation_type.`);
+            core.setFailed(`please check your operation_type. you can use 'download', 'upload', 'createbucket' or 'deletebucket'.`);
         }
     });
 }
@@ -1476,6 +1476,7 @@ function checkCommonInputs(inputs) {
     }
     if (!checkBucketName(inputs.bucketName)) {
         core.setFailed('bucket name is not correct.');
+        return false;
     }
     return true;
 }
