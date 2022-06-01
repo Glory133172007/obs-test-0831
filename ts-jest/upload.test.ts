@@ -1,5 +1,4 @@
 import { expect, test } from '@jest/globals';
-import * as bucket from '../src/bucket';
 import * as upload from '../src/upload';
 import * as download from '../src/download';
 import { ObjectInputs } from '../src/types';
