@@ -870,7 +870,7 @@ function run() {
             }
         }
         else {
-            core.setFailed(`please check your operation_type. you can use 'download' to download object from obs, use 'upload' to upload object to obs, use 'createbucket' to create a new bucket, or use 'deletebucket' to delete a bucket.`);
+            core.setFailed(`please check your operation_type. you can use 'download', 'upload', 'createbucket' or 'deletebucket'.`);
         }
     });
 }
