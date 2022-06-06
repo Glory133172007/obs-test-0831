@@ -31,9 +31,10 @@ inputs:
   exclude:
     description: "Exclude file or folder when download a folder"
     required: false
-  ACL:
-    description: "Pre-defined access control policy that can be specified during the bucket creation"
+  public_read:
+    description: "Whether to enable the public read permission of the bucket."
     required: false
+    default: false
   storage_class:
     description: "Bucket storage class that can be specified during the bucket creation"
     required: false

@@ -37,8 +37,8 @@ jobs:
           region: ${region}
           bucket_name: 'new-bucket'
           operation_type: 'createBucket'
-          ACL: 'AclPublicReadWrite'
-          storage_class: 'StorageClassWarm'
+          public_read: true
+          storage_class: 'infrequent'
       - name: Delete Bucket on HuaweiCloud OBS
         uses: ./
         id: delete_bucket_on_obs

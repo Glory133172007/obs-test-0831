@@ -61,16 +61,16 @@ exports.hasBucket = hasBucket;
  * @param obsClient obs客户端
  * @param bucketName 桶名
  * @param region 桶所在区域
- * @param ACL 预定义访问策略
+ * @param publicRead 是否开放公共读权限
  * @param storageClass 存储类型
  * @returns
  */
-function createBucket(obsClient, bucketName, region, ACL, storageClass) {
+function createBucket(obsClient, bucketName, region, publicRead, storageClass) {
     obsClient
         .createBucket({
         Bucket: bucketName,
         Location: region,
-        ACL: ACL ? obsClient.enums[ACL] : '',
+        ACL: publicRead ? obsClient.enums['AclPublicRead'] : obsClient.enums['AclPrivate'],
         StorageClass: storageClass ? obsClient.enums[storageClass] : '',
     })
         .then((result) => {
@@ -496,7 +496,7 @@ function getBucketInputs() {
         operationType: core.getInput('operation_type', { required: true }),
         bucketName: core.getInput('bucket_name', { required: true }),
         region: core.getInput('region', { required: true }),
-        ACL: core.getInput('ACL', { required: false }),
+        publicRead: core.getBooleanInput('public_read', { required: false }),
         storageClass: core.getInput('storage_class', { required: false }),
         clearBucket: (_a = core.getBooleanInput('clear_bucket', { required: false })) !== null && _a !== void 0 ? _a : true,
     };
@@ -520,7 +520,7 @@ function getObsClient(ak, sk, server) {
         return obs;
     }
     catch (error) {
-        core.setFailed('init obs client fail.');
+        core.setFailed('.');
     }
 }
 exports.getObsClient = getObsClient;
@@ -853,7 +853,7 @@ function run() {
                     core.setFailed(`The bucket: ${inputs.bucketName} already exists.`);
                     return;
                 }
-                bucket.createBucket(obs, inputs.bucketName, inputs.region, (_a = inputs.ACL) !== null && _a !== void 0 ? _a : '', (_b = inputs.storageClass) !== null && _b !== void 0 ? _b : '');
+                bucket.createBucket(obs, inputs.bucketName, inputs.region, (_a = inputs.publicRead) !== null && _a !== void 0 ? _a : false, utils.getStorageClass((_b = inputs.storageClass) !== null && _b !== void 0 ? _b : ''));
             }
             if (inputs.operationType.toLowerCase() === 'deletebucket') {
                 // 若桶不存在，退出
@@ -1276,7 +1276,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.isExistSameNameFile = exports.isExistSameNameFolder = exports.isFileOverSize = exports.getStringDelLastSlash = exports.isEndWithSlash = exports.createFolder = exports.getPathWithoutRootPath = exports.getLastItemWithSlash = exports.replaceSlash = exports.checkBucketInputs = exports.checkObjectInputs = exports.checkCommonInputs = exports.checkDownloadFilePath = exports.checkUploadFilePath = exports.getOperationCategory = exports.checkBucketName = exports.checkRegion = exports.checkAkSk = exports.PART_MAX_SIZE = void 0;
+exports.isExistSameNameFile = exports.isExistSameNameFolder = exports.isFileOverSize = exports.getStringDelLastSlash = exports.isEndWithSlash = exports.createFolder = exports.getPathWithoutRootPath = exports.getLastItemWithSlash = exports.replaceSlash = exports.checkBucketInputs = exports.checkObjectInputs = exports.checkCommonInputs = exports.getStorageClass = exports.checkDownloadFilePath = exports.checkUploadFilePath = exports.getOperationCategory = exports.checkBucketName = exports.checkRegion = exports.checkAkSk = exports.PART_MAX_SIZE = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const fs = __importStar(__nccwpck_require__(5747));
 /**
@@ -1311,27 +1311,17 @@ const regionArray = [
     'ap-southeast-1',
 ];
 /**
- * 目前支持的预定义访问策略
- * 私有读写 AclPrivate
- * 公共读 AclPublicRead
- * 公共读写 AclPublicReadWrite
- * 桶公共读，桶内对象公共读 AclPublicReadDelivered
- * 桶公共读写，桶内对象公共读写 AclPublicReadWriteDelivered
- */
-const ACLArray = [
-    'AclPrivate',
-    'AclPublicRead',
-    'AclPublicReadWrite',
-    'AclPublicReadDelivered',
-    'AclPublicReadWriteDelivered',
-];
-/**
  * 目前支持的存储类型
  * 标准存储 StorageClassStandard
  * 低频访问存储 StorageClassWarm
  * 归档存储 StorageClassCold
  */
-const storageClassArray = ['StorageClassStandard', 'StorageClassWarm', 'StorageClassCold'];
+// const storageClassArray = ['StorageClassStandard', 'StorageClassWarm', 'StorageClassCold'];
+const storageClassList = {
+    standard: 'StorageClassStandard',
+    infrequent: 'StorageClassWarm',
+    archive: 'StorageClassCold',
+};
 /**
  * 目前支持的操作类型
  * 对象操作 upload  download
@@ -1445,21 +1435,19 @@ function checkDownloadFilePath(inputs) {
 }
 exports.checkDownloadFilePath = checkDownloadFilePath;
 /**
- * 检查预定义访问策略是否合法
- * @param acl
- * @returns
- */
-function checkACL(acl) {
-    return ACLArray.includes(acl);
-}
-/**
- * 检查存储类型是否合法
+ * 获得存储类型
  * @param storageClass
  * @returns
  */
-function checkStorageClass(storageClass) {
-    return storageClassArray.includes(storageClass);
+function getStorageClass(storageClass) {
+    for (const key in storageClassList) {
+        if (storageClass === key) {
+            return storageClassList[key];
+        }
+    }
+    return '';
 }
+exports.getStorageClass = getStorageClass;
 /**
  * 检查公共属性(ak,sk,region,bucketName)是否合法
  * @param inputs
@@ -1495,19 +1483,13 @@ function checkObjectInputs(inputs) {
 }
 exports.checkObjectInputs = checkObjectInputs;
 /**
- * 检查操作桶时输入的参数(ACL,storageClass)是否合法
+ * 检查操作桶时输入的参数(storageClass)是否合法
  * @param inputs
  * @returns
  */
 function checkBucketInputs(inputs) {
-    if (inputs.ACL) {
-        if (!checkACL(inputs.ACL)) {
-            core.setFailed('ACL is not correct.');
-            return false;
-        }
-    }
     if (inputs.storageClass) {
-        if (!checkStorageClass(inputs.storageClass)) {
+        if (getStorageClass(inputs.storageClass) === '') {
             core.setFailed('storageClass is not correct.');
             return false;
         }

@@ -58,7 +58,13 @@ async function run() {
                 core.setFailed(`The bucket: ${inputs.bucketName} already exists.`);
                 return;
             }
-            bucket.createBucket(obs, inputs.bucketName, inputs.region, inputs.ACL ?? '', inputs.storageClass ?? '');
+            bucket.createBucket(
+                obs,
+                inputs.bucketName,
+                inputs.region,
+                inputs.publicRead ?? false,
+                utils.getStorageClass(inputs.storageClass ?? '')
+            );
         }
         if (inputs.operationType.toLowerCase() === 'deletebucket') {
             // 若桶不存在，退出
