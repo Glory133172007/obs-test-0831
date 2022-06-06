@@ -27,7 +27,7 @@ export function createBucket(
     obsClient: any,
     bucketName: string,
     region: string,
-    publicRead?: boolean,
+    publicRead: boolean,
     storageClass?: string
 ): boolean {
     obsClient

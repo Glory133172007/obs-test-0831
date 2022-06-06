@@ -8,14 +8,14 @@
 本项目说明文件仅做基础功能示例，具体不同场景下时样例及其参数使用请访问[OBS Helper Workflow Sample](https://github.com/huaweicloud/obs-helper-workflow-sample)  
 ## **前置工作**
 1、需要开通华为云的OBS服务，进行对象操作时需要建好桶。[OBS主页](https://www.huaweicloud.com/product/obs.html)，[OBS文档](https://support.huaweicloud.com/obs/)；  
-2、action调用华为云接口需要华为云鉴权，请将您华为云账户的ak/sk配置于您GitHub工程中的settting-Secret-Actions，分别添加为ACCESSKEY、SECRETACCESSKEY，[获取ak/sk方式](https://support.huaweicloud.com/api-obs/obs_04_0116.html)；  
+2、action调用华为云接口需要华为云鉴权，建议将您华为云账户的ak/sk配置于您GitHub工程中的settting-Secret-Actions，分别添加为ACCESSKEY、SECRETACCESSKEY以加密使用，[获取ak/sk方式](https://support.huaweicloud.com/api-obs/obs_04_0116.html)；  
 3、注意替换参数region和参数bucket_name为自己OBS服务的真实region和桶名（创建桶时为要创建的桶名）；  
 ## **上传下载对象参数说明**
 |  参数名称  |  参数说明  |  默认值  |  是否必填  |
 |  :----:  |  ----  |  :----: |  :----:  |
-| access_key  | 华为云账号的AK字符串，需要加密，请参照**前置工作**中的步骤2进行设置并使用 |  无  |  是  |
-| secret_key  | 华为云账号的SK字符串，需要加密，请参照**前置工作**中的步骤2进行设置并使用 |  无  |  是  |
-| region  | OBS所在区域字符串 |  'cn-north-4'  |  是  |
+| access_key  | 华为云账号的AK字符串，建议加密使用，可参照**前置工作**中的步骤2进行设置并使用 |  无  |  是  |
+| secret_key  | 华为云账号的SK字符串，建议加密使用，可参照**前置工作**中的步骤2进行设置并使用 |  无  |  是  |
+| region  | OBS服务所在区域 |  'cn-north-4'  |  是  |
 | bucket_name  | OBS的目标桶名 |  无  |  是  |
 | operation_type  | 要进行的操作，上传请使用*upload*，下载请使用*download* |  无  |  是  |
 | local_file_path  | 对象的本地路径，上传对象时可填写多个 |  无  |  是  |
@@ -25,9 +25,9 @@
 ## **创建删除桶参数说明**
 |  参数名称  |  参数说明  |  默认值  |  是否必填  |
 |  :----:  |  ----  |  :----: |  :----:  |
-| access_key  | 华为云账号的AK字符串，需要加密，请参照**前置工作**中的步骤2进行设置并使用 |  无  |  是  |
-| secret_key  | 华为云账号的SK字符串，需要加密，请参照**前置工作**中的步骤2进行设置并使用 |  无  |  是  |
-| region  | OBS所在区域字符串 |  'cn-north-4'  |  是  |
+| access_key  | 华为云账号的AK字符串，建议加密使用，可参照**前置工作**中的步骤2进行设置并使用 |  无  |  是  |
+| secret_key  | 华为云账号的SK字符串，建议加密使用，可参照**前置工作**中的步骤2进行设置并使用 |  无  |  是  |
+| region  | OBS服务所在区域 |  'cn-north-4'  |  是  |
 | bucket_name  | OBS的目标桶名 |  无  |  是  |
 | operation_type  | 要进行的操作，创建桶请使用*createbucket*，删除桶请使用*deletebucket* |  无  |  是  |
 | public_read  | 创建桶时，是否开放桶公共读权限，不填时默认不开放。如需设置其他权限，请在创建桶后到控制台进行修改 |  false  |  否  |

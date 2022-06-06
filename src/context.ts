@@ -38,7 +38,7 @@ export function getBucketInputs(): BucketInputs {
         region: core.getInput('region', { required: true }),
         publicRead: core.getBooleanInput('public_read', { required: false }),
         storageClass: core.getInput('storage_class', { required: false }),
-        clearBucket: core.getBooleanInput('clear_bucket', { required: false }) ?? true,
+        clearBucket: core.getBooleanInput('clear_bucket', { required: false }),
     };
 }
 

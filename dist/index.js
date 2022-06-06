@@ -489,7 +489,6 @@ function getObjectInputs() {
 }
 exports.getObjectInputs = getObjectInputs;
 function getBucketInputs() {
-    var _a;
     return {
         accessKey: core.getInput('access_key', { required: true }),
         secretKey: core.getInput('secret_key', { required: true }),
@@ -498,7 +497,7 @@ function getBucketInputs() {
         region: core.getInput('region', { required: true }),
         publicRead: core.getBooleanInput('public_read', { required: false }),
         storageClass: core.getInput('storage_class', { required: false }),
-        clearBucket: (_a = core.getBooleanInput('clear_bucket', { required: false })) !== null && _a !== void 0 ? _a : true,
+        clearBucket: core.getBooleanInput('clear_bucket', { required: false }),
     };
 }
 exports.getBucketInputs = getBucketInputs;
@@ -520,7 +519,7 @@ function getObsClient(ak, sk, server) {
         return obs;
     }
     catch (error) {
-        core.setFailed('.');
+        core.setFailed('init obs client fail.');
     }
 }
 exports.getObsClient = getObsClient;
@@ -812,7 +811,7 @@ const download = __importStar(__nccwpck_require__(5933));
 const bucket = __importStar(__nccwpck_require__(8129));
 const utils = __importStar(__nccwpck_require__(918));
 function run() {
-    var _a, _b;
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
         const commonInputs = context.getCommonInputs();
         if (!utils.checkCommonInputs(commonInputs)) {
@@ -853,7 +852,7 @@ function run() {
                     core.setFailed(`The bucket: ${inputs.bucketName} already exists.`);
                     return;
                 }
-                bucket.createBucket(obs, inputs.bucketName, inputs.region, (_a = inputs.publicRead) !== null && _a !== void 0 ? _a : false, utils.getStorageClass((_b = inputs.storageClass) !== null && _b !== void 0 ? _b : ''));
+                bucket.createBucket(obs, inputs.bucketName, inputs.region, inputs.publicRead, utils.getStorageClass((_a = inputs.storageClass) !== null && _a !== void 0 ? _a : ''));
             }
             if (inputs.operationType.toLowerCase() === 'deletebucket') {
                 // 若桶不存在，退出
@@ -1316,7 +1315,6 @@ const regionArray = [
  * 低频访问存储 StorageClassWarm
  * 归档存储 StorageClassCold
  */
-// const storageClassArray = ['StorageClassStandard', 'StorageClassWarm', 'StorageClassCold'];
 const storageClassList = {
     standard: 'StorageClassStandard',
     infrequent: 'StorageClassWarm',

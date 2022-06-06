@@ -62,7 +62,7 @@ async function run() {
                 obs,
                 inputs.bucketName,
                 inputs.region,
-                inputs.publicRead ?? false,
+                inputs.publicRead,
                 utils.getStorageClass(inputs.storageClass ?? '')
             );
         }
