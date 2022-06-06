@@ -18,9 +18,9 @@ export interface ObjectInputs extends CommonInputs {
 }
 
 export interface BucketInputs extends CommonInputs {
-    ACL?: string;
+    publicRead: boolean;
+    clearBucket: boolean;
     storageClass?: string;
-    clearBucket?: boolean;
 }
 
 export interface CommonResult {

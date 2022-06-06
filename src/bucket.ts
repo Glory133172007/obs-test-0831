@@ -19,7 +19,7 @@ export async function hasBucket(obsClient: any, bucketName: string): Promise<boo
  * @param obsClient obs客户端
  * @param bucketName 桶名
  * @param region 桶所在区域
- * @param ACL 预定义访问策略
+ * @param publicRead 是否开放公共读权限
  * @param storageClass 存储类型
  * @returns
  */
@@ -27,14 +27,14 @@ export function createBucket(
     obsClient: any,
     bucketName: string,
     region: string,
-    ACL?: string,
+    publicRead: boolean,
     storageClass?: string
 ): boolean {
     obsClient
         .createBucket({
             Bucket: bucketName,
             Location: region,
-            ACL: ACL ? obsClient.enums[ACL] : '',
+            ACL: publicRead ? obsClient.enums['AclPublicRead'] : obsClient.enums['AclPrivate'],
             StorageClass: storageClass ? obsClient.enums[storageClass] : '',
         })
         .then((result: CommonResult) => {

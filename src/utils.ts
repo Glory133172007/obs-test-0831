@@ -35,28 +35,16 @@ const regionArray = [
 ];
 
 /**
- * 目前支持的预定义访问策略
- * 私有读写 AclPrivate
- * 公共读 AclPublicRead
- * 公共读写 AclPublicReadWrite
- * 桶公共读，桶内对象公共读 AclPublicReadDelivered
- * 桶公共读写，桶内对象公共读写 AclPublicReadWriteDelivered
- */
-const ACLArray = [
-    'AclPrivate',
-    'AclPublicRead',
-    'AclPublicReadWrite',
-    'AclPublicReadDelivered',
-    'AclPublicReadWriteDelivered',
-];
-
-/**
  * 目前支持的存储类型
  * 标准存储 StorageClassStandard
  * 低频访问存储 StorageClassWarm
  * 归档存储 StorageClassCold
  */
-const storageClassArray = ['StorageClassStandard', 'StorageClassWarm', 'StorageClassCold'];
+const storageClassList = {
+    standard: 'StorageClassStandard',
+    infrequent: 'StorageClassWarm',
+    archive: 'StorageClassCold',
+};
 
 /**
  * 目前支持的操作类型
@@ -174,21 +162,17 @@ export function checkDownloadFilePath(inputs: ObjectInputs): boolean {
 }
 
 /**
- * 检查预定义访问策略是否合法
- * @param acl
- * @returns
- */
-function checkACL(acl: string): boolean {
-    return ACLArray.includes(acl);
-}
-
-/**
- * 检查存储类型是否合法
+ * 获得存储类型
  * @param storageClass
  * @returns
  */
-function checkStorageClass(storageClass: string): boolean {
-    return storageClassArray.includes(storageClass);
+export function getStorageClass(storageClass: string): string {
+    for (const key in storageClassList) {
+        if (storageClass === key) {
+            return storageClassList[key as keyof typeof storageClassList];
+        }
+    }
+    return '';
 }
 
 /**
@@ -227,19 +211,13 @@ export function checkObjectInputs(inputs: ObjectInputs): boolean {
 }
 
 /**
- * 检查操作桶时输入的参数(ACL,storageClass)是否合法
+ * 检查操作桶时输入的参数(storageClass)是否合法
  * @param inputs
  * @returns
  */
 export function checkBucketInputs(inputs: BucketInputs): boolean {
-    if (inputs.ACL) {
-        if (!checkACL(inputs.ACL)) {
-            core.setFailed('ACL is not correct.');
-            return false;
-        }
-    }
     if (inputs.storageClass) {
-        if (!checkStorageClass(inputs.storageClass)) {
+        if (getStorageClass(inputs.storageClass) === '') {
             core.setFailed('storageClass is not correct.');
             return false;
         }
