@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 import * as fs from 'fs';
-import { Inputs } from './types';
+import { BucketInputs, CommonInputs, ObjectInputs } from './types';
 
 /**
  * 目前支持obs功能的region列表
@@ -34,22 +34,48 @@ const regionArray = [
     'ap-southeast-1',
 ];
 
-const FILE_MAX_SIZE = 5 * 1024 * 1024 * 1024;
-
-export const includeSelfFolderArray = {
-    includeItem: ['y', 'yes', 'true'],
-    excludeItem: ['n', 'no', 'false'],
+/**
+ * 目前支持的存储类型
+ * 标准存储 StorageClassStandard
+ * 低频访问存储 StorageClassWarm
+ * 归档存储 StorageClassCold
+ */
+const storageClassList = {
+    standard: 'StorageClassStandard',
+    infrequent: 'StorageClassWarm',
+    archive: 'StorageClassCold',
 };
 
 /**
+ * 目前支持的操作类型
+ * 对象操作 upload  download
+ * 桶操作 createbucket  deletebucket
+ */
+const OPERATION_TYPE = {
+    object: ['upload', 'download'],
+    bucket: ['createbucket', 'deletebucket'],
+};
+
+/**
+ * 允许上传的最大文件大小（单位：B）
+ */
+const FILE_MAX_SIZE = 5 * 1024 * 1024 * 1024;
+
+/**
+ * 分段上传的段大小（单位：B）
+ */
+export const PART_MAX_SIZE = 1024 * 1024;
+
+/**
  * 检查ak/sk是否合法
- * @param inputs
+ * @param ak
+ * @param sk
  * @returns
  */
-export function checkAkSk(inputs: Inputs): boolean {
+export function checkAkSk(ak: string, sk: string): boolean {
     const akReg = /^[a-zA-Z0-9]{10,30}$/;
     const skReg = /^[a-zA-Z0-9]{30,50}$/;
-    return akReg.test(inputs.access_key) && skReg.test(inputs.secret_key);
+    return akReg.test(ak) && skReg.test(sk);
 }
 
 /**
@@ -62,12 +88,33 @@ export function checkRegion(region: string): boolean {
 }
 
 /**
- * 检查operation_type是否合法
+ * 检查桶名，规则如下
+ * 3～63个字符，数字或字母开头，支持小写字母、数字、“-”、“.”
+ * 禁止以“-”或“.”开头及结尾，禁止两个“.”相邻，禁止“.”和“-”相邻
+ * 禁止类IP地址
+ * @param bucketName
+ * @returns
+ */
+export function checkBucketName(bucketName: string): boolean {
+    const legalReg = /^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/;
+    const symbolReg = /([.]+[.-]+)|([-]+[.]+)/;
+    const ipReg = /(\.((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})){3}/;
+    return legalReg.test(bucketName) && !symbolReg.test(bucketName) && !ipReg.test(bucketName);
+}
+
+/**
+ * 获得操作类型
  * @param operation_type
  * @returns
  */
-export function checkOperationType(operation_type: string): boolean {
-    return operation_type.toLowerCase() === 'upload' || operation_type.toLowerCase() === 'download';
+export function getOperationCategory(operationType: string): string {
+    if (OPERATION_TYPE.object.includes(operationType.toLowerCase())) {
+        return 'object';
+    }
+    if (OPERATION_TYPE.bucket.includes(operationType.toLowerCase())) {
+        return 'bucket';
+    }
+    return '';
 }
 
 /**
@@ -75,12 +122,12 @@ export function checkOperationType(operation_type: string): boolean {
  * @param inputs
  * @returns
  */
-export function checkUploadFilePath(inputs: Inputs): boolean {
-    if (inputs.local_file_path.length === 0) {
+export function checkUploadFilePath(inputs: ObjectInputs): boolean {
+    if (inputs.localFilePath.length === 0) {
         core.setFailed('please input localFilePath.');
         return false;
     }
-    for (const path of inputs.local_file_path) {
+    for (const path of inputs.localFilePath) {
         if (path === '') {
             core.setFailed('you should not input a empty string as local_file_path.');
             return false;
@@ -98,16 +145,16 @@ export function checkUploadFilePath(inputs: Inputs): boolean {
  * @param inputs
  * @returns
  */
-export function checkDownloadFilePath(inputs: Inputs): boolean {
-    if (inputs.local_file_path.length !== 1) {
+export function checkDownloadFilePath(inputs: ObjectInputs): boolean {
+    if (inputs.localFilePath.length !== 1) {
         core.setFailed('you should input one local_file_path.');
         return false;
     }
-    if (inputs.local_file_path[0] === '') {
+    if (inputs.localFilePath[0] === '') {
         core.setFailed('you should not input a empty string as local_file_path.');
         return false;
     }
-    if (!inputs.obs_file_path) {
+    if (!inputs.obsFilePath) {
         core.setFailed('you should input one obs_file_path.');
         return false;
     }
@@ -115,24 +162,26 @@ export function checkDownloadFilePath(inputs: Inputs): boolean {
 }
 
 /**
- * 检查includeSelfFolder是否合法
- * @param input
+ * 获得存储类型
+ * @param storageClass
  * @returns
  */
-export function checkIncludeSelfFolder(input: string): boolean {
-    return (
-        includeSelfFolderArray.includeItem.indexOf(input.toLowerCase()) > -1 ||
-        includeSelfFolderArray.excludeItem.indexOf(input.toLowerCase()) > -1
-    );
+export function getStorageClass(storageClass: string): string {
+    for (const key in storageClassList) {
+        if (storageClass === key) {
+            return storageClassList[key as keyof typeof storageClassList];
+        }
+    }
+    return '';
 }
 
 /**
- * 检查输入的各参数是否合法
+ * 检查公共属性(ak,sk,region,bucketName)是否合法
  * @param inputs
  * @returns
  */
-export function checkInputs(inputs: Inputs): boolean {
-    if (!checkAkSk(inputs)) {
+export function checkCommonInputs(inputs: CommonInputs): boolean {
+    if (!checkAkSk(inputs.accessKey, inputs.secretKey)) {
         core.setFailed('ak or sk is not correct.');
         return false;
     }
@@ -140,20 +189,36 @@ export function checkInputs(inputs: Inputs): boolean {
         core.setFailed('region is not correct.');
         return false;
     }
-    if (!checkOperationType(inputs.operation_type)) {
-        core.setFailed('operation_type is not correct, you should input "upload" or "download".');
+    if (!checkBucketName(inputs.bucketName)) {
+        core.setFailed('bucket name is not correct.');
         return false;
     }
+    return true;
+}
+
+/**
+ * 检查操作对象时输入的参数(localFilePath,obsFilePath)是否合法
+ * @param inputs
+ * @returns
+ */
+export function checkObjectInputs(inputs: ObjectInputs): boolean {
     const checkFilePath =
-        inputs.operation_type.toLowerCase() === 'upload' ? checkUploadFilePath(inputs) : checkDownloadFilePath(inputs);
+        inputs.operationType.toLowerCase() === 'upload' ? checkUploadFilePath(inputs) : checkDownloadFilePath(inputs);
     if (!checkFilePath) {
         return false;
     }
-    if (inputs?.include_self_folder) {
-        if (!checkIncludeSelfFolder(inputs.include_self_folder)) {
-            core.setFailed(
-                'include_self_folder is not legal, you should input y(Y)/n(N)/yes(YES)/no(NO)/true(TRUE)/false(FALSE).'
-            );
+    return true;
+}
+
+/**
+ * 检查操作桶时输入的参数(storageClass)是否合法
+ * @param inputs
+ * @returns
+ */
+export function checkBucketInputs(inputs: BucketInputs): boolean {
+    if (inputs.storageClass) {
+        if (getStorageClass(inputs.storageClass) === '') {
+            core.setFailed('storageClass is not correct.');
             return false;
         }
     }
