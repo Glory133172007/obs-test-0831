@@ -274,8 +274,13 @@ export function getPathWithoutRootPath(rootPath: string, path: string): string {
  */
 export function createFolder(path: string): void {
     if (!fs.existsSync(path)) {
-        core.info('create folder: ' + path);
-        fs.mkdirSync(path);
+        try {
+            core.info(`start create folder: "${path}"`);
+            fs.mkdirSync(path);
+        } catch (error) {
+            core.info(`failed to create folder: "${path}"`);
+        }
+        core.info(`successfully create folder: "${path}"`);
     }
 }
 

@@ -152,15 +152,20 @@ export async function uploadFile(
     obsFilePath: string
 ): Promise<void> {
     if (utils.isFileOverSize(localFilePath)) {
-        core.setFailed(`your local file '${localFilePath}' cannot be uploaded because it is larger than 5 GB`);
+        core.setFailed(`your local file "${localFilePath}" cannot be uploaded because it is larger than 5 GB`);
         return;
     }
-    core.info(`upload file: ${localFilePath} to ${bucketName}/${obsFilePath}`);
-    await obsClient.putObject({
+    core.info(`start upload file: "${localFilePath}" as "${bucketName}/${obsFilePath}"`);
+    const result = await obsClient.putObject({
         Bucket: bucketName,
         Key: obsFilePath,
         SourceFile: localFilePath,
     });
+    if (result.CommonMsg.Status < 300) {
+        core.info(`succeessfully upload file: "${localFilePath}" as "${bucketName}/${obsFilePath}"`);
+    } else {
+        core.info(`failed to upload file: "${localFilePath}", because ${result.CommonMsg.Message}`);
+    }
 }
 
 /**
@@ -172,11 +177,16 @@ export async function uploadFile(
  * @returns
  */
 export async function uploadFolder(obsClient: any, bucketName: string, obsFilePath: string): Promise<void> {
-    core.info(`create folder ${obsFilePath}/`);
-    await obsClient.putObject({
+    core.info(`start create folder "${obsFilePath}/"`);
+    const result = await obsClient.putObject({
         Bucket: bucketName,
         Key: obsFilePath + '/',
     });
+    if (result.CommonMsg.Status < 300) {
+        core.info(`succeessfully create folder "${obsFilePath}/"`);
+    } else {
+        core.info(`failed to create folder "${obsFilePath}/", because ${result.CommonMsg.Message}`);
+    }
 }
 
 /**
@@ -195,11 +205,16 @@ export async function obsCreateRootFolder(obsClient: any, bucketName: string, ob
             return;
         }
         obsPath += `${path}/`;
-        core.info('create folder ' + obsPath);
-        await obsClient.putObject({
+        core.info(`start create folder "${obsPath}"`);
+        const result = await obsClient.putObject({
             Bucket: bucketName,
             Key: obsPath,
         });
+        if (result.CommonMsg.Status < 300) {
+            core.info(`succeessfully create folder "${obsPath}"`);
+        } else {
+            core.info(`failed to create folder "${obsPath}", because ${result.CommonMsg.Message}`);
+        }
     }
 }
 
