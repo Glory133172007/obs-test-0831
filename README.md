@@ -23,7 +23,7 @@
 | include_self_folder  | 上传/下载文件夹时是否包含文件夹自身，不填时默认不包含 |  false  |  否  |
 | exclude  | 下载对象时，要排除的对象，上传时无用，不填时默认不排除 |  无  |  否  |
 
-> 请注意，上传/下载时，地址类参数请不要使用操作系统独有的地址符号（如Linux系统的'\~，会被识别成名为'\~'的文件夹'）。如果想便捷使用某个地址，建议设置此地址至env参数或使用[action提供的上下文功能](https://docs.github.com/cn/actions/learn-github-actions/contexts#github-context)，例如：
+> 请注意，上传/下载时，地址类参数请不要使用操作系统独有的地址符号（如Linux系统的'\~，会被识别成名为'\~'的文件夹'）。如果想便捷使用某个地址，建议使用[action提供的上下文参数](https://docs.github.com/cn/actions/learn-github-actions/contexts#github-context)中提供的地址上下文，或者设置此地址为env参数，例如：
 
 ```yaml
 name: Echo Paths
