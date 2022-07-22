@@ -41,7 +41,7 @@ jobs:
       - name: echo env variable
         run: echo ${{ env.HOME_DIR }}
 
-      # 上下文使用示例，此处为github运行时的当前目录
+      # 上下文使用示例，此处为action运行时的工作目录
       - name: echo workspace
         run: echo ${{ github.workspace }}
 ```
