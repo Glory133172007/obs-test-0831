@@ -23,25 +23,19 @@
 | include_self_folder  | 上传/下载文件夹时是否包含文件夹自身，不填时默认不包含 |  false  |  否  |
 | exclude  | 下载对象时，要排除的对象，上传时无用，不填时默认不排除 |  无  |  否  |
 
-> 请注意，上传/下载时，地址类参数请不要使用操作系统独有的地址符号（如Linux系统的'\~，会被识别成名为'\~'的文件夹'）。如果想便捷使用某个地址，建议使用[action提供的上下文参数](https://docs.github.com/cn/actions/learn-github-actions/contexts#github-context)中提供的地址上下文，或者设置此地址为env参数，例如：
+> 请注意，上传/下载时，地址类参数请不要使用操作系统独有的地址符号（如Linux系统的'\~，会被识别成名为'\~'的文件夹'）。如果想便捷使用某个地址，建议使用[action提供的上下文功能](https://docs.github.com/cn/actions/learn-github-actions/contexts#github-context)中提供的上下文，例如：
 
 ```yaml
-name: Show Paths
+name: Show Contexts
 on:
   push:
     branches:
         master
-env: 
-  HOME_DIR: /home/{your_username}
 jobs:
-  Show-Paths:
+  Show-Workspace:
     runs-on: ubuntu-latest
     steps:
-      # 环境变量使用示例
-      - name: echo env variable
-        run: echo ${{ env.HOME_DIR }}
-
-      # 上下文使用示例，此处为action运行时的工作目录
+      # 此处为action运行时的工作目录
       - name: echo workspace
         run: echo ${{ github.workspace }}
 ```
