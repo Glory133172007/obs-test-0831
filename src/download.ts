@@ -60,9 +60,10 @@ async function downloadFilesFromObs(
     let delFolderPath = ''; // 用来记录无法下载的文件夹
     for (const path of downloadList) {
         if (delFolderPath === '' || !path.match(`^${delFolderPath}`)) {
-            let finalLocalPath =
-                localRoot + utils.getPathWithoutRootPath(utils.getStringDelLastSlash(inputs.obsFilePath), path);
-
+            let finalLocalPath = `${localRoot}${utils.getPathWithoutRootPath(
+                utils.getStringDelLastSlash(inputs.obsFilePath),
+                path
+            )}`;
             // 若本地有和待下载文件同名的文件夹，给文件名加后缀下载
             if (downloadList.indexOf(`${path}/`) !== -1) {
                 finalLocalPath = `${path}${new Date().valueOf()}`;

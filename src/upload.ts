@@ -19,7 +19,7 @@ export async function uploadFileOrFolder(obsClient: any, inputs: ObjectInputs): 
                 let obsFilePath = '';
                 if (inputs.obsFilePath) {
                     if (utils.isEndWithSlash(inputs.obsFilePath)) {
-                        obsFilePath = inputs.obsFilePath + localRoot;
+                        obsFilePath = `${inputs.obsFilePath}${localRoot}`;
                     } else {
                         // 若是多路径上传时的文件,不存在重命名,默认传至obs_file_path文件夹下
                         obsFilePath =
@@ -72,7 +72,7 @@ export async function uploadFileOrFolder(obsClient: any, inputs: ObjectInputs): 
  */
 export function getObsRootFile(includeSelf: boolean, obsfile: string, objectName: string): string {
     if (includeSelf) {
-        const obsFinalFilePath = obsfile ? utils.getStringDelLastSlash(obsfile) + '/' + objectName : objectName;
+        const obsFinalFilePath = obsfile ? `${utils.getStringDelLastSlash(obsfile)}/${objectName}` : objectName;
         return obsFinalFilePath;
     } else {
         return utils.getStringDelLastSlash(obsfile);
@@ -180,7 +180,7 @@ export async function uploadFolder(obsClient: any, bucketName: string, obsFilePa
     core.info(`start create folder "${obsFilePath}/"`);
     const result = await obsClient.putObject({
         Bucket: bucketName,
-        Key: obsFilePath + '/',
+        Key: `${obsFilePath}/`,
     });
     if (result.CommonMsg.Status < SUCCESS_STATUS_CODE) {
         core.info(`succeessfully create folder "${obsFilePath}/"`);

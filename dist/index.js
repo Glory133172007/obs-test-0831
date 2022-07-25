@@ -620,7 +620,7 @@ function downloadFilesFromObs(obsClient, inputs, downloadList, localPath) {
         let delFolderPath = ''; // 用来记录无法下载的文件夹
         for (const path of downloadList) {
             if (delFolderPath === '' || !path.match(`^${delFolderPath}`)) {
-                let finalLocalPath = localRoot + utils.getPathWithoutRootPath(utils.getStringDelLastSlash(inputs.obsFilePath), path);
+                let finalLocalPath = `${localRoot}${utils.getPathWithoutRootPath(utils.getStringDelLastSlash(inputs.obsFilePath), path)}`;
                 // 若本地有和待下载文件同名的文件夹，给文件名加后缀下载
                 if (downloadList.indexOf(`${path}/`) !== -1) {
                     finalLocalPath = `${path}${new Date().valueOf()}`;
@@ -968,7 +968,7 @@ function uploadFileOrFolder(obsClient, inputs) {
                     let obsFilePath = '';
                     if (inputs.obsFilePath) {
                         if (utils.isEndWithSlash(inputs.obsFilePath)) {
-                            obsFilePath = inputs.obsFilePath + localRoot;
+                            obsFilePath = `${inputs.obsFilePath}${localRoot}`;
                         }
                         else {
                             // 若是多路径上传时的文件,不存在重命名,默认传至obs_file_path文件夹下
@@ -1019,7 +1019,7 @@ exports.uploadFileOrFolder = uploadFileOrFolder;
  */
 function getObsRootFile(includeSelf, obsfile, objectName) {
     if (includeSelf) {
-        const obsFinalFilePath = obsfile ? utils.getStringDelLastSlash(obsfile) + '/' + objectName : objectName;
+        const obsFinalFilePath = obsfile ? `${utils.getStringDelLastSlash(obsfile)}/${objectName}` : objectName;
         return obsFinalFilePath;
     }
     else {
@@ -1123,7 +1123,7 @@ function uploadFolder(obsClient, bucketName, obsFilePath) {
         core.info(`start create folder "${obsFilePath}/"`);
         const result = yield obsClient.putObject({
             Bucket: bucketName,
-            Key: obsFilePath + '/',
+            Key: `${obsFilePath}/`,
         });
         if (result.CommonMsg.Status < types_1.SUCCESS_STATUS_CODE) {
             core.info(`succeessfully create folder "${obsFilePath}/"`);
