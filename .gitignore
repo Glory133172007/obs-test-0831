@@ -3,3 +3,4 @@ package-lock.json
 install.ts
 resource
 .history
+lib

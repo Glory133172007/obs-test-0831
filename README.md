@@ -22,6 +22,27 @@
 | obs_file_path  | 对象在桶内的路径 |  无  |  下载时必填  |
 | include_self_folder  | 上传/下载文件夹时是否包含文件夹自身，不填时默认不包含 |  false  |  否  |
 | exclude  | 下载对象时，要排除的对象，上传时无用，不填时默认不排除 |  无  |  否  |
+
+> 请注意，上传/下载时，地址类参数请不要使用操作系统独有的地址符号（如Linux系统的'\~'，会被识别成名为'\~'的文件夹）。Github Actions提供的[上下文功能](https://docs.github.com/cn/actions/learn-github-actions/contexts#github-context)中，有一些常用的地址上下文，例如：
+
+```yaml
+name: Show Contexts
+on:
+  push:
+    branches:
+        master
+jobs:
+  Show-Workspace:
+    runs-on: ubuntu-latest
+    steps:
+      # ${{ github.workspace }}为action运行时的工作目录
+      - name: echo workspace
+        run: echo ${{ github.workspace }}
+
+      # ${{ runner.temp }}为Linux GitHub 托管的运行器的tmp目录
+      - name: echo linux temp
+        run: echo ${{ runner.temp }}
+```
 ## **创建删除桶参数说明**
 |  参数名称  |  参数说明  |  默认值  |  是否必填  |
 |  :----:  |  ----  |  :----: |  :----:  |

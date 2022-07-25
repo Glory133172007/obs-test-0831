@@ -272,11 +272,16 @@ export function getPathWithoutRootPath(rootPath: string, path: string): string {
  * 创建文件夹
  * @param path
  */
-export function createFolder(path: string): void {
-    if (!fs.existsSync(path)) {
-        core.info('create folder: ' + path);
-        fs.mkdirSync(path);
+export function createFolder(path: string): boolean {
+    if (fs.existsSync(path)) {
+        return true;
     }
+    try {
+        fs.mkdirSync(path);
+    } catch (error) {
+        return false;
+    }
+    return fs.existsSync(path);
 }
 
 /**

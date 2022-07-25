@@ -8,22 +8,24 @@ function getObsClient(inputs: ObjectInputs) {
     return new ObsClient({
         access_key_id: inputs.accessKey,       
         secret_access_key: inputs.secretKey,       
-        server : `https://obs.${inputs.region}.myhuaweicloud.com`,
+        server: `https://obs.${inputs.region}.ulanqab.huawei.com`
     });
+}
+const inputs = {
+    accessKey: '********************',
+    secretKey: '*********************************',
+    bucketName: '****',
+    operationType: 'upload',
+    obsFilePath: '',
+    localFilePath: [''],
+    region: 'cn-north-7',
+    includeSelfFolder: false
 }
 
 // ------------------------------file---------------------------------
 
 test('upload a exist file without rename to obs folder "obsTest1"', async () => {
-    const inputs = {
-        accessKey: '******',
-        secretKey: '******',
-        bucketName: '******',
-        operationType: 'upload',
-        obsFilePath: 'obsTest1/file1.txt',
-        localFilePath: ['resource/uploadDir/file1.txt'],
-        region: 'cn-north-6',   
-    }
+    inputs.obsFilePath = 'obsTest1/file1.txt'
     const obs = getObsClient(inputs);
     await upload.uploadFileOrFolder(obs, inputs);
     const objList = await download.getDownloadList(obs, inputs, inputs.obsFilePath);
@@ -31,15 +33,7 @@ test('upload a exist file without rename to obs folder "obsTest1"', async () => 
 });
 
 test('upload a exist file and rename to obs root', async () => {
-    const inputs = {
-        accessKey: '******',
-        secretKey: '******',
-        bucketName: '******',
-        operationType: 'upload',
-        obsFilePath: 'elif.txt',
-        localFilePath: ['resource/uploadDir/file1.txt'],
-        region: 'cn-north-6',   
-    }
+    inputs.obsFilePath = 'elif.txt'
     const obs = getObsClient(inputs);
     await upload.uploadFileOrFolder(obs, inputs);
     const objList = await download.getDownloadList(obs, inputs, inputs.obsFilePath);
@@ -47,16 +41,7 @@ test('upload a exist file and rename to obs root', async () => {
 });
 
 test('upload a nonexist file to obs root', async () => {
-    const inputs = {
-        accessKey: '******',
-        secretKey: '******',
-        bucketName: '******',
-        operationType: 'upload',
-        obsFilePath: '',
-        localFilePath: ['resource/uploadDir/file2.txt'],
-        region: 'cn-north-6',
-        include_self_folder: true
-    }
+    inputs.localFilePath = ['file2.txt'];
     const obs = getObsClient(inputs);
     await upload.uploadFileOrFolder(obs, inputs);
     const objList = await download.getDownloadList(obs, inputs, inputs.obsFilePath);
@@ -64,15 +49,7 @@ test('upload a nonexist file to obs root', async () => {
 });
 
 test('upload a big file to obs', async () => {
-    const inputs = {
-        accessKey: '******',
-        secretKey: '******',
-        bucketName: '******',
-        operationType: 'upload',
-        obsFilePath: 'src/bigFile.zip',
-        localFilePath: ['resource/bigFile.zip'],
-        region: 'cn-north-6'
-    }
+    inputs.localFilePath = ['bigFile.zip'];
     const obs = getObsClient(inputs);
     await upload.uploadFileOrFolder(obs, inputs);
     const objList = await download.getDownloadList(obs, inputs, inputs.obsFilePath);
@@ -82,86 +59,43 @@ test('upload a big file to obs', async () => {
 // ------------------------------folder---------------------------------
 
 test('upload a exist empty folder to obs "obsTest2"', async () => {
-    const inputs = {
-        accessKey: '******',
-        secretKey: '******',
-        bucketName: '******',
-        operationType: 'upload',
-        obsFilePath: 'obsTest2',
-        localFilePath: ['resource/uploadDir/test1'],
-        region: 'cn-north-6',
-        include_self_folder: true
-    }
+    inputs.localFilePath = ['resource/uploadDir/folder2'];
+    inputs.obsFilePath = 'obsTest2/'
+    inputs.includeSelfFolder = true;
     const obs = getObsClient(inputs);
     await upload.uploadFileOrFolder(obs, inputs);
     const objList = await download.getDownloadList(obs, inputs, inputs.obsFilePath);
-    expect(objList.indexOf('obsTest2/test1/')).toBeGreaterThan(-1);
+    expect(objList.indexOf('obsTest2/folder2/')).toBeGreaterThan(-1);
 });
 
-test('upload a exist folder to obs "obsTest3" and include local folder "uploadDir" itself', async () => {
-    const inputs = {
-        accessKey: '******',
-        secretKey: '******',
-        bucketName: '******',
-        operationType: 'upload',
-        obsFilePath: 'obsTest3',
-        localFilePath: ['resource/uploadDir/'],
-        region: 'cn-north-6',
-        include_self_folder: true
-    }
+test('upload a exist folder to obs "obsTest2" and include local folder "uploadDir" itself', async () => {
+    inputs.localFilePath = ['resource/uploadDir'];
+    inputs.obsFilePath = 'obsTest2/';
+    inputs.includeSelfFolder = true;
     const obs = getObsClient(inputs);
-    await upload.uploadFileOrFolder(obs, inputs);
-    const objList = await download.getDownloadList(obs, inputs, inputs.obsFilePath);
-    expect(objList.indexOf('obsTest3/uploadDir/test-mult/other1.txt')).toBeGreaterThan(-1);
-});
 
-test('upload a exist folder to obs "obsTest4"', async () => {
-    const inputs = {
-        accessKey: '******',
-        secretKey: '******',
-        bucketName: '******',
-        operationType: 'upload',
-        obsFilePath: 'obsTest4',
-        localFilePath: ['resource/uploadDir/'],
-        region: 'cn-north-6'
-    }
-    const obs = getObsClient(inputs);
     await upload.uploadFileOrFolder(obs, inputs);
     const objList = await download.getDownloadList(obs, inputs, inputs.obsFilePath);
-    expect(objList.indexOf('obsTest4/test-mult/other1.txt')).toBeGreaterThan(-1);
+    console.log(objList)
+    expect(objList.indexOf('obsTest2/uploadDir/folder1/')).toBeGreaterThan(-1);
 });
 
 test('upload a nonexist folder to obs root ', async () => {
-    const inputs = {
-        accessKey: '******',
-        secretKey: '******',
-        bucketName: '******',
-        operationType: 'upload',
-        obsFilePath: '',
-        localFilePath: ['resource/uploadDir/testabab'],
-        region: 'cn-north-6'
-    }
+    inputs.localFilePath = ['resource/uploadDir111'];
+    inputs.obsFilePath = ''
     const obs = getObsClient(inputs);
     await upload.uploadFileOrFolder(obs, inputs);
     const objList = await download.getDownloadList(obs, inputs, inputs.obsFilePath);
-    expect(objList.indexOf('testabab/')).toEqual(-1);
+    expect(objList.indexOf('uploadDir111/')).toEqual(-1);
 });
 
-test('upload a exist folder include lots of files to obs "obsTest5" ', async () => {
-    const inputs = {
-        accessKey: '******',
-        secretKey: '******',
-        bucketName: '******',
-        operationType: 'upload',
-        obsFilePath: 'obsTest5',
-        localFilePath: ['D:/project/spring-boot-main'],
-        include_self_folder: true,
-        region: 'cn-north-6'
-    }
+test('upload a exist folder include lots of files to obs "obsTest3" ', async () => {
+    inputs.localFilePath = ['resource/uploadDir/mult-file'];
+    inputs.obsFilePath = 'obsTest3';
     const obs = getObsClient(inputs);
     await upload.uploadFileOrFolder(obs, inputs);
     const objList = await download.getDownloadList(obs, inputs, inputs.obsFilePath);
-    expect(objList.indexOf('obsTest5/spring-boot-main/')).toEqual(-1);
+    expect(objList.indexOf('obsTest5/mult-file/')).toEqual(-1);
 });
 
 // ----------------------------------------funciton----------------------------------------
@@ -171,18 +105,9 @@ test('fileDisplay', async () => {
         file: [],
         folder: []
     };
-    const inputs = {
-        accessKey: '******',
-        secretKey: '******',
-        bucketName: '******',
-        operationType: 'upload',
-        obsFilePath: 'obsTest6',
-        localFilePath: ['resource/uploadDir'],
-        region: 'cn-north-6',   
-    };
-    await upload.fileDisplay(getObsClient(inputs), inputs, 'resource/uploadDir', '', uploadList);
-    expect(uploadList.file.length).toEqual(5);
-    expect(uploadList.folder).toEqual(['test', 'test/test2', 'test-mult', 'test-mult/other1', 'test1']);
+    await upload.fileDisplay(getObsClient(inputs), inputs, 'resource/uploadDir/folder1', '', uploadList);
+    expect(uploadList.file.length).toEqual(2);
+    expect(uploadList.folder).toEqual(['folder1-1', 'folder1-1/folder1-1-1']);
 });
 
 test('getObsRootFile', () => {
@@ -190,50 +115,10 @@ test('getObsRootFile', () => {
     expect(upload.getObsRootFile(false, 'obs', 'local')).toEqual('obs');
 });
 
-test('uploadFile', async () => {
-    const inputs = {
-        accessKey: '******',
-        secretKey: '******',
-        bucketName: '******',
-        operationType: 'upload',
-        obsFilePath: 'obsTest6',
-        localFilePath: ['resource/uploadDir/file1.txt'],
-        region: 'cn-north-6',   
-    };
-    const obs = getObsClient(inputs);
-    await upload.uploadFile(obs, inputs.bucketName, inputs.localFilePath[0], inputs.obsFilePath);
-    const objList = await download.getDownloadList(obs, inputs, inputs.obsFilePath);
-    expect(objList.indexOf('obsTest6/file1.txt') > -1).toBeTruthy;
-});
-
-test('uploadFolder', async () => {
-    const inputs = {
-        accessKey: '******',
-        secretKey: '******',
-        bucketName: '******',
-        operationType: 'upload',
-        obsFilePath: 'obsTest6/emptyFolder1',
-        localFilePath: ['resource/uploadDir/file1.txt'],
-        region: 'cn-north-6',   
-    };
-    const obs = getObsClient(inputs);
-    await upload.uploadFolder(obs, inputs.bucketName, inputs.obsFilePath);
-    const objList = await download.getDownloadList(obs, inputs, inputs.obsFilePath);
-    expect(objList.indexOf('obsTest6/emptyFolder1') > -1).toBeTruthy;
-});
-
 test('obsCreateRootFolder', async () => {
-    const inputs = {
-        accessKey: '******',
-        secretKey: '******',
-        bucketName: '******',
-        operationType: 'upload',
-        obsFilePath: 'obsTest6/root1/root2/root3',
-        localFilePath: ['resource/uploadDir/file1.txt'],
-        region: 'cn-north-6',   
-    };
+    inputs.obsFilePath = 'obsTest2/newFolder';
     const obs = getObsClient(inputs);
     await upload.obsCreateRootFolder(obs, inputs.bucketName, inputs.obsFilePath);
     const objList = await download.getDownloadList(obs, inputs, inputs.obsFilePath);
-    expect(objList.indexOf('obsTest6/root1/') > -1).toBeTruthy;
+    expect(objList.indexOf('obsTest2/newFolder/') > -1).toBeTruthy();
 });

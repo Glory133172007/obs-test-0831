@@ -13,18 +13,19 @@ import { ObjectInputs, ListBucketContentItem } from './types';
 export async function downloadFileOrFolder(obsClient: any, inputs: ObjectInputs): Promise<void> {
     const inputLocalFilePath = inputs.localFilePath[0];
     const downloadPathList = await getDownloadList(obsClient, inputs, inputs.obsFilePath);
+
     if (downloadPathList.length < 1) {
         core.setFailed('object not exist in obs or no object needed downloaded.');
         return;
-    } else if (pathIsSingleFile(downloadPathList, inputs.obsFilePath)) {
-        await downloadFile(obsClient, inputs, downloadPathList[0]);
-        return;
+    }
+
+    if (pathIsSingleFile(downloadPathList, inputs.obsFilePath)) {
+        // 下载单个文件时，以'/'结尾，代表下载到localpath代表的文件夹中，下载文件夹时无此限制
+        const fileLocalPath = utils.isEndWithSlash(inputLocalFilePath)
+            ? `${inputLocalFilePath}${utils.getLastItemWithSlash(downloadPathList[0])}`
+            : inputLocalFilePath;
+        await downloadFile(obsClient, inputs, downloadPathList[0], fileLocalPath);
     } else {
-        // 下载文件夹时，需指定一个本地存在的目录
-        if (!fs.existsSync(inputLocalFilePath)) {
-            core.setFailed('local dirctory not exist, please check you input');
-            return;
-        }
         await downloadFilesFromObs(obsClient, inputs, downloadPathList, inputLocalFilePath);
     }
 }
@@ -54,23 +55,30 @@ async function downloadFilesFromObs(
     downloadList: string[],
     localPath: string
 ): Promise<void> {
-    const localRoot = createEmptyRootFolders(localPath, inputs.obsFilePath, !!inputs.includeSelfFolder);
-    // 如果obs对象是文件夹且本地存在同名文件，不进行下载，记录需要跳过下载的文件夹开头
-    let delFolderPath = '';
+    const localRoot = getDownloadRoot(localPath, inputs.obsFilePath, !!inputs.includeSelfFolder);
+
+    let delFolderPath = ''; // 用来记录无法下载的文件夹
     for (const path of downloadList) {
         if (delFolderPath === '' || !path.match(`^${delFolderPath}`)) {
-            let finalLocalPath =
-                localRoot + utils.getPathWithoutRootPath(utils.getStringDelLastSlash(inputs.obsFilePath), path);
-            // 如果下载列表中有和文件同目录同名的文件夹，给文件名加后缀下载
+            let finalLocalPath = `${localRoot}${utils.getPathWithoutRootPath(
+                utils.getStringDelLastSlash(inputs.obsFilePath),
+                path
+            )}`;
+            // 若本地有和待下载文件同名的文件夹，给文件名加后缀下载
             if (downloadList.indexOf(`${path}/`) !== -1) {
-                finalLocalPath += new Date().valueOf();
+                finalLocalPath = `${path}${new Date().valueOf()}`;
             }
+
+            // 下载文件/文件夹
             if (utils.isEndWithSlash(finalLocalPath)) {
+                // 若本地有和待下载文件夹同名的文件，停止下载此文件夹
                 if (utils.isExistSameNameFile(finalLocalPath)) {
-                    core.info(`download folder ${finalLocalPath} failed.`);
+                    core.info(
+                        `download folder "${finalLocalPath}" failed, because there is already a file with the same name".`
+                    );
                     delFolderPath = path;
                 } else {
-                    utils.createFolder(finalLocalPath);
+                    delFolderPath = downloadFolder(finalLocalPath);
                 }
             } else {
                 await downloadFile(obsClient, inputs, path, finalLocalPath);
@@ -80,19 +88,31 @@ async function downloadFilesFromObs(
 }
 
 /**
- * 根据includeSelfFolder，创建文件夹
+ * 根据includeSelfFolder，获取本地文件根目录
  * @param localPath 本地path
  * @param obsPath 对象在obs上的path
  * @param includeSelfFolder 是否包含文件夹自身
  * @returns
  */
-export function createEmptyRootFolders(localPath: string, obsPath: string, includeSelfFolder: boolean): string {
-    let local = utils.getStringDelLastSlash(localPath);
-    if (includeSelfFolder) {
-        local += `/${utils.getStringDelLastSlash(obsPath).split('/').pop()}`;
-        utils.createFolder(local);
+export function getDownloadRoot(localPath: string, obsPath: string, includeSelfFolder: boolean): string {
+    return includeSelfFolder
+        ? `${utils.getStringDelLastSlash(localPath)}/${utils.getStringDelLastSlash(obsPath).split('/').pop()}`
+        : utils.getStringDelLastSlash(localPath);
+}
+
+/**
+ * 下载文件夹
+ * @param localPath 文件夹要下载在本地的路径
+ * @returns
+ */
+export function downloadFolder(localPath: string): string {
+    const isCreated = utils.createFolder(localPath);
+    if (isCreated) {
+        return '';
+    } else {
+        core.setFailed(`failed to create folder: "${localPath}"`);
+        return localPath;
     }
-    return local;
 }
 
 /**
@@ -108,27 +128,36 @@ export async function downloadFile(
     obsPath: string,
     localPath?: string
 ): Promise<void> {
-    let localFileName = localPath
-        ? localPath
-        : getLocalFileName(utils.getStringDelLastSlash(inputs.localFilePath[0]), obsPath);
+    let localFileName = localPath ?? getLocalFileName(utils.getStringDelLastSlash(inputs.localFilePath[0]), obsPath);
 
     // 若本地存在同名文件夹，下载到此文件夹中。若此文件夹中还存在同名文件夹，放弃本次下载
     if (utils.isExistSameNameFolder(localFileName)) {
+        core.info(
+            `a folder already exists on the local that has the same name as the path for downloading the obs file "${obsPath}"`
+        );
+        core.info(`try to download obs file in this folder`);
         const nextFileName = `${localFileName}/${utils.getLastItemWithSlash(localFileName)}`;
         if (utils.isExistSameNameFolder(nextFileName)) {
-            core.info(`download file ${localFileName} failed.`);
+            core.info(
+                `download file "${localFileName}" failed, because "${localFileName}" already exists as a folder on the local.`
+            );
             return;
         } else {
             localFileName = nextFileName;
         }
     }
 
-    core.info(`download ${obsPath} to local: ${localFileName}`);
-    await obsClient.getObject({
+    core.info(`start download obs file: "${obsPath}"`);
+    const result = await obsClient.getObject({
         Bucket: inputs.bucketName,
         Key: obsPath,
         SaveAsFile: localFileName,
     });
+    if (result.CommonMsg.Status < 300) {
+        core.info(`successfully download obs file: "${obsPath}" as ${localFileName}`);
+    } else {
+        core.setFailed(`failed to download obs file: "${obsPath}", because ${result.CommonMsg.Message}`);
+    }
 }
 
 /**
