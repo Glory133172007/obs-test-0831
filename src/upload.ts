@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as utils from './utils';
 import * as core from '@actions/core';
-import { ObjectInputs, UploadFileList } from './types';
+import { ObjectInputs, UploadFileList, SUCCESS_STATUS_CODE } from './types';
 
 /**
  * 上传文件/文件夹
@@ -161,10 +161,10 @@ export async function uploadFile(
         Key: obsFilePath,
         SourceFile: localFilePath,
     });
-    if (result.CommonMsg.Status < 300) {
+    if (result.CommonMsg.Status < SUCCESS_STATUS_CODE) {
         core.info(`succeessfully upload file: "${localFilePath}" as "${bucketName}/${obsFilePath}"`);
     } else {
-        core.info(`failed to upload file: "${localFilePath}", because ${result.CommonMsg.Message}`);
+        core.setFailed(`failed to upload file: "${localFilePath}", because ${result.CommonMsg.Message}`);
     }
 }
 
@@ -182,10 +182,10 @@ export async function uploadFolder(obsClient: any, bucketName: string, obsFilePa
         Bucket: bucketName,
         Key: obsFilePath + '/',
     });
-    if (result.CommonMsg.Status < 300) {
+    if (result.CommonMsg.Status < SUCCESS_STATUS_CODE) {
         core.info(`succeessfully create folder "${obsFilePath}/"`);
     } else {
-        core.info(`failed to create folder "${obsFilePath}/", because ${result.CommonMsg.Message}`);
+        core.setFailed(`failed to create folder "${obsFilePath}/", because ${result.CommonMsg.Message}`);
     }
 }
 
@@ -210,10 +210,10 @@ export async function obsCreateRootFolder(obsClient: any, bucketName: string, ob
             Bucket: bucketName,
             Key: obsPath,
         });
-        if (result.CommonMsg.Status < 300) {
+        if (result.CommonMsg.Status < SUCCESS_STATUS_CODE) {
             core.info(`succeessfully create folder "${obsPath}"`);
         } else {
-            core.info(`failed to create folder "${obsPath}", because ${result.CommonMsg.Message}`);
+            core.setFailed(`failed to create folder "${obsPath}", because ${result.CommonMsg.Message}`);
         }
     }
 }
@@ -248,11 +248,11 @@ export async function initMultipartUpload(obs: any, bucketName: string, objKey: 
         Key: objKey,
     });
 
-    if (result.CommonMsg.Status < 300) {
+    if (result.CommonMsg.Status < SUCCESS_STATUS_CODE) {
         core.info('init multipart upload successfully.');
         return result.InterfaceResult.UploadId;
     } else {
-        core.info('init multipart upload failed.');
+        core.setFailed('init multipart upload failed.');
         return '';
     }
 }
@@ -298,13 +298,13 @@ export async function uploadParts(
             Offset: offset,
             PartSize: currPartSize,
         });
-        if (result.CommonMsg.Status < 300) {
+        if (result.CommonMsg.Status < SUCCESS_STATUS_CODE) {
             parts.push({
                 PartNumber: partNumber,
                 ETag: result.InterfaceResult.ETag,
             });
         } else {
-            throw new Error(result.CommonMsg.Code);
+            core.setFailed(result.CommonMsg.Code);
         }
     }
 
@@ -344,11 +344,11 @@ export async function mergeParts(
         Parts: parts,
     });
 
-    if (result.CommonMsg.Status < 300) {
+    if (result.CommonMsg.Status < SUCCESS_STATUS_CODE) {
         core.info('Complete to upload multiparts finished.');
         return true;
     } else {
-        core.info(result.CommonMsg.Code);
+        core.setFailed(result.CommonMsg.Code);
         return false;
     }
 }

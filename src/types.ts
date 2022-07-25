@@ -1,5 +1,7 @@
 import stream from 'stream';
 
+export const SUCCESS_STATUS_CODE = 300;
+
 export interface CommonInputs {
     accessKey: string;
     secretKey: string;

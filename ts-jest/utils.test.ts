@@ -73,7 +73,7 @@ test('check localFilePath and obsFilePath when upload', () => {
       bucketName: '******',
       operationType: 'upload',
       obsFilePath: 'uploadtest1',
-      localFilePath: ['resource/bigFile.zip'],
+      localFilePath: ['resource/uploadDir'],
       region: 'cn-north-6',
    };
    expect(utils.checkUploadFilePath(input1)).toBeTruthy();
@@ -256,6 +256,6 @@ test('isExistSameNameFile', () => {
 
 // 检查本地是否存在同名文件夹
 test('isExistSameNameFolder', () => {
-   expect(utils.isExistSameNameFolder('resource/uploadDir/test1')).toBeTruthy();
-   expect(utils.isExistSameNameFolder('resource/uploadDir/test2')).toBeFalsy();
+   expect(utils.isExistSameNameFolder('resource/uploadDir/folder1')).toBeTruthy();
+   expect(utils.isExistSameNameFolder('resource/uploadDir/folder3')).toBeFalsy();
 });

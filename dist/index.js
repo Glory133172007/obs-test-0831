@@ -565,7 +565,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getDownloadList = exports.getLocalFileName = exports.downloadFile = exports.createEmptyRootFolders = exports.pathIsSingleFile = exports.downloadFileOrFolder = void 0;
+exports.getDownloadList = exports.getLocalFileName = exports.downloadFile = exports.downloadFolder = exports.getDownloadRoot = exports.pathIsSingleFile = exports.downloadFileOrFolder = void 0;
 const fs = __importStar(__nccwpck_require__(5747));
 const utils = __importStar(__nccwpck_require__(918));
 const core = __importStar(__nccwpck_require__(2186));
@@ -584,15 +584,12 @@ function downloadFileOrFolder(obsClient, inputs) {
             core.setFailed('object not exist in obs or no object needed downloaded.');
             return;
         }
-        else if (pathIsSingleFile(downloadPathList, inputs.obsFilePath)) {
+        if (pathIsSingleFile(downloadPathList, inputs.obsFilePath)) {
             // 下载单个文件时，以'/'结尾，代表下载到localpath代表的文件夹中，下载文件夹时无此限制
-            if (utils.isEndWithSlash(inputLocalFilePath)) {
-                yield downloadFile(obsClient, inputs, downloadPathList[0], `${inputLocalFilePath}${utils.getLastItemWithSlash(downloadPathList[0])}`);
-            }
-            else {
-                yield downloadFile(obsClient, inputs, downloadPathList[0], inputLocalFilePath);
-            }
-            return;
+            const fileLocalPath = utils.isEndWithSlash(inputLocalFilePath)
+                ? `${inputLocalFilePath}${utils.getLastItemWithSlash(downloadPathList[0])}`
+                : inputLocalFilePath;
+            yield downloadFile(obsClient, inputs, downloadPathList[0], fileLocalPath);
         }
         else {
             yield downloadFilesFromObs(obsClient, inputs, downloadPathList, inputLocalFilePath);
@@ -619,24 +616,24 @@ exports.pathIsSingleFile = pathIsSingleFile;
  */
 function downloadFilesFromObs(obsClient, inputs, downloadList, localPath) {
     return __awaiter(this, void 0, void 0, function* () {
-        const localRoot = createEmptyRootFolders(localPath, inputs.obsFilePath, !!inputs.includeSelfFolder);
-        // 如果obs对象是文件夹且本地存在同名文件，不进行下载，记录需要跳过下载的文件夹开头
-        let delFolderPath = '';
+        const localRoot = getDownloadRoot(localPath, inputs.obsFilePath, !!inputs.includeSelfFolder);
+        let delFolderPath = ''; // 用来记录无法下载的文件夹
         for (const path of downloadList) {
             if (delFolderPath === '' || !path.match(`^${delFolderPath}`)) {
                 let finalLocalPath = localRoot + utils.getPathWithoutRootPath(utils.getStringDelLastSlash(inputs.obsFilePath), path);
-                // 如果下载列表中有和文件同目录同名的文件夹，给文件名加后缀下载
+                // 若本地有和待下载文件同名的文件夹，给文件名加后缀下载
                 if (downloadList.indexOf(`${path}/`) !== -1) {
-                    finalLocalPath = path + new Date().valueOf();
+                    finalLocalPath = `${path}${new Date().valueOf()}`;
                 }
-                // 下载文件夹时，空文件夹一并下载
+                // 下载文件/文件夹
                 if (utils.isEndWithSlash(finalLocalPath)) {
+                    // 若本地有和待下载文件夹同名的文件，停止下载此文件夹
                     if (utils.isExistSameNameFile(finalLocalPath)) {
-                        core.info(`download folder "${finalLocalPath}" failed.`);
+                        core.info(`download folder "${finalLocalPath}" failed, because there is already a file with the same name".`);
                         delFolderPath = path;
                     }
                     else {
-                        utils.createFolder(finalLocalPath);
+                        delFolderPath = downloadFolder(finalLocalPath);
                     }
                 }
                 else {
@@ -647,21 +644,34 @@ function downloadFilesFromObs(obsClient, inputs, downloadList, localPath) {
     });
 }
 /**
- * 根据includeSelfFolder，创建文件夹
+ * 根据includeSelfFolder，获取本地文件根目录
  * @param localPath 本地path
  * @param obsPath 对象在obs上的path
  * @param includeSelfFolder 是否包含文件夹自身
  * @returns
  */
-function createEmptyRootFolders(localPath, obsPath, includeSelfFolder) {
-    let local = utils.getStringDelLastSlash(localPath);
-    if (includeSelfFolder) {
-        local += `/${utils.getStringDelLastSlash(obsPath).split('/').pop()}`;
-        utils.createFolder(local);
-    }
-    return local;
+function getDownloadRoot(localPath, obsPath, includeSelfFolder) {
+    return includeSelfFolder
+        ? `${utils.getStringDelLastSlash(localPath)}/${utils.getStringDelLastSlash(obsPath).split('/').pop()}`
+        : utils.getStringDelLastSlash(localPath);
 }
-exports.createEmptyRootFolders = createEmptyRootFolders;
+exports.getDownloadRoot = getDownloadRoot;
+/**
+ * 下载文件夹
+ * @param localPath 文件夹要下载在本地的路径
+ * @returns
+ */
+function downloadFolder(localPath) {
+    const isCreated = utils.createFolder(localPath);
+    if (isCreated) {
+        return '';
+    }
+    else {
+        core.setFailed(`failed to create folder: "${localPath}"`);
+        return localPath;
+    }
+}
+exports.downloadFolder = downloadFolder;
 /**
  * 下载文件
  * @param obsClient Obs客户端
@@ -695,7 +705,7 @@ function downloadFile(obsClient, inputs, obsPath, localPath) {
             core.info(`successfully download obs file: "${obsPath}" as ${localFileName}`);
         }
         else {
-            core.info(`failed to download obs file: "${obsPath}", because ${result.CommonMsg.Message}`);
+            core.setFailed(`failed to download obs file: "${obsPath}", because ${result.CommonMsg.Message}`);
         }
     });
 }
@@ -886,6 +896,18 @@ run();
 
 /***/ }),
 
+/***/ 8164:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.SUCCESS_STATUS_CODE = void 0;
+exports.SUCCESS_STATUS_CODE = 300;
+
+
+/***/ }),
+
 /***/ 4831:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -929,6 +951,7 @@ const fs = __importStar(__nccwpck_require__(5747));
 const path = __importStar(__nccwpck_require__(5622));
 const utils = __importStar(__nccwpck_require__(918));
 const core = __importStar(__nccwpck_require__(2186));
+const types_1 = __nccwpck_require__(8164);
 /**
  * 上传文件/文件夹
  * @param obsClient  Obs客户端，因obsClient为引入的obs库的类型，本身并未导出其类型，故使用any，下同
@@ -1078,11 +1101,11 @@ function uploadFile(obsClient, bucketName, localFilePath, obsFilePath) {
             Key: obsFilePath,
             SourceFile: localFilePath,
         });
-        if (result.CommonMsg.Status < 300) {
+        if (result.CommonMsg.Status < types_1.SUCCESS_STATUS_CODE) {
             core.info(`succeessfully upload file: "${localFilePath}" as "${bucketName}/${obsFilePath}"`);
         }
         else {
-            core.info(`failed to upload file: "${localFilePath}", because ${result.CommonMsg.Message}`);
+            core.setFailed(`failed to upload file: "${localFilePath}", because ${result.CommonMsg.Message}`);
         }
     });
 }
@@ -1102,11 +1125,11 @@ function uploadFolder(obsClient, bucketName, obsFilePath) {
             Bucket: bucketName,
             Key: obsFilePath + '/',
         });
-        if (result.CommonMsg.Status < 300) {
+        if (result.CommonMsg.Status < types_1.SUCCESS_STATUS_CODE) {
             core.info(`succeessfully create folder "${obsFilePath}/"`);
         }
         else {
-            core.info(`failed to create folder "${obsFilePath}/", because ${result.CommonMsg.Message}`);
+            core.setFailed(`failed to create folder "${obsFilePath}/", because ${result.CommonMsg.Message}`);
         }
     });
 }
@@ -1133,11 +1156,11 @@ function obsCreateRootFolder(obsClient, bucketName, obsFile) {
                 Bucket: bucketName,
                 Key: obsPath,
             });
-            if (result.CommonMsg.Status < 300) {
+            if (result.CommonMsg.Status < types_1.SUCCESS_STATUS_CODE) {
                 core.info(`succeessfully create folder "${obsPath}"`);
             }
             else {
-                core.info(`failed to create folder "${obsPath}", because ${result.CommonMsg.Message}`);
+                core.setFailed(`failed to create folder "${obsPath}", because ${result.CommonMsg.Message}`);
             }
         }
     });
@@ -1175,12 +1198,12 @@ function initMultipartUpload(obs, bucketName, objKey) {
             Bucket: bucketName,
             Key: objKey,
         });
-        if (result.CommonMsg.Status < 300) {
+        if (result.CommonMsg.Status < types_1.SUCCESS_STATUS_CODE) {
             core.info('init multipart upload successfully.');
             return result.InterfaceResult.UploadId;
         }
         else {
-            core.info('init multipart upload failed.');
+            core.setFailed('init multipart upload failed.');
             return '';
         }
     });
@@ -1216,14 +1239,14 @@ function uploadParts(obs, bucketName, objKey, uploadId, filePath) {
                 Offset: offset,
                 PartSize: currPartSize,
             });
-            if (result.CommonMsg.Status < 300) {
+            if (result.CommonMsg.Status < types_1.SUCCESS_STATUS_CODE) {
                 parts.push({
                     PartNumber: partNumber,
                     ETag: result.InterfaceResult.ETag,
                 });
             }
             else {
-                throw new Error(result.CommonMsg.Code);
+                core.setFailed(result.CommonMsg.Code);
             }
         }
         if (parts.length === partCount) {
@@ -1257,12 +1280,12 @@ function mergeParts(obs, bucketName, objKey, uploadId, parts) {
             UploadId: uploadId,
             Parts: parts,
         });
-        if (result.CommonMsg.Status < 300) {
+        if (result.CommonMsg.Status < types_1.SUCCESS_STATUS_CODE) {
             core.info('Complete to upload multiparts finished.');
             return true;
         }
         else {
-            core.info(result.CommonMsg.Code);
+            core.setFailed(result.CommonMsg.Code);
             return false;
         }
     });
@@ -1571,16 +1594,16 @@ exports.getPathWithoutRootPath = getPathWithoutRootPath;
  * @param path
  */
 function createFolder(path) {
-    if (!fs.existsSync(path)) {
-        try {
-            core.info(`start create folder: "${path}"`);
-            fs.mkdirSync(path);
-        }
-        catch (error) {
-            core.info(`failed to create folder: "${path}"`);
-        }
-        core.info(`successfully create folder: "${path}"`);
+    if (fs.existsSync(path)) {
+        return true;
     }
+    try {
+        fs.mkdirSync(path);
+    }
+    catch (error) {
+        return false;
+    }
+    return fs.existsSync(path);
 }
 exports.createFolder = createFolder;
 /**
