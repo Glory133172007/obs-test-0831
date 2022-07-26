@@ -1,4 +1,5 @@
 import * as core from '@actions/core';
+import * as cred from './credential';
 import { ObjectInputs, BucketInputs, CommonInputs } from './types';
 
 export function getOperationType(): string {
@@ -7,21 +8,21 @@ export function getOperationType(): string {
 
 export function getCommonInputs(): CommonInputs {
     return {
-        accessKey: core.getInput('access_key', { required: true }),
-        secretKey: core.getInput('secret_key', { required: true }),
+        accessKey: cred.getCredential('access_key', true),
+        secretKey: cred.getCredential('secret_key', true),
+        region: cred.getCredential('region', true),
         operationType: core.getInput('operation_type', { required: true }),
         bucketName: core.getInput('bucket_name', { required: true }),
-        region: core.getInput('region', { required: true }),
     };
 }
 
 export function getObjectInputs(): ObjectInputs {
     return {
-        accessKey: core.getInput('access_key', { required: true }),
-        secretKey: core.getInput('secret_key', { required: true }),
+        accessKey: cred.getCredential('access_key', true),
+        secretKey: cred.getCredential('secret_key', true),
+        region: cred.getCredential('region', true),
         operationType: core.getInput('operation_type', { required: true }),
         bucketName: core.getInput('bucket_name', { required: true }),
-        region: core.getInput('region', { required: true }),
         localFilePath: core.getMultilineInput('local_file_path', { required: false }),
         obsFilePath: core.getInput('obs_file_path', { required: false }),
         includeSelfFolder: core.getBooleanInput('include_self_folder', { required: false }) ?? false,
@@ -31,11 +32,11 @@ export function getObjectInputs(): ObjectInputs {
 
 export function getBucketInputs(): BucketInputs {
     return {
-        accessKey: core.getInput('access_key', { required: true }),
-        secretKey: core.getInput('secret_key', { required: true }),
+        accessKey: cred.getCredential('access_key', true),
+        secretKey: cred.getCredential('secret_key', true),
+        region: cred.getCredential('region', true),
         operationType: core.getInput('operation_type', { required: true }),
         bucketName: core.getInput('bucket_name', { required: true }),
-        region: core.getInput('region', { required: true }),
         publicRead: core.getBooleanInput('public_read', { required: false }),
         storageClass: core.getInput('storage_class', { required: false }),
         clearBucket: core.getBooleanInput('clear_bucket', { required: false }),

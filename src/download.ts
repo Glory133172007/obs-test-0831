@@ -56,6 +56,7 @@ async function downloadFilesFromObs(
     localPath: string
 ): Promise<void> {
     const localRoot = getDownloadRoot(localPath, inputs.obsFilePath, !!inputs.includeSelfFolder);
+    createLocalRootFolder(utils.getStringDelLastSlash(localRoot));
 
     let delFolderPath = ''; // 用来记录无法下载的文件夹
     for (const path of downloadList) {
@@ -64,6 +65,7 @@ async function downloadFilesFromObs(
                 utils.getStringDelLastSlash(inputs.obsFilePath),
                 path
             )}`;
+
             // 若本地有和待下载文件同名的文件夹，给文件名加后缀下载
             if (downloadList.indexOf(`${path}/`) !== -1) {
                 finalLocalPath = `${path}${new Date().valueOf()}`;
@@ -98,6 +100,22 @@ export function getDownloadRoot(localPath: string, obsPath: string, includeSelfF
     return includeSelfFolder
         ? `${utils.getStringDelLastSlash(localPath)}/${utils.getStringDelLastSlash(obsPath).split('/').pop()}`
         : utils.getStringDelLastSlash(localPath);
+}
+
+/**
+ * 下载文件夹时，检查并创建本地根目录
+ * @param localPath
+ */
+export function createLocalRootFolder(localPath: string): void {
+    const localPathList = localPath.split('/');
+    let local = localPathList[0];
+    for (const dir of localPathList) {
+        utils.createFolder(local);
+        if (dir !== localPathList[0]) {
+            local += `/${dir}`;
+        }
+    }
+    utils.createFolder(local);
 }
 
 /**

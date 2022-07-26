@@ -6,45 +6,43 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Upload To Huawei OBS
-        uses: ./
-        id: upload_file_to_obs
-        with:
-          access_key: ${{ secrets.ACCESSKEY }}
-          secret_key: ${{ secrets.SECRETACCESSKEY }}
+      # 使用华为云统一鉴权
+      - name: Authenticate to Huawei Cloud
+        uses: huaweicloud/auth-action@v1.0.0
+        with: 
+          access_key_id: ${{ secrets.ACCESSKEY }} 
+          secret_access_key: ${{ secrets.SECRETACCESSKEY }}
           region: cn-north-4
-          bucket_name: hdn-github-action
-          local_file_path: README.md
-          obs_file_path: 
-          operation_type: upload
-      - name: Download from Huawei OBS
-        uses: ./
-        id: download_file_from_obs
-        with:
-          access_key: ${{ secrets.ACCESSKEY }}
-          secret_key: ${{ secrets.SECRETACCESSKEY }}
-          region: cn-north-4
-          bucket_name: hdn-github-action
-          local_file_path: ${{ github.workspace }}
-          obs_file_path: test.txt
-          operation_type: download
+      # 创建桶
       - name: Create Bucket on HuaweiCloud OBS
         uses: ./
         id: create_bucket_on_obs
         with:
-          access_key: ${{ secrets.ACCESSKEY }}
-          secret_key: ${{ secrets.SECRETACCESSKEY }}
-          region: ${region}
-          bucket_name: 'new-bucket'
-          operation_type: 'createBucket'
+          bucket_name: new-bucket
+          operation_type: createBucket
           public_read: true
-          storage_class: 'infrequent'
+      # 上传文件至桶
+      - name: Upload To Huawei OBS
+        uses: ./
+        id: upload_file_to_obs
+        with:
+          bucket_name: new-bucket
+          local_file_path: README.md
+          obs_file_path: 
+          operation_type: upload
+      # 从桶内下载文件
+      - name: Download from Huawei OBS
+        uses: ./
+        id: download_file_from_obs
+        with:
+          bucket_name: new-bucket
+          local_file_path: ${{ github.workspace }}
+          obs_file_path: test.txt
+          operation_type: download
+      # 删除桶
       - name: Delete Bucket on HuaweiCloud OBS
         uses: ./
         id: delete_bucket_on_obs
         with:
-          access_key: ${{ secrets.ACCESSKEY }}
-          secret_key: ${{ secrets.SECRETACCESSKEY }}
-          region: ${region}
-          bucket_name: 'new-bucket'
-          operation_type: 'deleteBucket'
+          bucket_name: new-bucket
+          operation_type: deleteBucket

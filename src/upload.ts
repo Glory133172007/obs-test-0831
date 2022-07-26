@@ -11,30 +11,16 @@ import { ObjectInputs, UploadFileList, SUCCESS_STATUS_CODE } from './types';
  */
 export async function uploadFileOrFolder(obsClient: any, inputs: ObjectInputs): Promise<void> {
     for (const path of inputs.localFilePath) {
-        const localFilePath = utils.getStringDelLastSlash(path); // 文件或者文件夹
-        const localRoot = utils.getLastItemWithSlash(localFilePath);
+        const localFilePath = utils.getStringDelLastSlash(path); // 去除本地路径参数结尾的'/'，方便后续使用
+        const localName = utils.getLastItemWithSlash(localFilePath); // 本地路径参数的文件名/文件夹名
         try {
             const fsStat = fs.lstatSync(localFilePath);
             if (fsStat.isFile()) {
-                let obsFilePath = '';
-                if (inputs.obsFilePath) {
-                    if (utils.isEndWithSlash(inputs.obsFilePath)) {
-                        obsFilePath = `${inputs.obsFilePath}${localRoot}`;
-                    } else {
-                        // 若是多路径上传时的文件,不存在重命名,默认传至obs_file_path文件夹下
-                        obsFilePath =
-                            inputs.localFilePath.length > 1 ? `${inputs.obsFilePath}/${localRoot}` : inputs.obsFilePath;
-                    }
-                } else {
-                    // 若obs_file_path为空,上传所有对象至根目录
-                    obsFilePath = localRoot;
-                }
-
-                await uploadFile(obsClient, inputs.bucketName, localFilePath, obsFilePath);
+                await uploadFile(obsClient, inputs.bucketName, localFilePath, getObsFilePath(inputs, localName));
             }
 
             if (fsStat.isDirectory()) {
-                const localFileRootPath = getObsRootFile(!!inputs.includeSelfFolder, inputs.obsFilePath, localRoot);
+                const localFileRootPath = getObsRootFile(!!inputs.includeSelfFolder, inputs.obsFilePath, localName);
                 const uploadList = {
                     file: [],
                     folder: [],
@@ -43,19 +29,20 @@ export async function uploadFileOrFolder(obsClient: any, inputs: ObjectInputs): 
 
                 // 若总文件数大于1000，取消上传
                 const uploadListLength = uploadList.file.length + uploadList.folder.length;
-                if (uploadListLength <= 1000) {
-                    if (inputs.obsFilePath) {
-                        await obsCreateRootFolder(
-                            obsClient,
-                            inputs.bucketName,
-                            utils.getStringDelLastSlash(inputs.obsFilePath)
-                        );
-                    }
-                    await uploadFileAndFolder(obsClient, inputs.bucketName, uploadList);
-                } else {
+                if (uploadListLength > 1000) {
                     core.setFailed(`local dirctory: '${path}' has ${uploadListLength} files and folders,`);
                     core.setFailed(`please upload a dirctory include less than 1000 files and folders.`);
+                    return;
                 }
+
+                if (inputs.obsFilePath) {
+                    await obsCreateRootFolder(
+                        obsClient,
+                        inputs.bucketName,
+                        utils.getStringDelLastSlash(inputs.obsFilePath)
+                    );
+                }
+                await uploadFileAndFolder(obsClient, inputs.bucketName, uploadList);
             }
         } catch (error) {
             core.setFailed(`read local file or dirctory: '${path}' failed.`);
@@ -76,6 +63,25 @@ export function getObsRootFile(includeSelf: boolean, obsfile: string, objectName
         return obsFinalFilePath;
     } else {
         return utils.getStringDelLastSlash(obsfile);
+    }
+}
+
+/**
+ * 得到待上传文件在obs的路径
+ * @param inputs 用户输入的参数
+ * @param localRoot 待上传文件的根目录
+ * @returns
+ */
+export function getObsFilePath(inputs: ObjectInputs, localRoot: string): string {
+    if (!inputs.obsFilePath) {
+        return localRoot;
+    }
+
+    if (utils.isEndWithSlash(inputs.obsFilePath)) {
+        return `${inputs.obsFilePath}${localRoot}`;
+    } else {
+        // 若是多路径上传时的文件,不存在重命名,默认传至obs_file_path文件夹下
+        return inputs.localFilePath.length > 1 ? `${inputs.obsFilePath}/${localRoot}` : inputs.obsFilePath;
     }
 }
 
