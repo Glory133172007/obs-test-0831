@@ -2,7 +2,7 @@
     "name": "obs-helper",
     "version": "1.2.0",
     "private": true,
-    "description": "Upload/Download files or folders to HuaweiCloud OBS.",
+    "description": "Upload/Download files or folders to Huawei Cloud OBS.",
     "main": "lib/main.js",
     "scripts": {
         "build": "tsc",
