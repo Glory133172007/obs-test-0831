@@ -12,7 +12,6 @@ import { ObjectInputs, UploadFileList, SUCCESS_STATUS_CODE } from '../types';
 export async function uploadFileOrFolder(obsClient: any, inputs: ObjectInputs): Promise<void> {
     for (const localPath of inputs.localFilePath) {
         const localFilePath = utils.getStringDelLastSlash(localPath); // 去除本地路径参数结尾的'/'，方便后续使用
-        // const localName = utils.getLastItemWithSlash(localFilePath); // 本地路径参数的文件名/文件夹名
         const localName = path.basename(localFilePath);
         try {
             const fsStat = fs.lstatSync(localFilePath);

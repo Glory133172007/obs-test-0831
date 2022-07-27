@@ -664,10 +664,10 @@ exports.abortAllMultipartUpload = abortAllMultipartUpload;
  * 删除桶
  * @param obsClient obs客户端
  * @param bucketName 桶名
- * @param isForceClear 是否为空桶
+ * @param forceClear 是否强制清空桶
  * @returns
  */
-function deleteBucket(obsClient, bucketName, isForceClear) {
+function deleteBucket(obsClient, bucketName, forceClear) {
     return __awaiter(this, void 0, void 0, function* () {
         // 若桶不存在，退出
         if (!(yield hasBucket(obsClient, bucketName))) {
@@ -676,32 +676,28 @@ function deleteBucket(obsClient, bucketName, isForceClear) {
         }
         // 若桶非空且用户设置不强制清空桶，退出
         let isEmpty = yield isBucketEmpty(obsClient, bucketName);
-        if (!isEmpty && isForceClear === false) {
-            core.setFailed('some object or parts already exist in bucket, please delete them first or not set parameter "clear_bucket" as false.');
+        if (!isEmpty && !forceClear) {
+            core.setFailed('some object or parts already exist in bucket, please delete them first or set parameter "clear_bucket" as true.');
             return false;
         }
-        // let isEmpty = isBucketEmpty;
         if (!isEmpty) {
             isEmpty = yield clearBuckets(obsClient, bucketName);
         }
-        if (isEmpty) {
-            obsClient
-                .deleteBucket({
-                Bucket: bucketName,
-            })
-                .then((result) => {
-                if (result.CommonMsg.Status < 300) {
-                    core.info(`delete bucket: ${bucketName} successfully.`);
-                    return true;
-                }
-                else {
-                    core.setFailed(`delete bucket: ${bucketName} failed, ${result.CommonMsg.Message}.`);
-                }
-            })
-                .catch((err) => {
-                core.setFailed(`delete bucket: ${bucketName} failed, ${err}.`);
-            });
-        }
+        obsClient.deleteBucket({
+            Bucket: bucketName,
+        })
+            .then((result) => {
+            if (result.CommonMsg.Status < 300) {
+                core.info(`delete bucket: ${bucketName} successfully.`);
+                return true;
+            }
+            else {
+                core.setFailed(`delete bucket: ${bucketName} failed, ${result.CommonMsg.Message}.`);
+            }
+        })
+            .catch((err) => {
+            core.setFailed(`delete bucket: ${bucketName} failed, ${err}.`);
+        });
         return false;
     });
 }
@@ -1039,7 +1035,6 @@ function uploadFileOrFolder(obsClient, inputs) {
     return __awaiter(this, void 0, void 0, function* () {
         for (const localPath of inputs.localFilePath) {
             const localFilePath = utils.getStringDelLastSlash(localPath); // 去除本地路径参数结尾的'/'，方便后续使用
-            // const localName = utils.getLastItemWithSlash(localFilePath); // 本地路径参数的文件名/文件夹名
             const localName = path.basename(localFilePath);
             try {
                 const fsStat = fs.lstatSync(localFilePath);

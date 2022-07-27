@@ -382,10 +382,10 @@ export async function abortAllMultipartUpload(obsClient: any, bucketName: string
  * 删除桶
  * @param obsClient obs客户端
  * @param bucketName 桶名
- * @param isForceClear 是否为空桶
+ * @param forceClear 是否强制清空桶
  * @returns
  */
-export async function deleteBucket(obsClient: any, bucketName: string, isForceClear: boolean): Promise<boolean> {
+export async function deleteBucket(obsClient: any, bucketName: string, forceClear: boolean): Promise<boolean> {
 
     // 若桶不存在，退出
     if (!await hasBucket(obsClient, bucketName)) {
@@ -395,34 +395,30 @@ export async function deleteBucket(obsClient: any, bucketName: string, isForceCl
 
     // 若桶非空且用户设置不强制清空桶，退出
     let isEmpty = await isBucketEmpty(obsClient, bucketName);
-    if (!isEmpty && isForceClear === false) {
+    if (!isEmpty && !forceClear) {
         core.setFailed(
-            'some object or parts already exist in bucket, please delete them first or not set parameter "clear_bucket" as false.'
+            'some object or parts already exist in bucket, please delete them first or set parameter "clear_bucket" as true.'
         );
         return false;
     }
 
-    // let isEmpty = isBucketEmpty;
     if (!isEmpty) {
         isEmpty = await clearBuckets(obsClient, bucketName);
     }
 
-    if (isEmpty) {
-        obsClient
-            .deleteBucket({
-                Bucket: bucketName,
-            })
-            .then((result: CommonResult) => {
-                if (result.CommonMsg.Status < 300) {
-                    core.info(`delete bucket: ${bucketName} successfully.`);
-                    return true;
-                } else {
-                    core.setFailed(`delete bucket: ${bucketName} failed, ${result.CommonMsg.Message}.`);
-                }
-            })
-            .catch((err: string) => {
-                core.setFailed(`delete bucket: ${bucketName} failed, ${err}.`);
-            });
-    }
+    obsClient.deleteBucket({
+            Bucket: bucketName,
+        })
+        .then((result: CommonResult) => {
+            if (result.CommonMsg.Status < 300) {
+                core.info(`delete bucket: ${bucketName} successfully.`);
+                return true;
+            } else {
+                core.setFailed(`delete bucket: ${bucketName} failed, ${result.CommonMsg.Message}.`);
+            }
+        })
+        .catch((err: string) => {
+            core.setFailed(`delete bucket: ${bucketName} failed, ${err}.`);
+        });
     return false;
 }
