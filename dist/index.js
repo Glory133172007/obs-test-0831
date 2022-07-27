@@ -801,7 +801,7 @@ function downloadFilesFromObs(obsClient, inputs, downloadList, localPath) {
     return __awaiter(this, void 0, void 0, function* () {
         const localRoot = getDownloadRoot(localPath, inputs.obsFilePath, !!inputs.includeSelfFolder);
         if (localRoot !== '' && utils.replaceSlash(path_1.default.normalize(localRoot)) !== '/') {
-            createLocalRootFolder(localRoot);
+            createLocalRootFolder(utils.replaceSlash(path_1.default.normalize(localRoot)));
         }
         let delFolderPath = ''; // 用来记录无法下载的文件夹
         for (const path of downloadList) {

@@ -59,7 +59,7 @@ async function downloadFilesFromObs(
     const localRoot = getDownloadRoot(localPath, inputs.obsFilePath, !!inputs.includeSelfFolder);
     
     if (localRoot !== '' && utils.replaceSlash(path.normalize(localRoot)) !== '/') {
-        createLocalRootFolder(localRoot);
+        createLocalRootFolder(utils.replaceSlash(path.normalize(localRoot)));
     }
 
     let delFolderPath = ''; // 用来记录无法下载的文件夹
