@@ -31,7 +31,7 @@
 | local_file_path  | 对象的本地路径，上传对象时可填写多个 |  无  |  是  |
 | obs_file_path  | 对象在桶内的路径 |  无  |  下载时必填  |
 | include_self_folder  | 上传/下载文件夹时是否包含文件夹自身，上传/下载单个文件时无意义。默认不包含 |  false  |  否  |
-| exclude  | 下载对象时，要排除的对象，上传时无用。默认不排除 |  无  |  否  |
+| exclude  | 下载对象时，要排除的对象，上传时无用。不填写时不排除任何对象 |  无  |  否  |
 
 > 请注意，上传/下载时，地址类参数请不要使用操作系统独有的地址符号（如Linux系统的'\~'，会被识别成名为'\~'的文件夹）。Github Actions提供的[上下文功能](https://docs.github.com/cn/actions/learn-github-actions/contexts#github-context)中，有一些常用的地址上下文，例如：
 
@@ -113,15 +113,11 @@ jobs:
     └── src3
           └── test3.txt
 ```
-#### 上传文件src1/src2/test1.txt至obs根目录(未使用统一鉴权)
+#### 上传文件src1/src2/test1.txt至obs根目录
 ```yaml
 - name: Upload To Huawei Cloud OBS
   uses: huaweicloud/obs-helper@v1.3.0
-  id: upload_file_to_obs
   with:
-    access_key: ${{ secrets.ACCESSKEY }}
-    secret_key: ${{ secrets.SECRETACCESSKEY }}
-    region: 'cn-north-4'
     bucket_name: 'bucket-test'
     local_file_path: 'src1/src2/test1.txt'
     obs_file_path: 'test1.txt'
@@ -136,7 +132,6 @@ test1.txt
 ```yaml
 - name: Upload To Huawei Cloud OBS
   uses: huaweicloud/obs-helper@v1.3.0
-  id: upload_folder_to_obs
   with:
     bucket_name: 'bucket-test'
     local_file_path: 'src1'
@@ -159,7 +154,6 @@ test1.txt
 ```yaml
 - name: Upload To Huawei Cloud OBS
   uses: huaweicloud/obs-helper@v1.3.0
-  id: upload_files_to_obs
   with:
     bucket_name: 'bucket-test'
     local_file_path: |
@@ -194,7 +188,6 @@ src1
 ```yaml
 - name: Download File From Huawei Cloud OBS
   uses: huaweicloud/obs-helper@v1.3.0
-  id: download_file_from_obs
   with:
     bucket_name: 'bucket-test'
     local_file_path: 'src1/'
@@ -211,7 +204,6 @@ src1
 ```yaml
 - name: Download From Huawei Cloud OBS
   uses: huaweicloud/obs-helper@v1.3.0
-  id: download_folder_from_obs
   with:
     bucket_name: 'bucket-test'
     local_file_path: 'src'
@@ -234,7 +226,6 @@ src
 ```yaml
 - name: Download From Huawei Cloud OBS
   uses: huaweicloud/obs-helper@v1.3.0
-  id: download_folder_from_obs
   with:
     bucket_name: 'bucket-test'
     local_file_path: 'src'
@@ -259,7 +250,6 @@ src
 ```yaml
 - name: Create Bucket on Huawei Cloud OBS
   uses: huaweicloud/obs-helper@v1.3.0
-  id: create_bucket_on_obs
   with:
     access_key: ${{ secrets.ACCESSKEY }}
     secret_key: ${{ secrets.SECRETACCESSKEY }}
@@ -278,7 +268,6 @@ src
 ```yaml
 - name: Delete Bucket on Huawei Cloud OBS
   uses: huaweicloud/obs-helper@v1.3.0
-  id: delete_bucket_on_obs
   with:
     bucket_name: 'new-bucket'
     operation_type: 'deleteBucket'

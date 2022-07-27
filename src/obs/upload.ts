@@ -1,8 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import * as utils from './utils';
+import * as utils from '../utils';
 import * as core from '@actions/core';
-import { ObjectInputs, UploadFileList, SUCCESS_STATUS_CODE } from './types';
+import { ObjectInputs, UploadFileList, SUCCESS_STATUS_CODE } from '../types';
 
 /**
  * 上传文件/文件夹
@@ -10,9 +10,10 @@ import { ObjectInputs, UploadFileList, SUCCESS_STATUS_CODE } from './types';
  * @param inputs 用户输入的参数
  */
 export async function uploadFileOrFolder(obsClient: any, inputs: ObjectInputs): Promise<void> {
-    for (const path of inputs.localFilePath) {
-        const localFilePath = utils.getStringDelLastSlash(path); // 去除本地路径参数结尾的'/'，方便后续使用
-        const localName = utils.getLastItemWithSlash(localFilePath); // 本地路径参数的文件名/文件夹名
+    for (const localPath of inputs.localFilePath) {
+        const localFilePath = utils.getStringDelLastSlash(localPath); // 去除本地路径参数结尾的'/'，方便后续使用
+        // const localName = utils.getLastItemWithSlash(localFilePath); // 本地路径参数的文件名/文件夹名
+        const localName = path.basename(localFilePath);
         try {
             const fsStat = fs.lstatSync(localFilePath);
             if (fsStat.isFile()) {
@@ -30,7 +31,7 @@ export async function uploadFileOrFolder(obsClient: any, inputs: ObjectInputs): 
                 // 若总文件数大于1000，取消上传
                 const uploadListLength = uploadList.file.length + uploadList.folder.length;
                 if (uploadListLength > 1000) {
-                    core.setFailed(`local dirctory: '${path}' has ${uploadListLength} files and folders,`);
+                    core.setFailed(`local dirctory: '${localPath}' has ${uploadListLength} files and folders,`);
                     core.setFailed(`please upload a dirctory include less than 1000 files and folders.`);
                     return;
                 }
@@ -45,7 +46,7 @@ export async function uploadFileOrFolder(obsClient: any, inputs: ObjectInputs): 
                 await uploadFileAndFolder(obsClient, inputs.bucketName, uploadList);
             }
         } catch (error) {
-            core.setFailed(`read local file or dirctory: '${path}' failed.`);
+            core.setFailed(`read local file or dirctory: '${localPath}' failed.`);
         }
     }
 }
@@ -110,7 +111,7 @@ export async function fileDisplay(
 
             if (info.isFile()) {
                 uploadList.file.push({
-                    local: utils.replaceSlash(filepath),
+                    local: utils.replaceSlash(path.normalize(filepath)),
                     obs: obsFilePath,
                 });
             }

@@ -1,7 +1,272 @@
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 8129:
+/***/ 3842:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getObsClient = exports.getBucketInputs = exports.getObjectInputs = exports.getCommonInputs = exports.getOperationType = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const cred = __importStar(__nccwpck_require__(2166));
+function getOperationType() {
+    return core.getInput('operation_type', { required: true });
+}
+exports.getOperationType = getOperationType;
+function getCommonInputs() {
+    return {
+        accessKey: cred.getCredential('access_key', true),
+        secretKey: cred.getCredential('secret_key', true),
+        region: cred.getCredential('region', true),
+        operationType: core.getInput('operation_type', { required: true }),
+        bucketName: core.getInput('bucket_name', { required: true }),
+    };
+}
+exports.getCommonInputs = getCommonInputs;
+function getObjectInputs() {
+    var _a;
+    return {
+        accessKey: cred.getCredential('access_key', true),
+        secretKey: cred.getCredential('secret_key', true),
+        region: cred.getCredential('region', true),
+        operationType: core.getInput('operation_type', { required: true }),
+        bucketName: core.getInput('bucket_name', { required: true }),
+        localFilePath: core.getMultilineInput('local_file_path', { required: false }),
+        obsFilePath: core.getInput('obs_file_path', { required: false }),
+        includeSelfFolder: (_a = core.getBooleanInput('include_self_folder', { required: false })) !== null && _a !== void 0 ? _a : false,
+        exclude: core.getMultilineInput('exclude', { required: false }),
+    };
+}
+exports.getObjectInputs = getObjectInputs;
+function getBucketInputs() {
+    return {
+        accessKey: cred.getCredential('access_key', true),
+        secretKey: cred.getCredential('secret_key', true),
+        region: cred.getCredential('region', true),
+        operationType: core.getInput('operation_type', { required: true }),
+        bucketName: core.getInput('bucket_name', { required: true }),
+        publicRead: core.getBooleanInput('public_read', { required: false }),
+        storageClass: core.getInput('storage_class', { required: false }),
+        clearBucket: core.getBooleanInput('clear_bucket', { required: false }),
+    };
+}
+exports.getBucketInputs = getBucketInputs;
+/**
+ * 根据ak/sk，初始化Obs客户端
+ * @param ak AK
+ * @param sk SK
+ * @param server 连接OBS的服务地址
+ * @returns obsClient为引入的obs库的类型，本身并未导出其类型，故使用any
+ */
+function getObsClient(ak, sk, server) {
+    const ObsClient = __nccwpck_require__(2600); // eslint-disable-line @typescript-eslint/no-var-requires
+    try {
+        const obs = new ObsClient({
+            access_key_id: ak,
+            secret_access_key: sk,
+            server: server,
+        });
+        return obs;
+    }
+    catch (error) {
+        core.setFailed('init obs client fail.');
+    }
+}
+exports.getObsClient = getObsClient;
+
+
+/***/ }),
+
+/***/ 2166:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getCredential = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const HUAWEI_ClOUD_CREDENTIALS_ENVIRONMENT_VARIABLE_MAP = new Map([
+    ['access_key', 'HUAWEI_CLOUD_ACCESS_KEY_ID'],
+    ['secret_key', 'HUAWEI_CLOUD_SECRET_ACCESS_KEY'],
+    ['region', 'HUAWEI_CLOUD_REGION'],
+    ['project_id', 'HUAWEI_CLOUD_PROJECT_ID'],
+]);
+function getCredential(param, isRequired) {
+    const environmentVariable = HUAWEI_ClOUD_CREDENTIALS_ENVIRONMENT_VARIABLE_MAP.get(param) || '';
+    const credFromEnv = process.env[environmentVariable];
+    const cred = credFromEnv !== null && credFromEnv !== void 0 ? credFromEnv : core.getInput(param, { required: false });
+    if (isRequired && !cred) {
+        core.setFailed(`The Huawei Cloud credential input ${param} is not correct. Please switch to using huaweicloud/auth-action which supports authenticating to Huawei Cloud.`);
+    }
+    return cred;
+}
+exports.getCredential = getCredential;
+
+
+/***/ }),
+
+/***/ 3109:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const core = __importStar(__nccwpck_require__(2186));
+const context = __importStar(__nccwpck_require__(3842));
+const utils = __importStar(__nccwpck_require__(918));
+const upload = __importStar(__nccwpck_require__(9162));
+const download = __importStar(__nccwpck_require__(1140));
+const bucket = __importStar(__nccwpck_require__(7610));
+function run() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const commonInputs = context.getCommonInputs();
+        if (!utils.checkCommonInputs(commonInputs)) {
+            return;
+        }
+        // 初始化OBS客户端
+        const obs = context.getObsClient(commonInputs.accessKey, commonInputs.secretKey, `https://obs.${commonInputs.region}.myhuaweicloud.com`);
+        const operationCategory = utils.getOperationCategory(context.getOperationType());
+        if (operationCategory === 'object') {
+            handleObject(obs);
+        }
+        else if (operationCategory === 'bucket') {
+            handleBucket(obs);
+        }
+        else {
+            core.setFailed(`please check your operation_type. you can use 'download', 'upload', 'createbucket' or 'deletebucket'.`);
+        }
+    });
+}
+/**
+ * 处理对象，目前支持上传对象，下载对象
+ * @param obs OBS客户端
+ * @returns
+ */
+function handleObject(obs) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const inputs = context.getObjectInputs();
+        if (!utils.checkObjectInputs(inputs)) {
+            return;
+        }
+        // 若桶不存在，退出
+        if (!(yield bucket.hasBucket(obs, inputs.bucketName))) {
+            core.setFailed(`The bucket: ${inputs.bucketName} does not exists.`);
+            return;
+        }
+        // 执行上传/下载操作
+        if (inputs.operationType === 'upload') {
+            yield upload.uploadFileOrFolder(obs, inputs);
+        }
+        if (inputs.operationType === 'download') {
+            yield download.downloadFileOrFolder(obs, inputs);
+        }
+    });
+}
+/**
+ * 处理桶，目前支持新增桶，删除桶
+ * @param obs OBS客户端
+ * @returns
+ */
+function handleBucket(obs) {
+    var _a;
+    return __awaiter(this, void 0, void 0, function* () {
+        const inputs = context.getBucketInputs();
+        if (!utils.checkBucketInputs(inputs)) {
+            return;
+        }
+        if (inputs.operationType.toLowerCase() === 'createbucket') {
+            bucket.createBucket(obs, inputs.bucketName, inputs.region, inputs.publicRead, utils.getStorageClass((_a = inputs.storageClass) !== null && _a !== void 0 ? _a : ''));
+        }
+        if (inputs.operationType.toLowerCase() === 'deletebucket') {
+            yield bucket.deleteBucket(obs, inputs.bucketName, inputs.clearBucket);
+        }
+    });
+}
+run();
+
+
+/***/ }),
+
+/***/ 7610:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -66,30 +331,36 @@ exports.hasBucket = hasBucket;
  * @returns
  */
 function createBucket(obsClient, bucketName, region, publicRead, storageClass) {
-    obsClient
-        .createBucket({
-        Bucket: bucketName,
-        Location: region,
-        ACL: publicRead ? obsClient.enums['AclPublicRead'] : obsClient.enums['AclPrivate'],
-        StorageClass: storageClass ? obsClient.enums[storageClass] : '',
-    })
-        .then((result) => {
-        if (result.CommonMsg.Status < 300) {
-            if (result.InterfaceResult) {
-                core.info(`create bucket: ${bucketName} Successfully.`);
-                return true;
-            }
-        }
-        else {
-            core.setFailed(`create bucket: ${bucketName} failed, ${result.CommonMsg.Message}.`);
+    return __awaiter(this, void 0, void 0, function* () {
+        if (yield hasBucket(obsClient, bucketName)) {
+            core.setFailed(`The bucket: ${bucketName} already exists.`);
             return false;
         }
-    })
-        .catch((err) => {
-        core.setFailed(`create bucket: ${bucketName} failed, ${err}.`);
+        obsClient
+            .createBucket({
+            Bucket: bucketName,
+            Location: region,
+            ACL: publicRead ? obsClient.enums['AclPublicRead'] : obsClient.enums['AclPrivate'],
+            StorageClass: storageClass ? obsClient.enums[storageClass] : '',
+        })
+            .then((result) => {
+            if (result.CommonMsg.Status < 300) {
+                if (result.InterfaceResult) {
+                    core.info(`create bucket: ${bucketName} Successfully.`);
+                    return true;
+                }
+            }
+            else {
+                core.setFailed(`create bucket: ${bucketName} failed, ${result.CommonMsg.Message}.`);
+                return false;
+            }
+        })
+            .catch((err) => {
+            core.setFailed(`create bucket: ${bucketName} failed, ${err}.`);
+            return false;
+        });
         return false;
     });
-    return false;
 }
 exports.createBucket = createBucket;
 /**
@@ -393,12 +664,23 @@ exports.abortAllMultipartUpload = abortAllMultipartUpload;
  * 删除桶
  * @param obsClient obs客户端
  * @param bucketName 桶名
- * @param isBucketEmpty 是否为空桶
+ * @param isForceClear 是否为空桶
  * @returns
  */
-function deleteBucket(obsClient, bucketName, isBucketEmpty) {
+function deleteBucket(obsClient, bucketName, isForceClear) {
     return __awaiter(this, void 0, void 0, function* () {
-        let isEmpty = isBucketEmpty;
+        // 若桶不存在，退出
+        if (!(yield hasBucket(obsClient, bucketName))) {
+            core.setFailed(`The bucket: ${bucketName} does not exists.`);
+            return false;
+        }
+        // 若桶非空且用户设置不强制清空桶，退出
+        let isEmpty = yield isBucketEmpty(obsClient, bucketName);
+        if (!isEmpty && isForceClear === false) {
+            core.setFailed('some object or parts already exist in bucket, please delete them first or not set parameter "clear_bucket" as false.');
+            return false;
+        }
+        // let isEmpty = isBucketEmpty;
         if (!isEmpty) {
             isEmpty = yield clearBuckets(obsClient, bucketName);
         }
@@ -428,158 +710,7 @@ exports.deleteBucket = deleteBucket;
 
 /***/ }),
 
-/***/ 3842:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getObsClient = exports.getBucketInputs = exports.getObjectInputs = exports.getCommonInputs = exports.getOperationType = void 0;
-const core = __importStar(__nccwpck_require__(2186));
-const cred = __importStar(__nccwpck_require__(2166));
-function getOperationType() {
-    return core.getInput('operation_type', { required: true });
-}
-exports.getOperationType = getOperationType;
-function getCommonInputs() {
-    return {
-        accessKey: cred.getCredential('access_key', true),
-        secretKey: cred.getCredential('secret_key', true),
-        region: cred.getCredential('region', true),
-        operationType: core.getInput('operation_type', { required: true }),
-        bucketName: core.getInput('bucket_name', { required: true }),
-    };
-}
-exports.getCommonInputs = getCommonInputs;
-function getObjectInputs() {
-    var _a;
-    return {
-        accessKey: cred.getCredential('access_key', true),
-        secretKey: cred.getCredential('secret_key', true),
-        region: cred.getCredential('region', true),
-        operationType: core.getInput('operation_type', { required: true }),
-        bucketName: core.getInput('bucket_name', { required: true }),
-        localFilePath: core.getMultilineInput('local_file_path', { required: false }),
-        obsFilePath: core.getInput('obs_file_path', { required: false }),
-        includeSelfFolder: (_a = core.getBooleanInput('include_self_folder', { required: false })) !== null && _a !== void 0 ? _a : false,
-        exclude: core.getMultilineInput('exclude', { required: false }),
-    };
-}
-exports.getObjectInputs = getObjectInputs;
-function getBucketInputs() {
-    return {
-        accessKey: cred.getCredential('access_key', true),
-        secretKey: cred.getCredential('secret_key', true),
-        region: cred.getCredential('region', true),
-        operationType: core.getInput('operation_type', { required: true }),
-        bucketName: core.getInput('bucket_name', { required: true }),
-        publicRead: core.getBooleanInput('public_read', { required: false }),
-        storageClass: core.getInput('storage_class', { required: false }),
-        clearBucket: core.getBooleanInput('clear_bucket', { required: false }),
-    };
-}
-exports.getBucketInputs = getBucketInputs;
-/**
- * 根据ak/sk，初始化Obs客户端
- * @param ak AK
- * @param sk SK
- * @param server 连接OBS的服务地址
- * @returns obsClient为引入的obs库的类型，本身并未导出其类型，故使用any
- */
-function getObsClient(ak, sk, server) {
-    const ObsClient = __nccwpck_require__(2600); // eslint-disable-line @typescript-eslint/no-var-requires
-    try {
-        const obs = new ObsClient({
-            access_key_id: ak,
-            secret_access_key: sk,
-            server: server,
-        });
-        return obs;
-    }
-    catch (error) {
-        core.setFailed('init obs client fail.');
-    }
-}
-exports.getObsClient = getObsClient;
-
-
-/***/ }),
-
-/***/ 2166:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getCredential = void 0;
-const core = __importStar(__nccwpck_require__(2186));
-const HUAWEI_ClOUD_CREDENTIALS_ENVIRONMENT_VARIABLE_MAP = new Map([
-    ['access_key', 'HUAWEI_CLOUD_ACCESS_KEY_ID'],
-    ['secret_key', 'HUAWEI_CLOUD_SECRET_ACCESS_KEY'],
-    ['region', 'HUAWEI_CLOUD_REGION'],
-    ['project_id', 'HUAWEI_CLOUD_PROJECT_ID'],
-]);
-function getCredential(param, isRequired) {
-    const environmentVariable = HUAWEI_ClOUD_CREDENTIALS_ENVIRONMENT_VARIABLE_MAP.get(param) || '';
-    const credFromEnv = process.env[environmentVariable];
-    const cred = credFromEnv !== null && credFromEnv !== void 0 ? credFromEnv : core.getInput(param, { required: false });
-    if (isRequired && !cred) {
-        core.setFailed(`The Huawei Cloud credential input ${param} is not correct. Please switch to using huaweicloud/auth-action which supports authenticating to Huawei Cloud.`);
-    }
-    return cred;
-}
-exports.getCredential = getCredential;
-
-
-/***/ }),
-
-/***/ 5933:
+/***/ 1140:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -616,12 +747,16 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getDownloadList = exports.getLocalFileName = exports.downloadFile = exports.downloadFolder = exports.createLocalRootFolder = exports.getDownloadRoot = exports.pathIsSingleFile = exports.downloadFileOrFolder = void 0;
 const fs = __importStar(__nccwpck_require__(5747));
-const utils = __importStar(__nccwpck_require__(918));
+const path_1 = __importDefault(__nccwpck_require__(5622));
 const core = __importStar(__nccwpck_require__(2186));
-const bucket = __importStar(__nccwpck_require__(8129));
+const bucket = __importStar(__nccwpck_require__(7610));
+const utils = __importStar(__nccwpck_require__(918));
 /**
  * 下载文件或者文件夹
  * @param obsClient Obs客户端，因obsClient为引入的obs库的类型，本身并未导出其类型，故使用any，下同
@@ -639,7 +774,7 @@ function downloadFileOrFolder(obsClient, inputs) {
         if (pathIsSingleFile(downloadPathList, inputs.obsFilePath)) {
             // 下载单个文件时，以'/'结尾，代表下载到localpath代表的文件夹中，下载文件夹时无此限制
             const fileLocalPath = utils.isEndWithSlash(inputLocalFilePath)
-                ? `${inputLocalFilePath}${utils.getLastItemWithSlash(downloadPathList[0])}`
+                ? `${inputLocalFilePath}${path_1.default.basename(downloadPathList[0])}`
                 : inputLocalFilePath;
             yield downloadFile(obsClient, inputs, downloadPathList[0], fileLocalPath);
         }
@@ -669,14 +804,16 @@ exports.pathIsSingleFile = pathIsSingleFile;
 function downloadFilesFromObs(obsClient, inputs, downloadList, localPath) {
     return __awaiter(this, void 0, void 0, function* () {
         const localRoot = getDownloadRoot(localPath, inputs.obsFilePath, !!inputs.includeSelfFolder);
-        createLocalRootFolder(utils.getStringDelLastSlash(localRoot));
+        if (localRoot !== '' && utils.replaceSlash(path_1.default.normalize(localRoot)) !== '/') {
+            createLocalRootFolder(localRoot);
+        }
         let delFolderPath = ''; // 用来记录无法下载的文件夹
         for (const path of downloadList) {
             if (delFolderPath === '' || !path.match(`^${delFolderPath}`)) {
                 let finalLocalPath = `${localRoot}${utils.getPathWithoutRootPath(utils.getStringDelLastSlash(inputs.obsFilePath), path)}`;
                 // 若本地有和待下载文件同名的文件夹，给文件名加后缀下载
-                if (downloadList.indexOf(`${path}/`) !== -1) {
-                    finalLocalPath = `${path}${new Date().valueOf()}`;
+                if (downloadList.indexOf(`${finalLocalPath}/`) !== -1) {
+                    finalLocalPath = `${finalLocalPath}${new Date().valueOf()}`;
                 }
                 // 下载文件/文件夹
                 if (utils.isEndWithSlash(finalLocalPath)) {
@@ -714,15 +851,11 @@ exports.getDownloadRoot = getDownloadRoot;
  * @param localPath
  */
 function createLocalRootFolder(localPath) {
-    const localPathList = localPath.split('/');
-    let local = localPathList[0];
-    for (const dir of localPathList) {
+    let local = localPath.startsWith('/') ? '/' : '';
+    for (const dir of localPath.split('/')) {
+        local = path_1.default.join(local, dir);
         utils.createFolder(local);
-        if (dir !== localPathList[0]) {
-            local += `/${dir}`;
-        }
     }
-    utils.createFolder(local);
 }
 exports.createLocalRootFolder = createLocalRootFolder;
 /**
@@ -755,7 +888,7 @@ function downloadFile(obsClient, inputs, obsPath, localPath) {
         if (utils.isExistSameNameFolder(localFileName)) {
             core.info(`a folder already exists on the local that has the same name as the path for downloading the obs file "${obsPath}"`);
             core.info(`try to download obs file in this folder`);
-            const nextFileName = `${localFileName}/${utils.getLastItemWithSlash(localFileName)}`;
+            const nextFileName = `${localFileName}/${path_1.default.basename(localFileName)}`;
             if (utils.isExistSameNameFolder(nextFileName)) {
                 core.info(`download file "${localFileName}" failed, because "${localFileName}" already exists as a folder on the local.`);
                 return;
@@ -788,7 +921,7 @@ exports.downloadFile = downloadFile;
 function getLocalFileName(localPath, obsPath) {
     try {
         if (fs.lstatSync(localPath).isDirectory()) {
-            return `${localPath}/${utils.getLastItemWithSlash(obsPath)}`;
+            return `${localPath}/${path_1.default.basename(obsPath)}`;
         }
         else {
             return localPath;
@@ -838,7 +971,7 @@ function delUselessPath(objList, inputs) {
         let isInclude = true;
         if (!!inputs.exclude && inputs.exclude.length > 0) {
             inputs.exclude.forEach((excludeItem) => {
-                if (element['Key'].search(`^${utils.getStringDelLastSlash(excludeItem)}`) > -1) {
+                if (excludeItem && element['Key'].search(`^${utils.getStringDelLastSlash(excludeItem)}`) > -1) {
                     isInclude = false;
                 }
             });
@@ -853,149 +986,7 @@ function delUselessPath(objList, inputs) {
 
 /***/ }),
 
-/***/ 3109:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-const core = __importStar(__nccwpck_require__(2186));
-const context = __importStar(__nccwpck_require__(3842));
-const upload = __importStar(__nccwpck_require__(4831));
-const download = __importStar(__nccwpck_require__(5933));
-const bucket = __importStar(__nccwpck_require__(8129));
-const utils = __importStar(__nccwpck_require__(918));
-function run() {
-    return __awaiter(this, void 0, void 0, function* () {
-        const commonInputs = context.getCommonInputs();
-        if (!utils.checkCommonInputs(commonInputs)) {
-            return;
-        }
-        // 初始化OBS客户端
-        const obs = context.getObsClient(commonInputs.accessKey, commonInputs.secretKey, `https://obs.${commonInputs.region}.myhuaweicloud.com`);
-        const operationCategory = utils.getOperationCategory(context.getOperationType());
-        if (operationCategory === 'object') {
-            handleObject(obs);
-        }
-        else if (operationCategory === 'bucket') {
-            handleBucket(obs);
-        }
-        else {
-            core.setFailed(`please check your operation_type. you can use 'download', 'upload', 'createbucket' or 'deletebucket'.`);
-        }
-    });
-}
-/**
- * 处理对象，目前支持上传对象，下载对象
- * @param obs OBS客户端
- * @returns
- */
-function handleObject(obs) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const inputs = context.getObjectInputs();
-        if (!utils.checkObjectInputs(inputs)) {
-            return;
-        }
-        // 若桶不存在，退出
-        if (!(yield bucket.hasBucket(obs, inputs.bucketName))) {
-            core.setFailed(`The bucket: ${inputs.bucketName} does not exists.`);
-            return;
-        }
-        // 执行上传/下载操作
-        if (inputs.operationType === 'upload') {
-            yield upload.uploadFileOrFolder(obs, inputs);
-        }
-        if (inputs.operationType === 'download') {
-            yield download.downloadFileOrFolder(obs, inputs);
-        }
-    });
-}
-/**
- * 处理桶，目前支持新增桶，删除桶
- * @param obs OBS客户端
- * @returns
- */
-function handleBucket(obs) {
-    var _a;
-    return __awaiter(this, void 0, void 0, function* () {
-        const inputs = context.getBucketInputs();
-        if (!utils.checkBucketInputs(inputs)) {
-            return;
-        }
-        const isBucketExist = yield bucket.hasBucket(obs, inputs.bucketName);
-        if (inputs.operationType.toLowerCase() === 'createbucket') {
-            // 若桶已经存在，退出
-            if (isBucketExist) {
-                core.setFailed(`The bucket: ${inputs.bucketName} already exists.`);
-                return;
-            }
-            bucket.createBucket(obs, inputs.bucketName, inputs.region, inputs.publicRead, utils.getStorageClass((_a = inputs.storageClass) !== null && _a !== void 0 ? _a : ''));
-        }
-        if (inputs.operationType.toLowerCase() === 'deletebucket') {
-            // 若桶不存在，退出
-            if (!isBucketExist) {
-                core.setFailed(`The bucket: ${inputs.bucketName} does not exists.`);
-                return;
-            }
-            const isEmpty = yield bucket.isBucketEmpty(obs, inputs.bucketName);
-            if (!isEmpty && inputs.clearBucket === false) {
-                core.setFailed('some object or parts already exist in bucket, please delete them first or not set parameter "clear_bucket" as false.');
-                return;
-            }
-            yield bucket.deleteBucket(obs, inputs.bucketName, isEmpty);
-        }
-    });
-}
-run();
-
-
-/***/ }),
-
-/***/ 8164:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.SUCCESS_STATUS_CODE = void 0;
-exports.SUCCESS_STATUS_CODE = 300;
-
-
-/***/ }),
-
-/***/ 4831:
+/***/ 9162:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -1046,9 +1037,10 @@ const types_1 = __nccwpck_require__(8164);
  */
 function uploadFileOrFolder(obsClient, inputs) {
     return __awaiter(this, void 0, void 0, function* () {
-        for (const path of inputs.localFilePath) {
-            const localFilePath = utils.getStringDelLastSlash(path); // 去除本地路径参数结尾的'/'，方便后续使用
-            const localName = utils.getLastItemWithSlash(localFilePath); // 本地路径参数的文件名/文件夹名
+        for (const localPath of inputs.localFilePath) {
+            const localFilePath = utils.getStringDelLastSlash(localPath); // 去除本地路径参数结尾的'/'，方便后续使用
+            // const localName = utils.getLastItemWithSlash(localFilePath); // 本地路径参数的文件名/文件夹名
+            const localName = path.basename(localFilePath);
             try {
                 const fsStat = fs.lstatSync(localFilePath);
                 if (fsStat.isFile()) {
@@ -1064,7 +1056,7 @@ function uploadFileOrFolder(obsClient, inputs) {
                     // 若总文件数大于1000，取消上传
                     const uploadListLength = uploadList.file.length + uploadList.folder.length;
                     if (uploadListLength > 1000) {
-                        core.setFailed(`local dirctory: '${path}' has ${uploadListLength} files and folders,`);
+                        core.setFailed(`local dirctory: '${localPath}' has ${uploadListLength} files and folders,`);
                         core.setFailed(`please upload a dirctory include less than 1000 files and folders.`);
                         return;
                     }
@@ -1075,7 +1067,7 @@ function uploadFileOrFolder(obsClient, inputs) {
                 }
             }
             catch (error) {
-                core.setFailed(`read local file or dirctory: '${path}' failed.`);
+                core.setFailed(`read local file or dirctory: '${localPath}' failed.`);
             }
         }
     });
@@ -1136,7 +1128,7 @@ function fileDisplay(obsClient, inputs, localFilePath, obsFileRootPath, uploadLi
                 const obsFilePath = obsFileRootPath ? `${obsFileRootPath}/${filename}` : `${obsFileRootPath}${filename}`;
                 if (info.isFile()) {
                     uploadList.file.push({
-                        local: utils.replaceSlash(filepath),
+                        local: utils.replaceSlash(path.normalize(filepath)),
                         obs: obsFilePath,
                     });
                 }
@@ -1385,6 +1377,18 @@ exports.mergeParts = mergeParts;
 
 /***/ }),
 
+/***/ 8164:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.SUCCESS_STATUS_CODE = void 0;
+exports.SUCCESS_STATUS_CODE = 300;
+
+
+/***/ }),
+
 /***/ 918:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -1414,7 +1418,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.isExistSameNameFile = exports.isExistSameNameFolder = exports.isFileOverSize = exports.getStringDelLastSlash = exports.isEndWithSlash = exports.createFolder = exports.getPathWithoutRootPath = exports.getLastItemWithSlash = exports.replaceSlash = exports.checkBucketInputs = exports.checkObjectInputs = exports.checkCommonInputs = exports.getStorageClass = exports.checkDownloadFilePath = exports.checkUploadFilePath = exports.getOperationCategory = exports.checkBucketName = exports.checkRegion = exports.checkAkSk = exports.PART_MAX_SIZE = void 0;
+exports.isExistSameNameFile = exports.isExistSameNameFolder = exports.isFileOverSize = exports.getStringDelLastSlash = exports.isEndWithSlash = exports.createFolder = exports.getPathWithoutRootPath = exports.replaceSlash = exports.checkBucketInputs = exports.checkObjectInputs = exports.checkCommonInputs = exports.getStorageClass = exports.checkDownloadFilePath = exports.checkUploadFilePath = exports.getOperationCategory = exports.checkBucketName = exports.checkRegion = exports.checkAkSk = exports.PART_MAX_SIZE = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const fs = __importStar(__nccwpck_require__(5747));
 /**
@@ -1477,14 +1481,20 @@ const FILE_MAX_SIZE = 5 * 1024 * 1024 * 1024;
  */
 exports.PART_MAX_SIZE = 1024 * 1024;
 /**
+ * 用于验证输入参数的正则表达式
+ */
+const akReg = /^[a-zA-Z0-9]{10,30}$/;
+const skReg = /^[a-zA-Z0-9]{30,50}$/;
+const legalReg = /^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/;
+const symbolReg = /([.]+[.-]+)|([-]+[.]+)/;
+const ipReg = /(\.((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})){3}/;
+/**
  * 检查ak/sk是否合法
  * @param ak
  * @param sk
  * @returns
  */
 function checkAkSk(ak, sk) {
-    const akReg = /^[a-zA-Z0-9]{10,30}$/;
-    const skReg = /^[a-zA-Z0-9]{30,50}$/;
     return akReg.test(ak) && skReg.test(sk);
 }
 exports.checkAkSk = checkAkSk;
@@ -1506,9 +1516,6 @@ exports.checkRegion = checkRegion;
  * @returns
  */
 function checkBucketName(bucketName) {
-    const legalReg = /^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/;
-    const symbolReg = /([.]+[.-]+)|([-]+[.]+)/;
-    const ipReg = /(\.((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})){3}/;
     return legalReg.test(bucketName) && !symbolReg.test(bucketName) && !ipReg.test(bucketName);
 }
 exports.checkBucketName = checkBucketName;
@@ -1643,19 +1650,6 @@ function replaceSlash(path) {
     return path.replace(/\\/g, '/');
 }
 exports.replaceSlash = replaceSlash;
-/**
- * 获得路径中最后一个'/'之后的名称
- * @param path
- * @returns
- */
-function getLastItemWithSlash(path) {
-    if (path.indexOf('/') === -1) {
-        return path;
-    }
-    const pathArray = path.split('/');
-    return pathArray[pathArray.length - 1];
-}
-exports.getLastItemWithSlash = getLastItemWithSlash;
 /**
  * 获得以rootPath开头， 并删除rootPath的path
  * 用于获得从obs下载对象时，对象应下载在本地的相对路径

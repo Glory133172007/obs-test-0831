@@ -1,9 +1,9 @@
 import * as core from '@actions/core';
 import * as context from './context';
-import * as upload from './upload';
-import * as download from './download';
-import * as bucket from './bucket';
 import * as utils from './utils';
+import * as upload from './obs/upload';
+import * as download from './obs/download';
+import * as bucket from './obs/bucket';
 
 async function run() {
     const commonInputs = context.getCommonInputs();
@@ -72,14 +72,7 @@ async function handleBucket(obs: any): Promise<void> {
         return;
     }
 
-    const isBucketExist = await bucket.hasBucket(obs, inputs.bucketName);
-
     if (inputs.operationType.toLowerCase() === 'createbucket') {
-        // 若桶已经存在，退出
-        if (isBucketExist) {
-            core.setFailed(`The bucket: ${inputs.bucketName} already exists.`);
-            return;
-        }
         bucket.createBucket(
             obs,
             inputs.bucketName,
@@ -90,19 +83,7 @@ async function handleBucket(obs: any): Promise<void> {
     }
 
     if (inputs.operationType.toLowerCase() === 'deletebucket') {
-        // 若桶不存在，退出
-        if (!isBucketExist) {
-            core.setFailed(`The bucket: ${inputs.bucketName} does not exists.`);
-            return;
-        }
-        const isEmpty = await bucket.isBucketEmpty(obs, inputs.bucketName);
-        if (!isEmpty && inputs.clearBucket === false) {
-            core.setFailed(
-                'some object or parts already exist in bucket, please delete them first or not set parameter "clear_bucket" as false.'
-            );
-            return;
-        }
-        await bucket.deleteBucket(obs, inputs.bucketName, isEmpty);
+        await bucket.deleteBucket(obs, inputs.bucketName, inputs.clearBucket);
     }
 }
 

@@ -16,7 +16,6 @@ jobs:
       # 创建桶
       - name: Create Bucket on Huawei Cloud OBS
         uses: ./
-        id: create_bucket_on_obs
         with:
           bucket_name: new-bucket
           operation_type: createBucket
@@ -24,25 +23,22 @@ jobs:
       # 上传文件至桶
       - name: Upload To Huawei OBS
         uses: ./
-        id: upload_file_to_obs
         with:
           bucket_name: new-bucket
           local_file_path: README.md
-          obs_file_path: 
+          obs_file_path: src/README.md
           operation_type: upload
       # 从桶内下载文件
       - name: Download from Huawei OBS
         uses: ./
-        id: download_file_from_obs
         with:
           bucket_name: new-bucket
-          local_file_path: ${{ github.workspace }}
-          obs_file_path: test.txt
+          local_file_path: ${{ github.workspace }}/
+          obs_file_path: src/README.md
           operation_type: download
       # 删除桶
       - name: Delete Bucket on Huawei Cloud OBS
         uses: ./
-        id: delete_bucket_on_obs
         with:
           bucket_name: new-bucket
           operation_type: deleteBucket

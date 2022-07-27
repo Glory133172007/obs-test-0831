@@ -1,5 +1,5 @@
 import { expect, test } from '@jest/globals';
-import * as bucket from '../src/bucket';
+import * as bucket from '../src/obs/bucket';
 
 // --------------- base ----------------
 const inputs = {
@@ -15,7 +15,7 @@ const ObsClient = require('esdk-obs-nodejs');
 const obs = new ObsClient({
     access_key_id: inputs.accessKey,       
     secret_key: inputs.secretKey,       
-    server : `https://obs.${inputs.region}.myhuaweicloud.com`,
+    server: `https://obs.${inputs.region}.ulanqab.huawei.com`
 });
 
 test('check bucket exist in bucket', () => {

@@ -1,6 +1,6 @@
 import { expect, test } from '@jest/globals';
-import * as upload from '../src/upload';
-import * as download from '../src/download';
+import * as upload from '../src/obs/upload';
+import * as download from '../src/obs/download';
 import { ObjectInputs } from '../src/types';
 
 const ObsClient = require('esdk-obs-nodejs');
@@ -12,9 +12,9 @@ function getObsClient(inputs: ObjectInputs) {
     });
 }
 const inputs = {
-    accessKey: '********************',
-    secretKey: '*********************************',
-    bucketName: '****',
+    accessKey: '******',
+    secretKey: '*****************',
+    bucketName: '******',
     operationType: 'upload',
     obsFilePath: '',
     localFilePath: [''],
@@ -25,6 +25,7 @@ const inputs = {
 // ------------------------------file---------------------------------
 
 test('upload a exist file without rename to obs folder "obsTest1"', async () => {
+    inputs.localFilePath = ['resource/uploadDir/file1.txt'];
     inputs.obsFilePath = 'obsTest1/file1.txt'
     const obs = getObsClient(inputs);
     await upload.uploadFileOrFolder(obs, inputs);
@@ -33,6 +34,7 @@ test('upload a exist file without rename to obs folder "obsTest1"', async () => 
 });
 
 test('upload a exist file and rename to obs root', async () => {
+    inputs.localFilePath = ['resource/uploadDir/file1.txt'];
     inputs.obsFilePath = 'elif.txt'
     const obs = getObsClient(inputs);
     await upload.uploadFileOrFolder(obs, inputs);
@@ -76,7 +78,6 @@ test('upload a exist folder to obs "obsTest2" and include local folder "uploadDi
 
     await upload.uploadFileOrFolder(obs, inputs);
     const objList = await download.getDownloadList(obs, inputs, inputs.obsFilePath);
-    console.log(objList)
     expect(objList.indexOf('obsTest2/uploadDir/folder1/')).toBeGreaterThan(-1);
 });
 
@@ -90,12 +91,12 @@ test('upload a nonexist folder to obs root ', async () => {
 });
 
 test('upload a exist folder include lots of files to obs "obsTest3" ', async () => {
-    inputs.localFilePath = ['resource/uploadDir/mult-file'];
+    inputs.localFilePath = ['resource/uploadDir/multi-files'];
     inputs.obsFilePath = 'obsTest3';
     const obs = getObsClient(inputs);
     await upload.uploadFileOrFolder(obs, inputs);
     const objList = await download.getDownloadList(obs, inputs, inputs.obsFilePath);
-    expect(objList.indexOf('obsTest5/mult-file/')).toEqual(-1);
+    expect(objList.indexOf('obsTest3/multi-files/')).toEqual(-1);
 });
 
 // ----------------------------------------funciton----------------------------------------

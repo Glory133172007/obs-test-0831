@@ -177,20 +177,6 @@ test('test replace \\ to /', () => {
    expect(path4).toEqual('a/b//c/');
 });
 
-test('test get last item with slash from Path', () => {
-   const filePath1 = utils.getLastItemWithSlash('test.txt');
-   expect(filePath1).toEqual('test.txt');
-
-   const filePath2 = utils.getLastItemWithSlash('/test');
-   expect(filePath2).toEqual('test');
-
-   const filePath3 = utils.getLastItemWithSlash('/usr/local/test.zip');
-   expect(filePath3).toEqual('test.zip');
-
-   const filePath5 = utils.getLastItemWithSlash('./local/test.zip');
-   expect(filePath5).toEqual('test.zip');
-});
-
 test('test del first rootPath in path', () => {
    const result1 = utils.getPathWithoutRootPath('src/src1/src1-1','src/src1/src1-1/src/src1/src1-1/test.txt')
    expect(result1).toEqual('/src/src1/src1-1/test.txt');

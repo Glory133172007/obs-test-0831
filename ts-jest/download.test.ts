@@ -1,6 +1,6 @@
 import { expect, test } from '@jest/globals';
 import * as fs from 'fs';
-import * as download from '../src/download';
+import * as download from '../src/obs/download';
 import { ObjectInputs } from '../src/types';
 
 const ObsClient = require('esdk-obs-nodejs');
@@ -12,10 +12,10 @@ function getObsClient(inputs: ObjectInputs) {
     });
 }
 const inputs = {
-    accessKey: '******************',
-    secretKey: '*********************************',
+    accessKey: '******',
+    secretKey: '*****************',
+    bucketName: '******',
     operationType: 'download',
-    bucketName: '****',
     region: 'cn-north-7',
     obsFilePath: '',
     localFilePath: [''],
