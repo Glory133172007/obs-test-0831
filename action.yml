@@ -1,13 +1,13 @@
 # action.yml
-name: 'HuaweiCloud OBS Helper'
-description: 'Upload/Download files or folders to HuaweiCloud OBS'
+name: 'Huawei Cloud OBS Helper'
+description: 'Upload/Download files or folders to Huawei Cloud OBS'
 inputs:
   access_key:
     description: "Access key id"
-    required: true
+    required: false
   secret_key:
     description: "Secret access key"
-    required: true
+    required: false
   region:
     description: 'Region'
     required: false

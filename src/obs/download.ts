@@ -1,8 +1,9 @@
 import * as fs from 'fs';
-import * as utils from './utils';
+import path from 'path';
 import * as core from '@actions/core';
 import * as bucket from './bucket';
-import { ObjectInputs, ListBucketContentItem } from './types';
+import * as utils from '../utils';
+import { ObjectInputs, ListBucketContentItem } from '../types';
 
 /**
  * 下载文件或者文件夹
@@ -22,7 +23,7 @@ export async function downloadFileOrFolder(obsClient: any, inputs: ObjectInputs)
     if (pathIsSingleFile(downloadPathList, inputs.obsFilePath)) {
         // 下载单个文件时，以'/'结尾，代表下载到localpath代表的文件夹中，下载文件夹时无此限制
         const fileLocalPath = utils.isEndWithSlash(inputLocalFilePath)
-            ? `${inputLocalFilePath}${utils.getLastItemWithSlash(downloadPathList[0])}`
+            ? `${inputLocalFilePath}${path.basename(downloadPathList[0])}`
             : inputLocalFilePath;
         await downloadFile(obsClient, inputs, downloadPathList[0], fileLocalPath);
     } else {
@@ -56,6 +57,10 @@ async function downloadFilesFromObs(
     localPath: string
 ): Promise<void> {
     const localRoot = getDownloadRoot(localPath, inputs.obsFilePath, !!inputs.includeSelfFolder);
+    
+    if (localRoot !== '' && utils.replaceSlash(path.normalize(localRoot)) !== '/') {
+        createLocalRootFolder(utils.replaceSlash(path.normalize(localRoot)));
+    }
 
     let delFolderPath = ''; // 用来记录无法下载的文件夹
     for (const path of downloadList) {
@@ -64,9 +69,10 @@ async function downloadFilesFromObs(
                 utils.getStringDelLastSlash(inputs.obsFilePath),
                 path
             )}`;
+
             // 若本地有和待下载文件同名的文件夹，给文件名加后缀下载
-            if (downloadList.indexOf(`${path}/`) !== -1) {
-                finalLocalPath = `${path}${new Date().valueOf()}`;
+            if (downloadList.indexOf(`${finalLocalPath}/`) !== -1) {
+                finalLocalPath = `${finalLocalPath}${new Date().valueOf()}`;
             }
 
             // 下载文件/文件夹
@@ -98,6 +104,19 @@ export function getDownloadRoot(localPath: string, obsPath: string, includeSelfF
     return includeSelfFolder
         ? `${utils.getStringDelLastSlash(localPath)}/${utils.getStringDelLastSlash(obsPath).split('/').pop()}`
         : utils.getStringDelLastSlash(localPath);
+}
+
+/**
+ * 下载文件夹时，检查并创建本地根目录
+ * @param localPath
+ */
+export function createLocalRootFolder(localPath: string): void {
+    let local = localPath.startsWith('/') ? '/' : '';
+
+    for (const dir of localPath.split('/')) {
+        local = path.join(local, dir)
+        utils.createFolder(local);
+    }
 }
 
 /**
@@ -136,7 +155,7 @@ export async function downloadFile(
             `a folder already exists on the local that has the same name as the path for downloading the obs file "${obsPath}"`
         );
         core.info(`try to download obs file in this folder`);
-        const nextFileName = `${localFileName}/${utils.getLastItemWithSlash(localFileName)}`;
+        const nextFileName = `${localFileName}/${path.basename(localFileName)}`;
         if (utils.isExistSameNameFolder(nextFileName)) {
             core.info(
                 `download file "${localFileName}" failed, because "${localFileName}" already exists as a folder on the local.`
@@ -169,7 +188,7 @@ export async function downloadFile(
 export function getLocalFileName(localPath: string, obsPath: string): string {
     try {
         if (fs.lstatSync(localPath).isDirectory()) {
-            return `${localPath}/${utils.getLastItemWithSlash(obsPath)}`;
+            return `${localPath}/${path.basename(obsPath)}`;
         } else {
             return localPath;
         }
@@ -218,7 +237,7 @@ function delUselessPath(objList: ListBucketContentItem[], inputs: ObjectInputs):
         let isInclude = true;
         if (!!inputs.exclude && inputs.exclude.length > 0) {
             inputs.exclude.forEach((excludeItem) => {
-                if (element['Key'].search(`^${utils.getStringDelLastSlash(excludeItem)}`) > -1) {
+                if (excludeItem && element['Key'].search(`^${utils.getStringDelLastSlash(excludeItem)}`) > -1) {
                     isInclude = false;
                 }
             });

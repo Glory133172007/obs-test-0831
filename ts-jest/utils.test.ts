@@ -107,6 +107,16 @@ test('check localFilePath and obsFilePath when upload', () => {
       region: 'cn-north-6',
    };
    expect(utils.checkUploadFilePath(input4)).toBeFalsy();
+   const input5 = {
+      accessKey: '******',
+      secretKey: '******',
+      bucketName: '******',
+      operationType: 'upload',
+      obsFilePath: 'uploadtest1',
+      localFilePath: ['path1','path2','path3','path4','path5','path6','path7','path8','path9','path10','path11'],
+      region: 'cn-north-6',
+   };
+   expect(utils.checkUploadFilePath(input5)).toBeFalsy();
 });
 
 // 检查下载时的localFilePath和obsFilePath是否合法
@@ -175,20 +185,6 @@ test('test replace \\ to /', () => {
 
    const path4 = utils.replaceSlash('a/b\\\\c/');
    expect(path4).toEqual('a/b//c/');
-});
-
-test('test get last item with slash from Path', () => {
-   const filePath1 = utils.getLastItemWithSlash('test.txt');
-   expect(filePath1).toEqual('test.txt');
-
-   const filePath2 = utils.getLastItemWithSlash('/test');
-   expect(filePath2).toEqual('test');
-
-   const filePath3 = utils.getLastItemWithSlash('/usr/local/test.zip');
-   expect(filePath3).toEqual('test.zip');
-
-   const filePath5 = utils.getLastItemWithSlash('./local/test.zip');
-   expect(filePath5).toEqual('test.zip');
 });
 
 test('test del first rootPath in path', () => {

@@ -1,5 +1,5 @@
 import * as core from '@actions/core';
-import { CommonResult, ListObjectsResult, ListVersionsResult, ListMultipartResult, DeleteObjectsResult } from './types';
+import { CommonResult, ListObjectsResult, ListVersionsResult, ListMultipartResult, DeleteObjectsResult } from '../types';
 
 /**
  * 判断桶是否存在
@@ -23,13 +23,17 @@ export async function hasBucket(obsClient: any, bucketName: string): Promise<boo
  * @param storageClass 存储类型
  * @returns
  */
-export function createBucket(
+export async function createBucket(
     obsClient: any,
     bucketName: string,
     region: string,
     publicRead: boolean,
     storageClass?: string
-): boolean {
+): Promise<boolean> {
+    if (await hasBucket(obsClient, bucketName)) {
+        core.setFailed(`The bucket: ${bucketName} already exists.`);
+        return false;
+    }
     obsClient
         .createBucket({
             Bucket: bucketName,
@@ -378,31 +382,43 @@ export async function abortAllMultipartUpload(obsClient: any, bucketName: string
  * 删除桶
  * @param obsClient obs客户端
  * @param bucketName 桶名
- * @param isBucketEmpty 是否为空桶
+ * @param forceClear 是否强制清空桶
  * @returns
  */
-export async function deleteBucket(obsClient: any, bucketName: string, isBucketEmpty: boolean): Promise<boolean> {
-    let isEmpty = isBucketEmpty;
+export async function deleteBucket(obsClient: any, bucketName: string, forceClear: boolean): Promise<boolean> {
+
+    // 若桶不存在，退出
+    if (!await hasBucket(obsClient, bucketName)) {
+        core.setFailed(`The bucket: ${bucketName} does not exists.`);
+        return false;
+    }
+
+    // 若桶非空且用户设置不强制清空桶，退出
+    let isEmpty = await isBucketEmpty(obsClient, bucketName);
+    if (!isEmpty && !forceClear) {
+        core.setFailed(
+            'some object or parts already exist in bucket, please delete them first or set parameter "clear_bucket" as true.'
+        );
+        return false;
+    }
+
     if (!isEmpty) {
         isEmpty = await clearBuckets(obsClient, bucketName);
     }
 
-    if (isEmpty) {
-        obsClient
-            .deleteBucket({
-                Bucket: bucketName,
-            })
-            .then((result: CommonResult) => {
-                if (result.CommonMsg.Status < 300) {
-                    core.info(`delete bucket: ${bucketName} successfully.`);
-                    return true;
-                } else {
-                    core.setFailed(`delete bucket: ${bucketName} failed, ${result.CommonMsg.Message}.`);
-                }
-            })
-            .catch((err: string) => {
-                core.setFailed(`delete bucket: ${bucketName} failed, ${err}.`);
-            });
-    }
+    obsClient.deleteBucket({
+            Bucket: bucketName,
+        })
+        .then((result: CommonResult) => {
+            if (result.CommonMsg.Status < 300) {
+                core.info(`delete bucket: ${bucketName} successfully.`);
+                return true;
+            } else {
+                core.setFailed(`delete bucket: ${bucketName} failed, ${result.CommonMsg.Message}.`);
+            }
+        })
+        .catch((err: string) => {
+            core.setFailed(`delete bucket: ${bucketName} failed, ${err}.`);
+        });
     return false;
 }

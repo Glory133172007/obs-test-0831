@@ -67,14 +67,21 @@ const FILE_MAX_SIZE = 5 * 1024 * 1024 * 1024;
 export const PART_MAX_SIZE = 1024 * 1024;
 
 /**
+ * 用于验证输入参数的正则表达式
+ */
+const akReg = /^[a-zA-Z0-9]{10,30}$/;
+const skReg = /^[a-zA-Z0-9]{30,50}$/;
+const legalReg = /^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/;
+const symbolReg = /([.]+[.-]+)|([-]+[.]+)/;
+const ipReg = /(\.((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})){3}/;
+
+/**
  * 检查ak/sk是否合法
  * @param ak
  * @param sk
  * @returns
  */
 export function checkAkSk(ak: string, sk: string): boolean {
-    const akReg = /^[a-zA-Z0-9]{10,30}$/;
-    const skReg = /^[a-zA-Z0-9]{30,50}$/;
     return akReg.test(ak) && skReg.test(sk);
 }
 
@@ -96,9 +103,6 @@ export function checkRegion(region: string): boolean {
  * @returns
  */
 export function checkBucketName(bucketName: string): boolean {
-    const legalReg = /^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/;
-    const symbolReg = /([.]+[.-]+)|([-]+[.]+)/;
-    const ipReg = /(\.((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})){3}/;
     return legalReg.test(bucketName) && !symbolReg.test(bucketName) && !ipReg.test(bucketName);
 }
 
@@ -125,6 +129,10 @@ export function getOperationCategory(operationType: string): string {
 export function checkUploadFilePath(inputs: ObjectInputs): boolean {
     if (inputs.localFilePath.length === 0) {
         core.setFailed('please input localFilePath.');
+        return false;
+    }
+    if (inputs.localFilePath.length > 10) {
+        core.setFailed('you should input no more than 10 local_file_path.');
         return false;
     }
     for (const path of inputs.localFilePath) {
@@ -232,19 +240,6 @@ export function checkBucketInputs(inputs: BucketInputs): boolean {
  */
 export function replaceSlash(path: string): string {
     return path.replace(/\\/g, '/');
-}
-
-/**
- * 获得路径中最后一个'/'之后的名称
- * @param path
- * @returns
- */
-export function getLastItemWithSlash(path: string): string {
-    if (path.indexOf('/') === -1) {
-        return path;
-    }
-    const pathArray = path.split('/');
-    return pathArray[pathArray.length - 1];
 }
 
 /**
