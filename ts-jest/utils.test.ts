@@ -107,6 +107,16 @@ test('check localFilePath and obsFilePath when upload', () => {
       region: 'cn-north-6',
    };
    expect(utils.checkUploadFilePath(input4)).toBeFalsy();
+   const input5 = {
+      accessKey: '******',
+      secretKey: '******',
+      bucketName: '******',
+      operationType: 'upload',
+      obsFilePath: 'uploadtest1',
+      localFilePath: ['path1','path2','path3','path4','path5','path6','path7','path8','path9','path10','path11'],
+      region: 'cn-north-6',
+   };
+   expect(utils.checkUploadFilePath(input5)).toBeFalsy();
 });
 
 // 检查下载时的localFilePath和obsFilePath是否合法

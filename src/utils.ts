@@ -131,6 +131,10 @@ export function checkUploadFilePath(inputs: ObjectInputs): boolean {
         core.setFailed('please input localFilePath.');
         return false;
     }
+    if (inputs.localFilePath.length > 10) {
+        core.setFailed('you should input no more than 10 local_file_path.');
+        return false;
+    }
     for (const path of inputs.localFilePath) {
         if (path === '') {
             core.setFailed('you should not input a empty string as local_file_path.');

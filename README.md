@@ -28,7 +28,7 @@
 | region  | OBS服务所在区域。如果使用了华为云统一鉴权[huaweicloud/auth-action](https://github.com/huaweicloud/auth-action)可以不填写此参数 |  'cn-north-4'  |  否  |
 | bucket_name  | OBS的目标桶名 |  无  |  是  |
 | operation_type  | 要进行的操作，上传请使用*upload*，下载请使用*download* |  无  |  是  |
-| local_file_path  | 对象的本地路径，上传对象时可填写多个 |  无  |  是  |
+| local_file_path  | 对象的本地路径，上传对象时可填写1~10个 |  无  |  是  |
 | obs_file_path  | 对象在桶内的路径 |  无  |  下载时必填  |
 | include_self_folder  | 上传/下载文件夹时是否包含文件夹自身，上传/下载单个文件时无意义。默认不包含 |  false  |  否  |
 | exclude  | 下载对象时，要排除的对象，上传时无用。不填写时不排除任何对象 |  无  |  否  |
