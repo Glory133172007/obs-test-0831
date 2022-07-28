@@ -21,7 +21,7 @@ jobs:
           operation_type: createBucket
           public_read: true
       # 上传文件至桶
-      - name: Upload To Huawei OBS
+      - name: Upload File to Huawei Cloud OBS
         uses: ./
         with:
           bucket_name: new-bucket
@@ -29,7 +29,7 @@ jobs:
           obs_file_path: src/README.md
           operation_type: upload
       # 从桶内下载文件
-      - name: Download from Huawei OBS
+      - name: Download from Huawei Cloud OBS
         uses: ./
         with:
           bucket_name: new-bucket

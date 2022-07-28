@@ -46,11 +46,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # ${{ github.workspace }}为action运行时的工作目录
-      - name: echo workspace
+      - name: Echo Workspace of Action
         run: echo ${{ github.workspace }}
 
-      # ${{ runner.temp }}为Linux GitHub 托管的运行器的tmp目录
-      - name: echo linux temp
+      # ${{ runner.temp }}为运行器临时目录的路径
+      - name: Echo Temporary Directory on the Runner
         run: echo ${{ runner.temp }}
 ```
 ## **创建删除桶参数说明**
@@ -115,7 +115,7 @@ jobs:
 ```
 #### 上传文件src1/src2/test1.txt至obs根目录
 ```yaml
-- name: Upload To Huawei Cloud OBS
+- name: Upload to Huawei Cloud OBS
   uses: huaweicloud/obs-helper@v1.3.0
   with:
     bucket_name: 'bucket-test'
@@ -130,7 +130,7 @@ test1.txt
 
 #### 上传文件夹src1(包含文件夹自身)至src文件夹
 ```yaml
-- name: Upload To Huawei Cloud OBS
+- name: Upload to Huawei Cloud OBS
   uses: huaweicloud/obs-helper@v1.3.0
   with:
     bucket_name: 'bucket-test'
@@ -152,7 +152,7 @@ test1.txt
 
 #### 上传多个文件和文件夹(不包含文件夹自身)至src文件夹
 ```yaml
-- name: Upload To Huawei Cloud OBS
+- name: Upload to Huawei Cloud OBS
   uses: huaweicloud/obs-helper@v1.3.0
   with:
     bucket_name: 'bucket-test'
@@ -186,7 +186,7 @@ src1
 ```
 #### 下载文件test1.txt至文件夹src1中
 ```yaml
-- name: Download File From Huawei Cloud OBS
+- name: Download File from Huawei Cloud OBS
   uses: huaweicloud/obs-helper@v1.3.0
   with:
     bucket_name: 'bucket-test'
@@ -202,7 +202,7 @@ src1
 
 #### 下载文件夹src1(包含文件夹自身)至文件夹src中
 ```yaml
-- name: Download From Huawei Cloud OBS
+- name: Download from Huawei Cloud OBS
   uses: huaweicloud/obs-helper@v1.3.0
   with:
     bucket_name: 'bucket-test'
@@ -224,7 +224,7 @@ src
 
 #### 下载文件夹src1(不包含文件夹自身，排除下载桶内src1/sr2/test3.txt和src1/src3目录下的所有文件)到src文件夹下
 ```yaml
-- name: Download From Huawei Cloud OBS
+- name: Download from Huawei Cloud OBS
   uses: huaweicloud/obs-helper@v1.3.0
   with:
     bucket_name: 'bucket-test'
@@ -266,7 +266,7 @@ src
 #### 删除名为'new-bucket'的桶（自动清空桶内所有对象和碎片）
 假设您的obs中存在名为'new-bucket'的桶
 ```yaml
-- name: Delete Bucket on Huawei Cloud OBS
+- name: Delete bucket on Huawei Cloud OBS
   uses: huaweicloud/obs-helper@v1.3.0
   with:
     bucket_name: 'new-bucket'
