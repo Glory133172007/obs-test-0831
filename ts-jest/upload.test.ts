@@ -112,8 +112,19 @@ test('fileDisplay', async () => {
 });
 
 test('getObsRootFile', () => {
+    expect(upload.getObsRootFile(true, '/obs', 'local')).toEqual('obs/local');
+    expect(upload.getObsRootFile(true, 'obs/', 'local')).toEqual('obs/local');
     expect(upload.getObsRootFile(true, 'obs', 'local')).toEqual('obs/local');
+    expect(upload.getObsRootFile(true, '////obs///', 'local')).toEqual('obs/local');
+    expect(upload.getObsRootFile(true, '', 'local')).toEqual('local');
+    expect(upload.getObsRootFile(true, '/', 'local')).toEqual('local');
+
+    expect(upload.getObsRootFile(false, '/obs', 'local')).toEqual('obs');
+    expect(upload.getObsRootFile(false, 'obs/', 'local')).toEqual('obs');
     expect(upload.getObsRootFile(false, 'obs', 'local')).toEqual('obs');
+    expect(upload.getObsRootFile(false, '////obs///', 'local')).toEqual('obs');
+    expect(upload.getObsRootFile(false, '', 'local')).toEqual('');
+    expect(upload.getObsRootFile(false, '/', 'local')).toEqual('');
 });
 
 test('obsCreateRootFolder', async () => {
@@ -123,3 +134,11 @@ test('obsCreateRootFolder', async () => {
     const objList = await download.getDownloadList(obs, inputs, inputs.obsFilePath);
     expect(objList.indexOf('obsTest2/newFolder/') > -1).toBeTruthy();
 });
+
+test('formatObsPath', () => {
+    expect(upload.formatObsPath('')).toEqual('');
+    expect(upload.formatObsPath('/')).toEqual('');
+    expect(upload.formatObsPath('/a/b')).toEqual('a/b');
+    expect(upload.formatObsPath('/a/////\\b/c')).toEqual('a/b/c');
+    expect(upload.formatObsPath('a/b//////c/')).toEqual('a/b/c/');
+})
