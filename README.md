@@ -25,7 +25,7 @@
 |  :----:  |  ----  |  :----: |  :----:  |
 | access_key  | 访问密钥ID。与私有访问密钥关联的唯一标识符，和私有访问密钥(secret_key)一起使用，对请求进行加密签名。建议参照**前置工作**中的步骤2进行设置以加密使用。如果使用了华为云统一鉴权[huaweicloud/auth-action](https://github.com/huaweicloud/auth-action)可以不填写此参数 |  无  |  否  |
 | secret_key  | 与访问密钥ID(access_key)结合使用的私有访问密钥，对请求进行加密签名，可标识发送方，并防止请求被修改。建议参照**前置工作**中的步骤2进行设置以加密使用。如果使用了华为云统一鉴权[huaweicloud/auth-action](https://github.com/huaweicloud/auth-action)可以不填写此参数 |  无  |  否  |
-| region  | OBS服务所在区域。如果使用了华为云统一鉴权[huaweicloud/auth-action](https://github.com/huaweicloud/auth-action)可以不填写此参数 |  'cn-north-4'  |  否  |
+| region  | OBS服务所在区域。用于配置OBS终端节点。如果使用了华为云统一鉴权[huaweicloud/auth-action](https://github.com/huaweicloud/auth-action)可以不填写此参数 |  'cn-north-4'  |  否  |
 | bucket_name  | OBS的目标桶名 |  无  |  是  |
 | operation_type  | 要进行的操作，上传请使用*upload*，下载请使用*download* |  无  |  是  |
 | local_file_path  | 对象的本地路径，上传对象时可填写1~10个 |  无  |  是  |
@@ -58,32 +58,16 @@ jobs:
 |  :----:  |  ----  |  :----: |  :----:  |
 | access_key  | 访问密钥ID。与私有访问密钥关联的唯一标识符，和私有访问密钥(secret_key)一起使用，对请求进行加密签名。建议参照**前置工作**中的步骤2进行设置以加密使用。如果使用了华为云统一鉴权[huaweicloud/auth-action](https://github.com/huaweicloud/auth-action)可以不填写此参数 |  无  |  否  |
 | secret_key  | 与访问密钥ID(access_key)结合使用的私有访问密钥，对请求进行加密签名，可标识发送方，并防止请求被修改。建议参照**前置工作**中的步骤2进行设置以加密使用。如果使用了华为云统一鉴权[huaweicloud/auth-action](https://github.com/huaweicloud/auth-action)可以不填写此参数 |  无  |  否  |
-| region  | OBS服务所在区域。如果使用了华为云统一鉴权[huaweicloud/auth-action](https://github.com/huaweicloud/auth-action)可以不填写此参数 |  'cn-north-4'  |  否  |
+| region  | OBS服务所在区域。用于配置OBS终端节点。如果使用了华为云统一鉴权[huaweicloud/auth-action](https://github.com/huaweicloud/auth-action)可以不填写此参数 |  'cn-north-4'  |  否  |
 | bucket_name  | OBS的目标桶名 |  无  |  是  |
 | operation_type  | 要进行的操作，创建桶请使用*createbucket*，删除桶请使用*deletebucket* |  无  |  是  |
 | public_read  | 创建桶时，是否开放桶公共读权限，不填时默认不开放。如需设置其他权限，请在创建桶后到控制台进行修改 |  false  |  否  |
 | storage_class  | 创建桶时，桶的存储类型，不填时默认为*标准存储*|  无  |  否  |
 | clear_bucket  | 删除桶时，是否清空桶内全部对象/碎片，不填时默认清空 |  true  |  否  |
 
-
-目前OBS支持的区域名称和对应region如下
-```text
-  非洲-约翰内斯堡：  af-south-1	
-  华北-北京四：	 cn-north-4	
-  华北-北京一：	 cn-north-1	
-  华北-乌兰察布一：  cn-north-9	
-  华东-上海二：	 cn-east-2	
-  华东-上海一：	 cn-east-3	
-  华南-广州：	 cn-south-1	
-  拉美-墨西哥城二：  la-north-2	
-  拉美-墨西哥城一：  na-mexico-1	
-  拉美-圣保罗一：  sa-brazil-1	
-  拉美-圣地亚哥：  la-south-2	
-  西南-贵阳一：	 cn-southwest-2	
-  亚太-曼谷：	 ap-southeast-2	
-  亚太-新加坡：	 ap-southeast-3	
-  中国-香港：	 ap-southeast-1	
-```
+## **参数支持列表**
+目前OBS支持的区域名称和对应region(区域)、终端节点请见[对象存储服务 OBS](https://developer.huaweicloud.com/endpoint?OBS)  
+  
 目前OBS支持的存储类型(storage_class)如下
 ```text
   标准存储： standard
