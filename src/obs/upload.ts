@@ -20,12 +20,12 @@ export async function uploadFileOrFolder(obsClient: any, inputs: ObjectInputs): 
             }
 
             if (fsStat.isDirectory()) {
-                const localFileRootPath = getObsRootFile(!!inputs.includeSelfFolder, inputs.obsFilePath, localName);
+                const obsFileRootPath = getObsRootFile(!!inputs.includeSelfFolder, inputs.obsFilePath, localName);
                 const uploadList = {
                     file: [],
                     folder: [],
                 };
-                await fileDisplay(obsClient, inputs, localFilePath, localFileRootPath, uploadList);
+                await fileDisplay(obsClient, inputs, localFilePath, obsFileRootPath, uploadList);
 
                 // 若总文件数大于1000，取消上传
                 const uploadListLength = uploadList.file.length + uploadList.folder.length;
@@ -58,12 +58,26 @@ export async function uploadFileOrFolder(obsClient: any, inputs: ObjectInputs): 
  * @returns
  */
 export function getObsRootFile(includeSelf: boolean, obsfile: string, objectName: string): string {
+    const formatPath = formatObsPath(obsfile);
     if (includeSelf) {
-        const obsFinalFilePath = obsfile ? `${utils.getStringDelLastSlash(obsfile)}/${objectName}` : objectName;
-        return obsFinalFilePath;
+        return formatPath ? `${utils.getStringDelLastSlash(formatPath)}/${objectName}` : objectName;
     } else {
-        return utils.getStringDelLastSlash(obsfile);
+        return utils.getStringDelLastSlash(formatPath);
     }
+}
+
+/**
+ * 格式化上传时的obs_file_path
+ * @param obsPath 
+ * @returns 
+ */
+export function formatObsPath(obsPath: string): string {
+    // 上传到根目录
+    if (!obsPath || utils.replaceSlash(path.normalize(obsPath)) === '/') {
+        return '';
+    }
+    const pathFormat = utils.replaceSlash(path.normalize(obsPath));
+    return pathFormat.startsWith('/') ? pathFormat.substring(1) : pathFormat;
 }
 
 /**
@@ -114,7 +128,7 @@ export async function fileDisplay(
                     obs: obsFilePath,
                 });
             }
-
+            
             if (info.isDirectory()) {
                 uploadList.folder.push(obsFilePath);
                 await fileDisplay(obsClient, inputs, filepath, obsFilePath, uploadList);

@@ -1020,7 +1020,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.mergeParts = exports.uploadParts = exports.initMultipartUpload = exports.multipartUpload = exports.obsCreateRootFolder = exports.uploadFolder = exports.uploadFile = exports.fileDisplay = exports.getObsFilePath = exports.getObsRootFile = exports.uploadFileOrFolder = void 0;
+exports.mergeParts = exports.uploadParts = exports.initMultipartUpload = exports.multipartUpload = exports.obsCreateRootFolder = exports.uploadFolder = exports.uploadFile = exports.fileDisplay = exports.getObsFilePath = exports.formatObsPath = exports.getObsRootFile = exports.uploadFileOrFolder = void 0;
 const fs = __importStar(__nccwpck_require__(5747));
 const path = __importStar(__nccwpck_require__(5622));
 const utils = __importStar(__nccwpck_require__(918));
@@ -1042,12 +1042,12 @@ function uploadFileOrFolder(obsClient, inputs) {
                     yield uploadFile(obsClient, inputs.bucketName, localFilePath, getObsFilePath(inputs, localName));
                 }
                 if (fsStat.isDirectory()) {
-                    const localFileRootPath = getObsRootFile(!!inputs.includeSelfFolder, inputs.obsFilePath, localName);
+                    const obsFileRootPath = getObsRootFile(!!inputs.includeSelfFolder, inputs.obsFilePath, localName);
                     const uploadList = {
                         file: [],
                         folder: [],
                     };
-                    yield fileDisplay(obsClient, inputs, localFilePath, localFileRootPath, uploadList);
+                    yield fileDisplay(obsClient, inputs, localFilePath, obsFileRootPath, uploadList);
                     // 若总文件数大于1000，取消上传
                     const uploadListLength = uploadList.file.length + uploadList.folder.length;
                     if (uploadListLength > 1000) {
@@ -1076,15 +1076,29 @@ exports.uploadFileOrFolder = uploadFileOrFolder;
  * @returns
  */
 function getObsRootFile(includeSelf, obsfile, objectName) {
+    const formatPath = formatObsPath(obsfile);
     if (includeSelf) {
-        const obsFinalFilePath = obsfile ? `${utils.getStringDelLastSlash(obsfile)}/${objectName}` : objectName;
-        return obsFinalFilePath;
+        return formatPath ? `${utils.getStringDelLastSlash(formatPath)}/${objectName}` : objectName;
     }
     else {
-        return utils.getStringDelLastSlash(obsfile);
+        return utils.getStringDelLastSlash(formatPath);
     }
 }
 exports.getObsRootFile = getObsRootFile;
+/**
+ * 格式化上传时的obs_file_path
+ * @param obsPath
+ * @returns
+ */
+function formatObsPath(obsPath) {
+    // 上传到根目录
+    if (!obsPath || utils.replaceSlash(path.normalize(obsPath)) === '/') {
+        return '';
+    }
+    const pathFormat = utils.replaceSlash(path.normalize(obsPath));
+    return pathFormat.startsWith('/') ? pathFormat.substring(1) : pathFormat;
+}
+exports.formatObsPath = formatObsPath;
 /**
  * 得到待上传文件在obs的路径
  * @param inputs 用户输入的参数
