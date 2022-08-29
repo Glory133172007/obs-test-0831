@@ -175,16 +175,16 @@ export async function uploadFile(
         core.setFailed(`your local file "${localFilePath}" cannot be uploaded because it is larger than 5 GB`);
         return;
     }
-    core.info(`start upload file: "${localFilePath}" as "${bucketName}/${obsFilePath}"`);
+    core.info(`start upload file: "${localFilePath}"`);
     const result = await obsClient.putObject({
         Bucket: bucketName,
         Key: obsFilePath,
         SourceFile: localFilePath,
     });
     if (result.CommonMsg.Status < SUCCESS_STATUS_CODE) {
-        core.info(`succeessfully upload file: "${localFilePath}" as "${bucketName}/${obsFilePath}"`);
+        core.info(`succeessfully upload file: "${localFilePath}"`);
     } else {
-        core.setFailed(`failed to upload file: "${localFilePath}", because ${result.CommonMsg.Message}`);
+        core.setFailed(`failed to upload file: "${localFilePath}", because ${result.CommonMsg.Code}`);
     }
 }
 
@@ -205,7 +205,7 @@ export async function uploadFolder(obsClient: any, bucketName: string, obsFilePa
     if (result.CommonMsg.Status < SUCCESS_STATUS_CODE) {
         core.info(`succeessfully create folder "${obsFilePath}/"`);
     } else {
-        core.setFailed(`failed to create folder "${obsFilePath}/", because ${result.CommonMsg.Message}`);
+        core.setFailed(`failed to create folder "${obsFilePath}/", because ${result.CommonMsg.Code}`);
     }
 }
 
@@ -233,7 +233,7 @@ export async function obsCreateRootFolder(obsClient: any, bucketName: string, ob
         if (result.CommonMsg.Status < SUCCESS_STATUS_CODE) {
             core.info(`succeessfully create folder "${obsPath}"`);
         } else {
-            core.setFailed(`failed to create folder "${obsPath}", because ${result.CommonMsg.Message}`);
+            core.setFailed(`failed to create folder "${obsPath}", because ${result.CommonMsg.Code}`);
         }
     }
 }

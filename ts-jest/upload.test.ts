@@ -8,7 +8,7 @@ function getObsClient(inputs: ObjectInputs) {
     return new ObsClient({
         access_key_id: inputs.accessKey,       
         secret_access_key: inputs.secretKey,       
-        server: `https://obs.${inputs.region}.ulanqab.huawei.com`
+        server: ``
     });
 }
 const inputs = {
