@@ -30,8 +30,8 @@ export async function uploadFileOrFolder(obsClient: any, inputs: ObjectInputs): 
                 // 若总文件数大于1000，取消上传
                 const uploadListLength = uploadList.file.length + uploadList.folder.length;
                 if (uploadListLength > 1000) {
-                    core.setFailed(`local dirctory: '${localPath}' has ${uploadListLength} files and folders,`);
-                    core.setFailed(`please upload a dirctory include less than 1000 files and folders.`);
+                    core.setFailed(`local directory: '${localPath}' has ${uploadListLength} files and folders,`);
+                    core.setFailed(`please upload a directory include less than 1000 files and folders.`);
                     return;
                 }
 
@@ -45,7 +45,7 @@ export async function uploadFileOrFolder(obsClient: any, inputs: ObjectInputs): 
                 await uploadFileAndFolder(obsClient, inputs.bucketName, uploadList);
             }
         } catch (error) {
-            core.setFailed(`read local file or dirctory: '${localPath}' failed.`);
+            core.setFailed(`read local file or directory: '${localPath}' failed.`);
         }
     }
 }

@@ -141,7 +141,7 @@ export function checkUploadFilePath(inputs: ObjectInputs): boolean {
             return false;
         }
         if (!fs.existsSync(path)) {
-            core.setFailed(`local file or dirctory not exist, please check your input path.`);
+            core.setFailed(`local file or directory not exist, please check your input path.`);
             return false;
         }
     }

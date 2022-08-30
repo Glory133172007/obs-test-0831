@@ -260,5 +260,5 @@ src
 执行成功后，您在obs的桶'new-bucket'以及其中所有对象和碎片将被删除
 
 ## Action中使用的公网地址说明
-本action在使用过程会调用OBS服务，涉及到的公网域名可到[地区和终端节点 - 对象存储服务 OBS](https://developer.huaweicloud.com/endpoint?OBS)查看。  
-[Linux AMD64 OBSUtil下载链接](https://obs-community.obs.cn-north-1.myhuaweicloud.com/obsutil/current/obsutil_linux_amd64.tar.gz)
+- 本action在使用过程会调用OBS服务，涉及到的公网域名可到[地区和终端节点 - 对象存储服务 OBS](https://developer.huaweicloud.com/endpoint?OBS)查看。  
+- [Linux AMD64 OBSUtil下载链接](https://obs-community.obs.cn-north-1.myhuaweicloud.com/obsutil/current/obsutil_linux_amd64.tar.gz)
