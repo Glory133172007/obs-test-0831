@@ -12,7 +12,7 @@ import { ObjectInputs, ListBucketContentItem } from '../types';
  * @returns
  */
 export async function downloadFileOrFolder(obsClient: any, inputs: ObjectInputs): Promise<void> {
-    const inputLocalFilePath = inputs.localFilePath[0];
+    const inputLocalFilePath = utils.replaceSlash(path.normalize(inputs.localFilePath[0]));
     const downloadPathList = await getDownloadList(obsClient, inputs, inputs.obsFilePath);
 
     if (downloadPathList.length < 1) {
@@ -173,9 +173,9 @@ export async function downloadFile(
         SaveAsFile: localFileName,
     });
     if (result.CommonMsg.Status < 300) {
-        core.info(`successfully download obs file: "${obsPath}" as ${localFileName}`);
+        core.info(`successfully download obs file: "${obsPath}"`);
     } else {
-        core.setFailed(`failed to download obs file: "${obsPath}", because ${result.CommonMsg.Message}`);
+        core.setFailed(`failed to download obs file: "${obsPath}", because ${result.CommonMsg.Code}`);
     }
 }
 

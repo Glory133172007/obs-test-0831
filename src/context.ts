@@ -25,7 +25,8 @@ export function getObjectInputs(): ObjectInputs {
         bucketName: core.getInput('bucket_name', { required: true }),
         localFilePath: core.getMultilineInput('local_file_path', { required: false }),
         obsFilePath: core.getInput('obs_file_path', { required: false }),
-        includeSelfFolder: core.getBooleanInput('include_self_folder', { required: false }) ?? false,
+        includeSelfFolder:
+            core.getBooleanInput('include_self_folder', { required: false }) ?? false,
         exclude: core.getMultilineInput('exclude', { required: false }),
     };
 }

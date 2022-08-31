@@ -48,7 +48,7 @@ export async function createBucket(
                     return true;
                 }
             } else {
-                core.setFailed(`create bucket: ${bucketName} failed, ${result.CommonMsg.Message}.`);
+                core.setFailed(`create bucket: ${bucketName} failed, ${result.CommonMsg.Code}.`);
                 return false;
             }
         })
@@ -72,7 +72,7 @@ export async function getBucketVersioning(obsClient: any, bucketName: string): P
     if (result.CommonMsg.Status < 300) {
         return result.InterfaceResult.VersionStatus;
     } else {
-        core.info(`get bucket versioning failed because ${result.CommonMsg.Message}`);
+        core.info(`get bucket versioning failed because ${result.CommonMsg.Code}`);
         return '';
     }
 }
@@ -345,7 +345,7 @@ async function deleteObjects(
         })
         .then((result: DeleteObjectsResult) => {
             if (result.CommonMsg.Status === 400) {
-                core.info(`Delete failed because ${result.CommonMsg.Message}`);
+                core.info(`Delete failed because ${result.CommonMsg.Code}`);
             } else if (result.InterfaceResult.Errors.length > 0) {
                 core.info(`Failed to delete objects: ${result.InterfaceResult.Errors}.`);
             } else {
@@ -414,7 +414,7 @@ export async function deleteBucket(obsClient: any, bucketName: string, forceClea
                 core.info(`delete bucket: ${bucketName} successfully.`);
                 return true;
             } else {
-                core.setFailed(`delete bucket: ${bucketName} failed, ${result.CommonMsg.Message}.`);
+                core.setFailed(`delete bucket: ${bucketName} failed, ${result.CommonMsg.Code}.`);
             }
         })
         .catch((err: string) => {

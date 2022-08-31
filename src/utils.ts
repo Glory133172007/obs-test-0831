@@ -141,7 +141,7 @@ export function checkUploadFilePath(inputs: ObjectInputs): boolean {
             return false;
         }
         if (!fs.existsSync(path)) {
-            core.setFailed(`local file or dirctory: '${path}' not exist, please check your input path.`);
+            core.setFailed(`local file or directory not exist, please check your input path.`);
             return false;
         }
     }
@@ -211,7 +211,9 @@ export function checkCommonInputs(inputs: CommonInputs): boolean {
  */
 export function checkObjectInputs(inputs: ObjectInputs): boolean {
     const checkFilePath =
-        inputs.operationType.toLowerCase() === 'upload' ? checkUploadFilePath(inputs) : checkDownloadFilePath(inputs);
+        inputs.operationType.toLowerCase() === 'upload'
+            ? checkUploadFilePath(inputs)
+            : checkDownloadFilePath(inputs);
     if (!checkFilePath) {
         return false;
     }
@@ -329,5 +331,8 @@ export function isExistSameNameFolder(localPath: string): boolean {
  * @returns
  */
 export function isExistSameNameFile(localPath: string): boolean {
-    return fs.existsSync(getStringDelLastSlash(localPath)) && fs.statSync(getStringDelLastSlash(localPath)).isFile();
+    return (
+        fs.existsSync(getStringDelLastSlash(localPath)) &&
+        fs.statSync(getStringDelLastSlash(localPath)).isFile()
+    );
 }

@@ -15,7 +15,7 @@ const ObsClient = require('esdk-obs-nodejs');
 const obs = new ObsClient({
     access_key_id: inputs.accessKey,       
     secret_key: inputs.secretKey,       
-    server: `https://obs.${inputs.region}.ulanqab.huawei.com`
+    server: ``
 });
 
 test('check bucket exist in bucket', () => {
