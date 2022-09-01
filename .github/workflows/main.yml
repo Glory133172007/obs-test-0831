@@ -17,14 +17,14 @@ jobs:
       - name: Create Bucket on Huawei Cloud OBS
         uses: ./
         with:
-          bucket_name: new-bucket
+          bucket_name: new-bucket-lxy
           operation_type: createBucket
-          public_read: true
+          public_read: false
       # 上传文件至桶
       - name: Upload File to Huawei Cloud OBS
         uses: ./
         with:
-          bucket_name: new-bucket
+          bucket_name: new-bucket-lxy
           local_file_path: README.md
           obs_file_path: src/README.md
           operation_type: upload
@@ -32,7 +32,7 @@ jobs:
       - name: Download from Huawei Cloud OBS
         uses: ./
         with:
-          bucket_name: new-bucket
+          bucket_name: new-bucket-lxy
           local_file_path: ${{ github.workspace }}/
           obs_file_path: src/README.md
           operation_type: download
@@ -40,5 +40,6 @@ jobs:
       - name: Delete Bucket on Huawei Cloud OBS
         uses: ./
         with:
-          bucket_name: new-bucket
+          bucket_name: new-bucket-lxy
           operation_type: deleteBucket
+          clear_bucket: true
