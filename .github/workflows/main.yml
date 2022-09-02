@@ -14,7 +14,7 @@ jobs:
           secret_access_key: ${{ secrets.SECRETACCESSKEY }}
           region: cn-north-4
       # 创建桶
-      - name: Create Bucket on Huawei Cloud OBS
+      - name: Create Bucket on Huawei Cloud OBS - test
         uses: ./
         with:
           bucket_name: new-bucket-lxy
